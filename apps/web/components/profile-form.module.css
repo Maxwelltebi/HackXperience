@@ -1,0 +1,51 @@
+.form {
+  display: grid;
+  gap: 28px;
+}
+
+.card {
+  display: grid;
+  gap: 20px;
+  padding: 28px 24px;
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 32px;
+  }
+}
+
+.cardHead {
+  display: grid;
+  gap: 4px;
+}
+
+.cardHead p {
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer .banner {
+  flex: 1 1 320px;
+}

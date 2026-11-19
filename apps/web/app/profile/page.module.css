@@ -1,0 +1,14 @@
+.main {
+  display: grid;
+  gap: 28px;
+  max-width: 880px;
+  padding-top: 24px;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}

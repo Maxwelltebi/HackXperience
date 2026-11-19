@@ -1,0 +1,101 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 32px 16px;
+}
+
+.stack {
+  display: grid;
+  gap: 28px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.card {
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  padding: 40px 24px 24px;
+  text-align: center;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  box-shadow: var(--raised);
+  text-decoration: none;
+}
+
+.markInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  box-shadow: var(--inset);
+  color: var(--ink);
+  font: 800 30px/1 var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+.wordmark {
+  display: grid;
+  gap: 2px;
+}
+
+.wordmark strong {
+  font: 800 32px/1.1 var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+.wordmark > span {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 26px;
+}
+
+.buttons {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.well {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 22px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--muted);
+}
+
+.well svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--green);
+}
+
+.terms {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}

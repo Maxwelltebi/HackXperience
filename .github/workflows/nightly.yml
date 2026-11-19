@@ -1,0 +1,78 @@
+name: Nightly backup and keep-alive
+
+# Every night: an encrypted data dump kept as a 30-day artifact, and a request to
+# /api/v1/health so the Supabase project never pauses for inactivity.
+# Run by hand from the Actions tab with "Run workflow".
+on:
+  schedule:
+    - cron: '17 2 * * *' # 02:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Must match the Supabase project's Postgres major version.
+      PG_MAJOR: '17'
+    steps:
+      - name: Check secrets
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          test -n "$BACKUP_DATABASE_URL" || { echo "BACKUP_DATABASE_URL secret is missing"; exit 1; }
+          test -n "$BACKUP_ENCRYPTION_KEY" || { echo "BACKUP_ENCRYPTION_KEY secret is missing"; exit 1; }
+
+      # Data only: the schema comes from supabase/migrations on restore.
+      # public: every application table. auth: users and identities, so sign-ins map to the same accounts.
+      - name: Dump data
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          docker run --rm \
+            -e DB_URL="$BACKUP_DATABASE_URL" \
+            -v "$PWD/backup:/backup" \
+            "postgres:${PG_MAJOR}" sh -ec '
+              pg_dump "$DB_URL" --data-only --no-owner --no-privileges \
+                --schema=public --file=/backup/public.sql
+              pg_dump "$DB_URL" --data-only --no-owner --no-privileges \
+                --table=auth.users --table=auth.identities --file=/backup/auth.sql
+            '
+          date -u +%Y-%m-%dT%H:%M:%SZ > backup/CREATED_AT
+          echo "PG_MAJOR=${PG_MAJOR}" >> backup/CREATED_AT
+          ls -l backup
+
+      - name: Encrypt
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          name="hackxperience-$(date -u +%Y%m%d-%H%M%S).tar.gz.gpg"
+          tar -czf - -C backup . \
+            | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 \
+                --symmetric --cipher-algo AES256 --output "$name" 3<<<"$BACKUP_ENCRYPTION_KEY"
+          rm -rf backup
+          echo "BACKUP_FILE=$name" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+
+  keep-alive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Call /api/v1/health
+        env:
+          HEALTH_URL: ${{ vars.HEALTH_URL || 'https://hack.ciren.network/api/v1/health' }}
+        run: curl --fail --silent --show-error --retry 3 --retry-delay 15 --max-time 30 "$HEALTH_URL"

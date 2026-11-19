@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "HackXperience",
+    "slug": "hackxperience",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "hackxperience",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#E6EBF1",
+    "android": {
+      "package": "network.ciren.hackxperience",
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#E6EBF1"
+        }
+      ]
+    ]
+  }
+}

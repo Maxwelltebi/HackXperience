@@ -1,0 +1,23 @@
+{
+  "name": "@hx/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hx/shared": "workspace:*",
+    "postgres": "4.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "vitest": "5.1.1"
+  }
+}
