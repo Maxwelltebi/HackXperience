@@ -34,7 +34,28 @@ describe('handler() client-generated ids', () => {
       body: { id: '42', name: 'x' },
     });
     const body = await expectError(response, 400, 'VALIDATION_FAILED');
-    expect(body.error.details).toEqual([{ path: 'id', message: 'Must be a UUID.' }]);
+    expect(body.error.details).toEqual({ fields: { id: 'Must be a UUID.' } });
+  });
+
+  it('accepts the id as an Idempotency-Key header', async () => {
+    const id = crypto.randomUUID();
+    const response = await call(createThing, {
+      method: 'POST',
+      as: user,
+      body: { name: 'x' },
+      headers: { 'idempotency-key': id },
+    });
+    expect((await response.json()).id).toBe(id);
+  });
+
+  it('rejects a body id that disagrees with the Idempotency-Key header', async () => {
+    const response = await call(createThing, {
+      method: 'POST',
+      as: user,
+      body: { id: crypto.randomUUID(), name: 'x' },
+      headers: { 'idempotency-key': crypto.randomUUID() },
+    });
+    await expectError(response, 400, 'VALIDATION_FAILED');
   });
 });
 

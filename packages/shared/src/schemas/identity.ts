@@ -113,13 +113,10 @@ export const pushTokenSchema = z.object({
 });
 export type PushToken = z.infer<typeof pushTokenSchema>;
 
-/** DELETE /me/push-tokens */
-export const deletePushTokenBodySchema = z
-  .object({
-    token: z.string().trim().min(1).max(512),
-  })
-  .strict();
-export type DeletePushTokenBody = z.infer<typeof deletePushTokenBodySchema>;
+/** DELETE /me/push-tokens/{token} */
+export const pushTokenParamsSchema = z.object({
+  token: z.string().trim().min(1).max(512),
+});
 
 /** GET /health */
 export const healthResponseSchema = z.object({

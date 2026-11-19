@@ -21,19 +21,27 @@ export const ERROR_CODES = Object.keys(ERROR_STATUS) as [ErrorCode, ...ErrorCode
 
 export const errorCodeSchema = z.enum(ERROR_CODES);
 
-/** One problem with one field of a request. `path` is dotted, e.g. "timezone" or "answers.q1". */
-export const fieldErrorSchema = z.object({
-  path: z.string(),
-  message: z.string(),
-});
-export type FieldError = z.infer<typeof fieldErrorSchema>;
+/**
+ * Field problems in a VALIDATION_FAILED response, keyed by dotted path:
+ * { "timezone": "Unknown time zone...", "answers.q1": "Required" }.
+ */
+export const fieldErrorsSchema = z.record(z.string(), z.string());
+export type FieldErrors = z.infer<typeof fieldErrorsSchema>;
+
+/**
+ * Extra context for an error (Design Step 4: `"details": {}`). VALIDATION_FAILED puts
+ * its field problems under `fields`; other codes add their own keys, e.g. the first
+ * check-in time for ALREADY_CHECKED_IN.
+ */
+export const errorDetailsSchema = z.record(z.string(), z.unknown());
+export type ErrorDetails = z.infer<typeof errorDetailsSchema>;
 
 /** The one error shape. Every non-2xx response from /api/v1 has this body. */
 export const errorBodySchema = z.object({
   error: z.object({
     code: errorCodeSchema,
     message: z.string(),
-    details: z.array(fieldErrorSchema).optional(),
+    details: errorDetailsSchema.optional(),
   }),
 });
 export type ErrorBody = z.infer<typeof errorBodySchema>;
@@ -45,17 +53,27 @@ export function errorStatus(code: ErrorCode): number {
 /** Thrown by server code and turned into an error response by handler(). */
 export class ApiError extends Error {
   readonly code: ErrorCode;
-  readonly details: FieldError[] | undefined;
+  readonly details: ErrorDetails | undefined;
 
-  constructor(code: ErrorCode, message: string, details?: FieldError[]) {
+  constructor(code: ErrorCode, message: string, details?: ErrorDetails) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.details = details;
   }
 
+  /** A 400 VALIDATION_FAILED carrying field problems in details.fields. */
+  static validation(message: string, fields: FieldErrors): ApiError {
+    return new ApiError('VALIDATION_FAILED', message, { fields });
+  }
+
   get status(): number {
     return errorStatus(this.code);
+  }
+
+  /** The field problems, or {} when there are none. */
+  get fieldErrors(): FieldErrors {
+    return fieldErrorsOf(this.details);
   }
 
   toBody(): ErrorBody {
@@ -67,4 +85,10 @@ export class ApiError extends Error {
       },
     };
   }
+}
+
+/** Reads details.fields from an error's details, ignoring anything malformed. */
+export function fieldErrorsOf(details: ErrorDetails | undefined): FieldErrors {
+  const parsed = fieldErrorsSchema.safeParse(details?.fields);
+  return parsed.success ? parsed.data : {};
 }

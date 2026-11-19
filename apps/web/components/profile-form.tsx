@@ -3,6 +3,7 @@
 import {
   API_PREFIX,
   errorBodySchema,
+  fieldErrorsOf,
   meResponseSchema,
   patchProfileBodySchema,
   type MeResponse,
@@ -95,9 +96,9 @@ export function ProfileForm({ initial, timezones }: { initial: MeResponse; timez
         return;
       }
       const error = errorBodySchema.safeParse(json);
-      const details = error.success ? (error.data.error.details ?? []) : [];
-      if (details.length > 0) {
-        setErrors(Object.fromEntries(details.map((d) => [d.path, d.message])));
+      const fields = error.success ? fieldErrorsOf(error.data.error.details) : {};
+      if (Object.keys(fields).length > 0) {
+        setErrors(fields);
         setStatus({ kind: 'idle' });
         return;
       }

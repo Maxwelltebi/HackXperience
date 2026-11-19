@@ -1,6 +1,62 @@
 # Progress
 
-Handoff log between phases. Each phase adds a section: what was built, how to run it, what was left out and why, new dependencies, and questions for a human. Newest phase first.
+Handoff log between phases. Each phase adds a section: what was built, how to run it, what was left out and why, new dependencies, and questions for a human. Newest phase first. The two registers below stay at the top and are updated every phase.
+
+---
+
+## Open questions register
+
+One list for every open question. Agents add rows; a person answers in the **Answer** column (or in a commit message that names the ID), and the next agent applies the answer and moves the row to Resolved. **Default if unanswered** is what the code does today, so nothing blocks unless the Blocks column says so.
+
+### Open
+
+| ID  | Question                                                                                                                                                                              | Raised | Blocks            | Default if unanswered                  | Answer |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------- | -------------------------------------- | ------ |
+| Q1  | **When is the next CIReN event?** It decides the full 8-phase plan or the cut line (Phases 1–5, web only). (DESIGN Step 8)                                                            | Design | Planning          | Full plan, web first                   |        |
+| Q2  | **Is school public?** `GET /users/{id}/profile` is public (DESIGN Step 4) and returns name, avatar, bio, GitHub username, school.                                                     | P1     | —                 | School shown                           |        |
+| Q3  | **GitHub accounts with no public email.** `users.email` is `not null`, so that sign-in fails. Acceptable (they use Google), or handle it? _(auth)_                                    | P1     | —                 | Sign-in fails with the error page      |        |
+| Q4  | **Account deletion.** `audit_log.actor_id` has no cascade, so deleting a user with audit rows fails. Should accounts be deletable, and what happens to their audit rows? _(deletion)_ | P1     | Phase 7           | Accounts can't be deleted              |        |
+| Q5  | **`EXPO_PUBLIC_API_URL`** (the web app's URL, for the mobile app) is missing from the build plan's environment table. Add it there?                                                   | P1     | —                 | Documented in `.env.example`           |        |
+| Q6  | **Code of conduct.** Where does the sign-in page's "code of conduct" link go?                                                                                                         | P1     | Launch            | Plain text                             |        |
+| Q7  | Should drafts with no title and no write-up be judged? (DESIGN Step 8)                                                                                                                | Design | Phase 4           | No (current rule)                      |        |
+| Q8  | Real CIReN event sizes, to recheck the DESIGN Step 2 estimates.                                                                                                                       | Design | Phase 7 load test | 500 applicants, 300 accepted, 80 teams |        |
+
+### Resolved
+
+| ID  | Question                                                                                       | Resolution                                                                                                                                          |
+| --- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Design doc missing                                                                             | Added 19 Nov 2026; copied to `docs/DESIGN.md`.                                                                                                      |
+| R2  | Header name `server_time` vs `Server-Time`                                                     | DESIGN Step 4 says `server_time`. Kept.                                                                                                             |
+| R3  | Error code names                                                                               | DESIGN only fixes the shape and the domain codes (`TEAM_FULL`, `STALE_VERSION`, …). The generic codes stay.                                         |
+| R4  | Should the public profile require sign-in?                                                     | No: DESIGN Step 4 says "anyone". School is still open (Q2).                                                                                         |
+| R5  | Error `details` shape                                                                          | DESIGN Step 4 shows `"details": {}`. Changed from an array to an object; validation problems are under `details.fields` as `{ "path": "message" }`. |
+| R6  | `DELETE /me/push-tokens` body vs path                                                          | DESIGN Step 4: `DELETE /me/push-tokens/{token}`. Changed.                                                                                           |
+| R7  | Retry-safe creates: body `id` (build plan rule 14) vs `Idempotency-Key` header (DESIGN Step 4) | `handler({ clientId: true })` accepts either; if both are sent they must match.                                                                     |
+
+---
+
+## Mobile app status
+
+The Android app is paused while the web app is finished (the web app covers every role on phones; DESIGN Step 8 cut line). This log is what a person or agent needs to pick it back up.
+
+| Area                                                                                                                    | State                                                              | Where                                          | Next step                                                                    |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| App shell, Expo SDK 58, Expo Router                                                                                     | Done                                                               | `apps/mobile/src/app/_layout.tsx`              | —                                                                            |
+| Package `network.ciren.hackxperience`, scheme `hackxperience`                                                           | Done (the package is fixed after the first Play upload)            | `apps/mobile/app.json`                         | —                                                                            |
+| Google and GitHub sign-in (PKCE, in-app browser, deep link)                                                             | Built, **not yet tried on a device** (needs Supabase OAuth set up) | `src/lib/auth.tsx`, `src/lib/auth-redirect.ts` | Phase 1 gate: sign in on Android in development                              |
+| Session storage                                                                                                         | AsyncStorage                                                       | `src/lib/supabase.ts`                          | —                                                                            |
+| API client: bearer token, error shape, `server_time` offset                                                             | Done                                                               | `src/lib/api.ts` (`serverNow()`)               | Add calls per phase                                                          |
+| Profile screen: name, school, GitHub, time zone, email reminders                                                        | Done                                                               | `src/app/index.tsx`                            | Add bio, level, graduation year, country, gender to match the web            |
+| Design tokens (colors, raised and inset shadows, 52 px controls)                                                        | Done                                                               | `src/theme.ts`, `src/components/ui.tsx`        | —                                                                            |
+| Fonts (Inter, Inter Tight, JetBrains Mono)                                                                              | Not started; system font                                           | —                                              | Load with `expo-font` before the Phase 3 screens                             |
+| App icon, splash artwork                                                                                                | Not started                                                        | —                                              | Needed before the first Play upload                                          |
+| Unit tests                                                                                                              | 4 (redirect parsing)                                               | `src/lib/auth-redirect.test.ts`                | —                                                                            |
+| Bundle check                                                                                                            | `expo export --platform android` passes                            | —                                              | Run before each build                                                        |
+| **Phase 3:** events list, event page, ticket QR, my team, volunteer scanner; EAS build profile; first closed-test build | Not started                                                        | —                                              | Start the Play closed test early: 14 days with 12+ testers before production |
+| **Phase 5:** judge scoring screen                                                                                       | Not started                                                        | —                                              | —                                                                            |
+| **Phase 6:** push token registration, announcements feed, mentor request form, `useLiveChannel`                         | Not started (the token endpoints exist)                            | —                                              | —                                                                            |
+
+Known gaps: the time zone field is free text (validated by the API), not a picker; the mobile profile shows fewer fields than the web.
 
 ---
 
@@ -11,13 +67,16 @@ Handoff log between phases. Each phase adds a section: what was built, how to ru
 | Check                                                   | Result                                                                                  |
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Migrations apply cleanly to an empty database           | Passed locally (embedded Postgres 17 with a Supabase stand-in; see below)               |
-| `pnpm lint && pnpm typecheck && pnpm test`              | Passed locally: 6 packages, 75 tests (shared 21, db 11, web 39, mobile 4), none skipped |
+| `pnpm lint && pnpm typecheck && pnpm test`              | Passed locally: 6 packages, 79 tests (shared 22, db 11, web 42, mobile 4), none skipped |
 | `next build`                                            | Passed; no server secrets or the database driver in `.next/static`                      |
 | Android JS bundle (`expo export --platform android`)    | Passed                                                                                  |
 | CI on GitHub with the real Supabase stack               | **Not run yet.** Needs a push, which is a person's job                                  |
 | Deploy to Vercel, OAuth on web and Android, nightly run | **Not run yet.** Needs the human-only setup tasks                                       |
 
-The design doc (`docs/DESIGN.md`) was **not in the repository** when Phase 1 was built. Everything below follows `docs/BUILD_PLAN.md` and the screens PDF. Where the design doc would have decided something, the choice is listed under Questions.
+Phase 1 was built before `docs/DESIGN.md` existed, then aligned with it on 19 Nov 2026 (register items R2–R7). Remaining differences from DESIGN, both deliberate:
+
+- **Auth routes.** DESIGN lists `POST /auth/google`, `/auth/github`, `/auth/logout`. Supabase runs the OAuth exchange, so the web app has a sign-in server action, `GET /auth/callback` and `POST /auth/sign-out` instead, and mobile talks to Supabase directly. None of these are under `/api/v1`.
+- **`GET /me` roles per event.** DESIGN says `/me` returns roles per event. Events and `event_staff` arrive in Phase 2, which adds them.
 
 ### What was built
 
@@ -39,19 +98,19 @@ The design doc (`docs/DESIGN.md`) was **not in the repository** when Phase 1 was
 
 **API** (`apps/web/app/api/v1/`, all through `handler()`)
 
-| Endpoint                        | Auth     | Notes                                                                             |
-| ------------------------------- | -------- | --------------------------------------------------------------------------------- |
-| `GET /health`                   | none     | `select 1`; 503 `SERVICE_UNAVAILABLE` if the database is down                     |
-| `GET /me`                       | required | user + profile                                                                    |
-| `PATCH /me/profile`             | required | any subset of name and profile fields; `.strict()`, so unknown fields are refused |
-| `GET /users/{id}/profile`       | none     | public fields only (no email, gender, level, country, settings); `badges: []`     |
-| `POST /me/push-tokens`          | required | upsert; a token moves to whoever registered it last                               |
-| `DELETE /me/push-tokens`        | required | body `{ token }`; deletes only your own; 204                                      |
-| anything else under `/api/v1/*` | none     | 404 `NOT_FOUND` in the standard shape                                             |
+| Endpoint                         | Auth     | Notes                                                                             |
+| -------------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `GET /health`                    | none     | `select 1`; 503 `SERVICE_UNAVAILABLE` if the database is down                     |
+| `GET /me`                        | required | user + profile                                                                    |
+| `PATCH /me/profile`              | required | any subset of name and profile fields; `.strict()`, so unknown fields are refused |
+| `GET /users/{id}/profile`        | none     | public fields only (no email, gender, level, country, settings); `badges: []`     |
+| `POST /me/push-tokens`           | required | upsert; a token moves to whoever registered it last                               |
+| `DELETE /me/push-tokens/{token}` | required | URL-encoded token; deletes only your own; 204                                     |
+| anything else under `/api/v1/*`  | none     | 404 `NOT_FOUND` in the standard shape                                             |
 
-`handler()` (`apps/web/lib/api/handler.ts`) does auth (session cookie, or `Authorization: Bearer <Supabase access token>` verified with `getClaims()`; only `role = authenticated` with a UUID `sub` passes), Zod validation of body, params and query, error mapping, the `server_time` header on every response including errors, and client-generated ids (`clientId: true` → `ctx.id`). Unexpected errors return 500 `INTERNAL` and log only method, path, and the Postgres error code, never messages (they can contain emails). Role checks are not in it yet; Phase 2 adds them.
+`handler()` (`apps/web/lib/api/handler.ts`) does auth (session cookie, or `Authorization: Bearer <Supabase access token>` verified with `getClaims()`; only `role = authenticated` with a UUID `sub` passes), Zod validation of body, params and query, error mapping, the `server_time` header on every response including errors, and client-generated ids (`clientId: true` → `ctx.id`, from the body's `id` or the `Idempotency-Key` header). Unexpected errors return 500 `INTERNAL` and log only method, path, and the Postgres error code, never messages (they can contain emails). Role checks are not in it yet; Phase 2 adds them.
 
-Error shape: `{ "error": { "code": "VALIDATION_FAILED", "message": "...", "details": [{ "path": "timezone", "message": "..." }] } }`.
+Error shape: `{ "error": { "code": "VALIDATION_FAILED", "message": "...", "details": { "fields": { "timezone": "..." } } } }`. Other codes put their own context in `details`. Read field problems with `fieldErrorsOf(details)` or `ApiError#fieldErrors`.
 
 **Web UI:** design tokens from screens PDF page 1 in `apps/web/app/globals.css` (raised, inset and flat surfaces; one solid primary button; bright-green focus rings; status as dot plus word). Fonts: Inter Tight, Inter and JetBrains Mono via `next/font`. The profile form validates with the shared schema before sending and shows server field errors; it also has "Saved 12 s ago" and "Couldn't save … Retry" states from the shared-states panel.
 
@@ -113,14 +172,7 @@ Versions are pinned exactly (Expo packages use the `~` ranges `expo install` exp
 
 ### Questions for a human
 
-1. **Design doc missing.** Please export _HackXperience: System Design_ to `docs/DESIGN.md`. Phase 2 depends on its permission matrix.
-2. **Header name.** The plan says the `server_time` header, so that's the literal name used (`SERVER_TIME_HEADER`). Underscores in header names pass through Node and Vercel, but some proxies drop them. Should it be `Server-Time` instead? It's a one-line change now and a breaking change later.
-3. **Error code names.** The plan names some codes (`VALIDATION_FAILED`, `SUBMISSION_LOCKED`…). Phase 1 added `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMITED`, `INTERNAL`, `SERVICE_UNAVAILABLE`. Do these match the design doc?
-4. **Public profile fields (auth/permissions).** `GET /users/{id}/profile` is public and returns name, avatar, bio, GitHub username, and school. Is school OK to show publicly? Should the endpoint require sign-in?
-5. **OAuth without an email (auth).** `users.email` is `not null`. If a GitHub account has no public verified email, the trigger fails and so does that sign-in. Is that acceptable (the person sees an error and uses Google), or should it be handled?
-6. **Deleting accounts (deletion).** `audit_log.actor_id` references `users` with no cascade, so deleting someone who has audit rows fails. The design doc's account-deletion rule decides this.
-7. **Mobile API URL.** The app needs `EXPO_PUBLIC_API_URL` (the web app's URL) to reach `/api/v1`. This variable isn't in the plan's environment table; please add it there.
-8. **Code of conduct link.** The sign-in design links "code of conduct". Where does it live? It's plain text for now.
+Moved to the Open questions register at the top.
 
 ### Notes for the human-only tasks
 

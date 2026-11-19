@@ -1,4 +1,4 @@
-import { ApiError, SERVER_TIME_HEADER, type ErrorCode, type FieldError } from '@hx/shared';
+import { ApiError, SERVER_TIME_HEADER, type ErrorCode, type ErrorDetails } from '@hx/shared';
 
 /** A JSON response. */
 export function json(data: unknown, status = 200): Response {
@@ -11,7 +11,7 @@ export function noContent(): Response {
 }
 
 /** A response in the one error shape. */
-export function errorResponse(code: ErrorCode, message: string, details?: FieldError[]): Response {
+export function errorResponse(code: ErrorCode, message: string, details?: ErrorDetails): Response {
   const error = new ApiError(code, message, details);
   return json(error.toBody(), error.status);
 }

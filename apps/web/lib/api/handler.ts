@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { PostgresError } from '@hx/db';
-import { ApiError, clientIdSchema, type FieldError } from '@hx/shared';
+import { ApiError, clientIdSchema, IDEMPOTENCY_KEY_HEADER, type FieldErrors } from '@hx/shared';
 import type { z, ZodType } from 'zod';
 import { authenticate } from './auth';
 import { errorResponse, withServerTime } from './respond';
@@ -19,8 +19,9 @@ interface HandlerOptions<A extends AuthMode, B, P, Q> {
   /** Zod schema for the query string (values are strings). */
   query?: Q;
   /**
-   * Accept a client-generated UUID `id` in the body (Agent rule 14). `ctx.id` is that id,
-   * or a new one when the client sent none. Insert with ON CONFLICT (id) DO NOTHING.
+   * Accept a client-generated UUID for a create (Agent rule 14, Design Step 4), sent as the
+   * body's `id` or the `Idempotency-Key` header. `ctx.id` is that id, or a new one when the
+   * client sent none. Insert with ON CONFLICT (id) DO NOTHING and return the existing row.
    */
   clientId?: boolean;
 }
@@ -92,7 +93,7 @@ async function buildContext<
   if (options.body || options.clientId) {
     const raw = await readJson(request);
     if (options.clientId) {
-      id = readClientId(raw) ?? id;
+      id = readClientId(request, raw) ?? id;
     }
     body = options.body ? parse(options.body, withoutId(raw, options.clientId), 'body') : undefined;
   }
@@ -112,13 +113,22 @@ async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-function readClientId(raw: unknown): string | null {
-  if (!isRecord(raw) || raw.id === undefined) return null;
-  const parsed = clientIdSchema.safeParse(raw.id);
+function readClientId(request: Request, raw: unknown): string | null {
+  const fromBody = isRecord(raw) && raw.id !== undefined ? uuidOrThrow(raw.id, 'id') : null;
+  const header = request.headers.get(IDEMPOTENCY_KEY_HEADER);
+  const fromHeader = header === null ? null : uuidOrThrow(header.trim(), IDEMPOTENCY_KEY_HEADER);
+  if (fromBody && fromHeader && fromBody !== fromHeader) {
+    throw ApiError.validation('The id and the Idempotency-Key header disagree.', {
+      id: 'Must match the Idempotency-Key header.',
+    });
+  }
+  return fromBody ?? fromHeader;
+}
+
+function uuidOrThrow(value: unknown, field: string): string {
+  const parsed = clientIdSchema.safeParse(value);
   if (!parsed.success) {
-    throw new ApiError('VALIDATION_FAILED', 'The id must be a UUID.', [
-      { path: 'id', message: 'Must be a UUID.' },
-    ]);
+    throw ApiError.validation(`The ${field} must be a UUID.`, { [field]: 'Must be a UUID.' });
   }
   return parsed.data;
 }
@@ -139,14 +149,17 @@ function parse(schema: ZodType, value: unknown, where: 'body' | 'params' | 'quer
   if (where === 'params') {
     throw new ApiError('NOT_FOUND', 'Not found.');
   }
-  throw new ApiError('VALIDATION_FAILED', 'Some fields need fixing.', toFieldErrors(result.error));
+  throw ApiError.validation('Some fields need fixing.', toFieldErrors(result.error));
 }
 
-export function toFieldErrors(error: z.ZodError): FieldError[] {
-  return error.issues.map((issue) => ({
-    path: issue.path.map(String).join('.'),
-    message: issue.message,
-  }));
+/** Zod issues as { "dotted.path": "message" }, keeping the first message per field. */
+export function toFieldErrors(error: z.ZodError): FieldErrors {
+  const fields: FieldErrors = {};
+  for (const issue of error.issues) {
+    const path = issue.path.map(String).join('.') || '_';
+    fields[path] ??= issue.message;
+  }
+  return fields;
 }
 
 function toErrorResponse(error: unknown, request: Request): Response {

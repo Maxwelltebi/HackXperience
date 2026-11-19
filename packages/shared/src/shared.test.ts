@@ -3,6 +3,7 @@ import {
   ApiError,
   ERROR_CODES,
   errorBodySchema,
+  fieldErrorsOf,
   isValidTimezone,
   listTimezones,
   patchProfileBodySchema,
@@ -78,18 +79,23 @@ describe('registerPushTokenBodySchema', () => {
 
 describe('ApiError', () => {
   it('maps codes to statuses and produces the standard body', () => {
-    const error = new ApiError('VALIDATION_FAILED', 'Bad body', [
-      { path: 'timezone', message: 'x' },
-    ]);
+    const error = ApiError.validation('Bad body', { timezone: 'x' });
     expect(error.status).toBe(400);
     expect(errorBodySchema.parse(error.toBody())).toEqual({
       error: {
         code: 'VALIDATION_FAILED',
         message: 'Bad body',
-        details: [{ path: 'timezone', message: 'x' }],
+        details: { fields: { timezone: 'x' } },
       },
     });
+    expect(error.fieldErrors).toEqual({ timezone: 'x' });
     expect(new ApiError('UNAUTHENTICATED', 'Sign in').status).toBe(401);
+  });
+
+  it('reads field errors defensively', () => {
+    expect(fieldErrorsOf(undefined)).toEqual({});
+    expect(fieldErrorsOf({ fields: 'nope' })).toEqual({});
+    expect(fieldErrorsOf({ first_checked_in_at: '2026-12-06T08:42:00Z' })).toEqual({});
   });
 
   it('has a status for every code', () => {

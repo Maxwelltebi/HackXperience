@@ -1,6 +1,9 @@
 /** Response header carrying the server's clock (UTC ISO 8601). Clients use it for countdowns. */
 export const SERVER_TIME_HEADER = 'server_time';
 
+/** Optional header carrying a client-generated UUID for a create, so a retry is harmless. */
+export const IDEMPOTENCY_KEY_HEADER = 'idempotency-key';
+
 /** All API routes live under this prefix. */
 export const API_PREFIX = '/api/v1';
 

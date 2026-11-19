@@ -80,8 +80,8 @@ export default function ProfileScreen() {
       setValues(toValues(me));
       setNotice({ tone: 'success', text: 'Saved' });
     } catch (error) {
-      if (error instanceof ApiError && error.details?.length) {
-        setErrors(Object.fromEntries(error.details.map((d) => [d.path, d.message])));
+      if (error instanceof ApiError && Object.keys(error.fieldErrors).length > 0) {
+        setErrors(error.fieldErrors);
       } else {
         setNotice({ tone: 'danger', text: messageFor(error) });
       }

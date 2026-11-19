@@ -16,11 +16,12 @@ interface CallOptions {
   body?: unknown;
   rawBody?: string;
   params?: Record<string, string | string[]>;
+  headers?: Record<string, string>;
 }
 
 /** Call a route handler the way Next.js would. */
 export async function call(route: RouteHandler, options: CallOptions = {}): Promise<Response> {
-  const headers = new Headers();
+  const headers = new Headers(options.headers);
   if (options.as) headers.set('authorization', `Bearer test:${options.as}`);
   let body: string | undefined;
   if (options.rawBody !== undefined) body = options.rawBody;

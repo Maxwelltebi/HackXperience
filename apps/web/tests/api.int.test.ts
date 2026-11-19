@@ -1,13 +1,12 @@
 // Phase 1 endpoints against the local database.
-import { meResponseSchema, publicProfileSchema, pushTokenSchema } from '@hx/shared';
+import { fieldErrorsOf, meResponseSchema, publicProfileSchema, pushTokenSchema } from '@hx/shared';
+import { getSql } from '@hx/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { GET as notFoundGet, POST as notFoundPost } from '@/app/api/v1/[...path]/route';
 import { GET as health } from '@/app/api/v1/health/route';
 import { PATCH as patchProfile } from '@/app/api/v1/me/profile/route';
-import {
-  DELETE as deletePushToken,
-  POST as postPushToken,
-} from '@/app/api/v1/me/push-tokens/route';
+import { DELETE as deletePushToken } from '@/app/api/v1/me/push-tokens/[token]/route';
+import { POST as postPushToken } from '@/app/api/v1/me/push-tokens/route';
 import { GET as getMe } from '@/app/api/v1/me/route';
 import { GET as getPublicProfile } from '@/app/api/v1/users/[id]/profile/route';
 import { call, expectError, expectServerTime, testUsers } from './helpers';
@@ -90,9 +89,9 @@ describe('PATCH /me/profile', () => {
       400,
       'VALIDATION_FAILED',
     );
-    expect(body.error.details).toEqual([
-      { path: 'timezone', message: expect.stringContaining('Unknown time zone') },
-    ]);
+    expect(body.error.details).toEqual({
+      fields: { timezone: expect.stringContaining('Unknown time zone') },
+    });
   });
 
   it('gives field details for every invalid field', async () => {
@@ -101,7 +100,7 @@ describe('PATCH /me/profile', () => {
       400,
       'VALIDATION_FAILED',
     );
-    expect(body.error.details?.map((d) => d.path).sort()).toEqual([
+    expect(Object.keys(fieldErrorsOf(body.error.details)).sort()).toEqual([
       'email_reminders',
       'graduation_year',
     ]);
@@ -142,7 +141,7 @@ describe('GET /users/{id}/profile', () => {
   });
 });
 
-describe('POST and DELETE /me/push-tokens', () => {
+describe('POST /me/push-tokens and DELETE /me/push-tokens/{token}', () => {
   const token = `ExponentPushToken[${crypto.randomUUID()}]`;
 
   it('refuses unauthenticated calls', async () => {
@@ -152,7 +151,7 @@ describe('POST and DELETE /me/push-tokens', () => {
       'UNAUTHENTICATED',
     );
     await expectError(
-      await call(deletePushToken, { method: 'DELETE', body: { token } }),
+      await call(deletePushToken, { method: 'DELETE', params: { token } }),
       401,
       'UNAUTHENTICATED',
     );
@@ -181,13 +180,29 @@ describe('POST and DELETE /me/push-tokens', () => {
       body: { token, platform: 'pager' },
     });
     const body = await expectError(response, 400, 'VALIDATION_FAILED');
-    expect(body.error.details?.[0]?.path).toBe('platform');
+    expect(Object.keys(fieldErrorsOf(body.error.details))).toEqual(['platform']);
   });
 
-  it('deletes the token with 204 and server_time', async () => {
-    const response = await call(deletePushToken, { method: 'DELETE', as: ama.id, body: { token } });
+  it("does not delete another user's token", async () => {
+    const response = await call(deletePushToken, {
+      method: 'DELETE',
+      as: efua.id,
+      params: { token },
+    });
+    expect(response.status).toBe(204);
+    const [row] = await getSql()`select user_id from push_tokens where token = ${token}`;
+    expect(row?.user_id).toBe(ama.id);
+  });
+
+  it('deletes your own token with 204 and server_time', async () => {
+    const response = await call(deletePushToken, {
+      method: 'DELETE',
+      as: ama.id,
+      params: { token },
+    });
     expect(response.status).toBe(204);
     expectServerTime(response);
+    expect(await getSql()`select 1 from push_tokens where token = ${token}`).toHaveLength(0);
   });
 });
 
