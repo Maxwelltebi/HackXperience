@@ -1,5 +1,5 @@
 import { closeSql, getSql } from '@hx/db';
-import { createTestUser, deleteTestUser } from '@hx/db/testing';
+import { testData } from '@hx/db/testing';
 import { errorBodySchema, SERVER_TIME_HEADER } from '@hx/shared';
 import { expect } from 'vitest';
 
@@ -54,15 +54,42 @@ export async function expectError(response: Response, status: number, code: stri
 
 /** Creates users through the auth trigger and removes them after the file's tests. */
 export function testUsers() {
-  const ids: string[] = [];
+  const data = testData(getSql());
   return {
-    async create(name = 'Test User') {
-      const user = await createTestUser(getSql(), { name });
-      ids.push(user.id);
-      return user;
+    create: (name = 'Test User') => data.user(name),
+    async cleanup() {
+      await data.cleanup();
+      await closeSql();
+    },
+  };
+}
+
+/**
+ * Users, events and staff roles for a test file, all removed afterwards.
+ * `roles` builds one person per staff role plus a plain participant, for permission tests.
+ */
+export function fixtures() {
+  const data = testData(getSql());
+  return {
+    ...data,
+    async eventWithRoles(options: Parameters<typeof data.event>[1] = {}) {
+      const owner = await data.user('Owner');
+      const event = await data.event(owner.id, options);
+      const people = {
+        owner,
+        admin: await data.user('Admin'),
+        judge: await data.user('Judge'),
+        mentor: await data.user('Mentor'),
+        volunteer: await data.user('Volunteer'),
+        participant: await data.user('Participant'),
+      };
+      for (const role of ['admin', 'judge', 'mentor', 'volunteer'] as const) {
+        await data.staff(event.id, people[role].id, role);
+      }
+      return { event, people };
     },
     async cleanup() {
-      for (const id of ids) await deleteTestUser(getSql(), id);
+      await data.cleanup();
       await closeSql();
     },
   };

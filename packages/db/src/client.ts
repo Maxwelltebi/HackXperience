@@ -51,4 +51,6 @@ export const PG_ERROR = {
   foreignKeyViolation: '23503',
   checkViolation: '23514',
   lockNotAvailable: '55P03',
+  deadlock: '40P01',
+  serializationFailure: '40001',
 } as const;

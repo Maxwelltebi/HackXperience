@@ -10,28 +10,35 @@ One list for every open question. Agents add rows; a person answers in the **Ans
 
 ### Open
 
-| ID  | Question                                                                                                                                                                              | Raised | Blocks            | Default if unanswered                  | Answer |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------- | -------------------------------------- | ------ |
-| Q1  | **When is the next CIReN event?** It decides the full 8-phase plan or the cut line (Phases 1–5, web only). (DESIGN Step 8)                                                            | Design | Planning          | Full plan, web first                   |        |
-| Q2  | **Is school public?** `GET /users/{id}/profile` is public (DESIGN Step 4) and returns name, avatar, bio, GitHub username, school.                                                     | P1     | —                 | School shown                           |        |
-| Q3  | **GitHub accounts with no public email.** `users.email` is `not null`, so that sign-in fails. Acceptable (they use Google), or handle it? _(auth)_                                    | P1     | —                 | Sign-in fails with the error page      |        |
-| Q4  | **Account deletion.** `audit_log.actor_id` has no cascade, so deleting a user with audit rows fails. Should accounts be deletable, and what happens to their audit rows? _(deletion)_ | P1     | Phase 7           | Accounts can't be deleted              |        |
-| Q5  | **`EXPO_PUBLIC_API_URL`** (the web app's URL, for the mobile app) is missing from the build plan's environment table. Add it there?                                                   | P1     | —                 | Documented in `.env.example`           |        |
-| Q6  | **Code of conduct.** Where does the sign-in page's "code of conduct" link go?                                                                                                         | P1     | Launch            | Plain text                             |        |
-| Q7  | Should drafts with no title and no write-up be judged? (DESIGN Step 8)                                                                                                                | Design | Phase 4           | No (current rule)                      |        |
-| Q8  | Real CIReN event sizes, to recheck the DESIGN Step 2 estimates.                                                                                                                       | Design | Phase 7 load test | 500 applicants, 300 accepted, 80 teams |        |
+| ID  | Question                                                                                                                                                                                                                                                                                        | Raised | Blocks            | Default if unanswered                  | Answer |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------- | -------------------------------------- | ------ |
+| Q1  | **When is the next CIReN event?** It decides the full 8-phase plan or the cut line (Phases 1–5, web only). (DESIGN Step 8)                                                                                                                                                                      | Design | Planning          | Full plan, web first                   |        |
+| Q2  | **Is school public?** `GET /users/{id}/profile` is public (DESIGN Step 4) and returns name, avatar, bio, GitHub username, school.                                                                                                                                                               | P1     | —                 | School shown                           |        |
+| Q3  | **GitHub accounts with no public email.** `users.email` is `not null`, so that sign-in fails. Acceptable (they use Google), or handle it? _(auth)_                                                                                                                                              | P1     | —                 | Sign-in fails with the error page      |        |
+| Q4  | **Account deletion.** `audit_log.actor_id` has no cascade, so deleting a user with audit rows fails. Should accounts be deletable, and what happens to their audit rows? _(deletion)_                                                                                                           | P1     | Phase 7           | Accounts can't be deleted              |        |
+| Q5  | **`EXPO_PUBLIC_API_URL`** (the web app's URL, for the mobile app) is missing from the build plan's environment table. Add it there?                                                                                                                                                             | P1     | —                 | Documented in `.env.example`           |        |
+| Q6  | **Code of conduct.** Where does the sign-in page's "code of conduct" link go?                                                                                                                                                                                                                   | P1     | Launch            | Plain text                             |        |
+| Q7  | Should drafts with no title and no write-up be judged? (DESIGN Step 8)                                                                                                                                                                                                                          | Design | Phase 4           | No (current rule)                      |        |
+| Q9  | **Event status checks** (my choice; DESIGN names the transitions but not their checks). Publish needs an application window that closes by the event end. Back to draft only while nobody has applied. Start judging only after the submission deadline and with at least one rubric criterion. | P2     | —                 | As described                           |        |
+| Q10 | **Platform admins and events** _(permissions)_. `is_platform_admin` grants nothing at events today; only event roles do. Should platform admins see and edit every event?                                                                                                                       | P2     | —                 | No automatic access                    |        |
+| Q11 | **Changing a decision after RSVP** _(permissions)_. Once an applicant confirms or declines, organizers can no longer change their status (for example, removing someone for a code of conduct breach). Should owners be able to?                                                                | P2     | Phase 3           | Not possible                           |        |
+| Q12 | **Drafts and non-admin staff.** Judges, mentors and volunteers can't see a draft event; only owners and admins can. OK?                                                                                                                                                                         | P2     | —                 | Owners and admins only                 |        |
+| Q13 | **Profile before applying.** The application form warns when school or level of study is missing, but doesn't block. Require them?                                                                                                                                                              | P2     | —                 | Warn only                              |        |
+| Q8  | Real CIReN event sizes, to recheck the DESIGN Step 2 estimates.                                                                                                                                                                                                                                 | Design | Phase 7 load test | 500 applicants, 300 accepted, 80 teams |        |
 
 ### Resolved
 
-| ID  | Question                                                                                       | Resolution                                                                                                                                          |
-| --- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | Design doc missing                                                                             | Added 19 Nov 2026; copied to `docs/DESIGN.md`.                                                                                                      |
-| R2  | Header name `server_time` vs `Server-Time`                                                     | DESIGN Step 4 says `server_time`. Kept.                                                                                                             |
-| R3  | Error code names                                                                               | DESIGN only fixes the shape and the domain codes (`TEAM_FULL`, `STALE_VERSION`, …). The generic codes stay.                                         |
-| R4  | Should the public profile require sign-in?                                                     | No: DESIGN Step 4 says "anyone". School is still open (Q2).                                                                                         |
-| R5  | Error `details` shape                                                                          | DESIGN Step 4 shows `"details": {}`. Changed from an array to an object; validation problems are under `details.fields` as `{ "path": "message" }`. |
-| R6  | `DELETE /me/push-tokens` body vs path                                                          | DESIGN Step 4: `DELETE /me/push-tokens/{token}`. Changed.                                                                                           |
-| R7  | Retry-safe creates: body `id` (build plan rule 14) vs `Idempotency-Key` header (DESIGN Step 4) | `handler({ clientId: true })` accepts either; if both are sent they must match.                                                                     |
+| ID  | Question                                                                                       | Resolution                                                                                                                                                                                            |
+| --- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Design doc missing                                                                             | Added 19 Nov 2026; copied to `docs/DESIGN.md`.                                                                                                                                                        |
+| R2  | Header name `server_time` vs `Server-Time`                                                     | DESIGN Step 4 says `server_time`. Kept.                                                                                                                                                               |
+| R3  | Error code names                                                                               | DESIGN only fixes the shape and the domain codes (`TEAM_FULL`, `STALE_VERSION`, …). The generic codes stay.                                                                                           |
+| R4  | Should the public profile require sign-in?                                                     | No: DESIGN Step 4 says "anyone". School is still open (Q2).                                                                                                                                           |
+| R5  | Error `details` shape                                                                          | DESIGN Step 4 shows `"details": {}`. Changed from an array to an object; validation problems are under `details.fields` as `{ "path": "message" }`.                                                   |
+| R6  | `DELETE /me/push-tokens` body vs path                                                          | DESIGN Step 4: `DELETE /me/push-tokens/{token}`. Changed.                                                                                                                                             |
+| R8  | Applying twice                                                                                 | Returns the first application (`200`) instead of an error, so a mobile retry is harmless (Agent rule 14).                                                                                             |
+| R9  | Tick lock with a transaction-mode pooler                                                       | `pg_try_advisory_xact_lock`, not the session lock the build plan names: through Supavisor in transaction mode a session lock can stick to a pooled connection forever. See `packages/db/src/tick.ts`. |
+| R7  | Retry-safe creates: body `id` (build plan rule 14) vs `Idempotency-Key` header (DESIGN Step 4) | `handler({ clientId: true })` accepts either; if both are sent they must match.                                                                                                                       |
 
 ---
 
@@ -56,7 +63,110 @@ The Android app is paused while the web app is finished (the web app covers ever
 | **Phase 5:** judge scoring screen                                                                                       | Not started                                                        | —                                              | —                                                                            |
 | **Phase 6:** push token registration, announcements feed, mentor request form, `useLiveChannel`                         | Not started (the token endpoints exist)                            | —                                              | —                                                                            |
 
+Phase 2 added nothing on mobile. `/me` now also returns `event_roles` and `org_ids`; the app parses them through the shared schema.
+
 Known gaps: the time zone field is free text (validated by the API), not a picker; the mobile profile shows fewer fields than the web.
+
+---
+
+## Phase 2: Events, roles, applications, email (built 19 Nov 2026, gate not yet run)
+
+### Status
+
+| Check                                                          | Result                                                                                                                                           |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Migrations 0001–0004 apply cleanly to an empty database        | Passed locally (0004 prints a notice and skips scheduling on Postgres without pg_cron, as designed)                                              |
+| `pnpm lint && pnpm typecheck && pnpm test`                     | Passed: 214 tests (core 62, emails 7, shared 22, db 21, web 98, mobile 4), three full runs in a row, none skipped                                |
+| `next build`                                                   | Passed; client bundles contain no secrets, the database driver or the AWS SDK                                                                    |
+| Public pages (landing events section, `/events`, event page)   | Checked in a browser at desktop and phone widths                                                                                                 |
+| Organizer screens and the apply flow in a browser              | **Not checked.** They need a real sign-in (Supabase Auth), which this machine doesn't have. Their API calls are covered by the integration tests |
+| Real SES email, Gmail SPF/DKIM/DMARC, pg_cron calling the tick | **Not run.** Needs the human-only setup for Phase 2                                                                                              |
+
+**Local test note:** this PC has about 0.6 GB of free RAM while VS Code and browsers are open. Under that pressure, database tests sometimes timed out (connection setup took over 10 s). The fix applied: `pnpm test` runs packages one at a time and database test files one at a time, with small connection pools. CI on Linux doesn't have this problem.
+
+### What was built
+
+**Migrations**
+
+- `0002_events`: `events`, `event_staff`, `tracks`, `schedule_items`, `rubric_criteria`, `awards`, `applications`, exactly as the Canonical schema. RLS on, no policies.
+- `0003_notifications`: `notification_outbox`, `email_suppressions`, and the pending-rows index.
+- `0004_cron`: `pg_cron` + `pg_net` job `hx-tick` every minute, reading `hx_tick_url` and `hx_tick_secret` from Vault. It does nothing until both secrets exist.
+
+**`packages/core`** (pure, 62 tests): event status machine (`checkEventTransition`, every allowed and refused pair tested), application decisions and RSVP (`decideApplication`, `rsvpApplication`), `applicationsOpen`, `validateAnswers` (types `short_text`, `long_text`, `single_choice`, `multi_choice`, `url`), `validateEventTimes`, `slugify`, `generateTicketCode` (128 random bits, 22 URL-safe characters).
+
+**`packages/shared`:** the permission matrix (`PERMISSIONS`, `can()`), DESIGN Step 4 exactly; event, setup and application schemas; time helpers (`zonedToUtc`, `utcToZoned`, `formatDateTime`). New error codes: `USER_NOT_FOUND`, `INVALID_TRANSITION`, `LAST_OWNER`, `APPLICATIONS_CLOSED` (423). `/me` now returns `event_roles` and `org_ids`.
+
+**`packages/emails`:** decision emails (accepted, waitlisted, rejected) in HTML and plain text, escaped.
+
+**`packages/db`**
+
+- `loadEventRoles(sql, eventId, userId)`. Drafts are visible only to owners and admins.
+- Events: create (creator becomes owner, audited), update (field-level before and after audit), status change (row locked, database clock, audited).
+- Staff: add by email (`USER_NOT_FOUND` if they never signed in), remove (`LAST_OWNER` guard). Both audited.
+- Setup CRUD for tracks, schedule, rubric, awards. Deletes are audited; a track with an award can't be deleted; one tiebreaker per rubric.
+- Applications: apply (window checked against `now()`), my application, RSVP (confirm sets `ticket_code`), review list (cursor pagination, status filter, search, tab counts), bulk decisions.
+- Bulk decisions: rows locked in id order (no deadlocks); one `audit_log` row and one outbox row each; `send_after = now() + 10 min`; dedupe key `decision:{applicationId}:{status}`. A decision changed back revives its superseded email row.
+- Outbox worker: claim with `FOR UPDATE SKIP LOCKED` and a 2-minute `locked_until`. Retries at 1, 5, 30 and 120 minutes; failed after 5 attempts; stuck rows recovered. It re-reads the application before sending (marks it `superseded` if changed) and checks suppressions first. Email addresses are scrubbed from `last_error`.
+- `runTick`: transaction-scoped advisory lock (see R9), then the outbox. With email not configured, rows wait instead of failing.
+
+**API** (`/api/v1`, all through `handler()`; `handler({ event: { permission } })` gives 404 for unseen events, 403 for missing roles)
+
+| Endpoint                                                                                 | Who                                                                                                          |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `POST /orgs/{orgId}/events`                                                              | org member                                                                                                   |
+| `GET /events`, `GET /events/{id}`, `GET /events/{id}/setup`                              | anyone (drafts: owner, admin)                                                                                |
+| `PATCH /events/{id}`, `POST /events/{id}/status`                                         | owner, admin                                                                                                 |
+| `GET`, `POST`, `DELETE /events/{id}/staff`                                               | owner                                                                                                        |
+| `GET`, `POST /events/{id}/{tracks,schedule,rubric,awards}`; `PATCH`, `DELETE …/{itemId}` | read: anyone who sees the event; write: owner, admin                                                         |
+| `POST /events/{id}/applications`                                                         | signed in, while open                                                                                        |
+| `GET /events/{id}/applications/me`, `POST …/me/rsvp`                                     | the applicant                                                                                                |
+| `GET /events/{id}/applications?status=&q=&cursor=&limit=`, `POST …/decisions`            | owner, admin                                                                                                 |
+| `POST /api/internal/tick`                                                                | `x-tick-secret` header = `TICK_SECRET` (constant-time compare)                                               |
+| `POST /api/internal/ses-events`                                                          | SNS signature (v1 and v2), AWS cert host, topic and age checked; permanent bounces and complaints suppressed |
+
+Database errors are mapped: unique or foreign-key conflicts → `409 CONFLICT`, check violations → `400`, deadlocks or lock timeouts → `503`.
+
+**Web UI**
+
+- Landing: real "Upcoming hackathons" and "Past CIReN events" (screens PDF page 2).
+- `/events`, `/events/[slug]` (tracks, schedule, dates in the viewer's zone, application status and RSVP), `/events/[slug]/apply`.
+- `/organize` (your events, New event), `/organize/new`, and the organizer shell from PDF page 8. Its pages:
+  - Overview: status actions and the event form, with times entered in the event's zone.
+  - Applications: tabs with counts, search, bulk Accept, Waitlist and Reject with the 10-minute note, detail panel, Load more.
+  - Tracks and schedule: tracks, schedule, rubric, awards.
+  - Application form: question editor.
+  - Staff.
+
+**Tests that the plan requires, all present:** every allowed and refused status transition; one refused test per role (volunteer, judge, mentor and participant can't list or decide applications, edit, change status or add tracks; admin can't manage staff); answer validation; 50 decisions give 50 audit rows and 50 outbox rows; the undo window sends only the latest; two concurrent workers never send the same row; suppressed addresses never sent to; forged, tampered, off-site-cert, wrong-topic and stale SNS messages rejected.
+
+### How to run it
+
+Same as Phase 1, plus:
+
+- Organizer screens need an account that is a CIReN `org_members` row. Locally the seed makes Kwame one, but seed users can't sign in (OAuth only). With a dev Supabase project, add yourself: `insert into org_members (org_id, user_id) values ('00000000-0000-4000-8000-00000000c12e', '<your user id>');`
+- The seed includes a published demo event, _The CIReN Experience 5.0_, with two applications.
+- Emails: without AWS settings the tick leaves decision emails in `notification_outbox` (status `pending`), so you can inspect them.
+
+### New dependencies
+
+| Dependency                           | Where   | Why                                                             |
+| ------------------------------------ | ------- | --------------------------------------------------------------- |
+| `@aws-sdk/client-sesv2` 3.1172.0     | web     | SES `SendEmail` (named in the build plan)                       |
+| `@hx/core`, `@hx/emails` (workspace) | db, web | State machines and templates used by the queries and the worker |
+
+### Left out, and why
+
+- **Export CSV** on the applications screen: reports and CSV are Phase 7.
+- **Ticket QR**: Phase 3. Confirming already creates the `ticket_code`.
+- **Check-ins, Teams, Submissions, Judging, Live dashboard, Announcements, Reports, Audit log** sidebar items: their phases. Hidden, not shown as dead links.
+- **Markdown in event descriptions**: shown as plain text with line breaks.
+- **`database.types.ts`** still covers 0001 only. Run `pnpm db:types` with Docker to regenerate it.
+
+### Human tasks for the Phase 2 gate
+
+- `TICK_SECRET` in Vercel. In the Supabase SQL editor run `select vault.create_secret('https://hack.ciren.network/api/internal/tick', 'hx_tick_url');` and `select vault.create_secret('<same TICK_SECRET>', 'hx_tick_secret');`.
+- `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SES_FROM`, `SES_REPLY_TO`, `SNS_TOPIC_ARN`, `APP_URL` in Vercel.
+- Point the SNS subscription at `https://hack.ciren.network/api/internal/ses-events`. The endpoint confirms the subscription itself.
 
 ---
 

@@ -9,7 +9,15 @@ export const ERROR_STATUS = {
   UNAUTHENTICATED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  /** Staff invite: the person has never signed in, so there is no account to add. */
+  USER_NOT_FOUND: 404,
   CONFLICT: 409,
+  /** Event or application status change that the state machine does not allow. */
+  INVALID_TRANSITION: 409,
+  /** Removing the event's last owner. */
+  LAST_OWNER: 409,
+  /** Applying outside the application window, or to an event that is not open. */
+  APPLICATIONS_CLOSED: 423,
   RATE_LIMITED: 429,
   INTERNAL: 500,
   SERVICE_UNAVAILABLE: 503,

@@ -12,6 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "3.1172.0",
+    "@hx/core": "workspace:*",
     "@hx/db": "workspace:*",
     "@hx/shared": "workspace:*",
     "@supabase/ssr": "0.12.7",

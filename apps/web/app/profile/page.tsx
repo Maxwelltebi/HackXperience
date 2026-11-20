@@ -22,7 +22,7 @@ export default async function ProfilePage() {
 
   return (
     <>
-      <SiteHeader signedIn />
+      <SiteHeader signedIn canOrganize={me.org_ids.length > 0 || me.event_roles.length > 0} />
       <main className={`container ${styles.main}`}>
         <div className={styles.heading}>
           <div>

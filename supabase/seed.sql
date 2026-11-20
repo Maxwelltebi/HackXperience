@@ -20,3 +20,38 @@ where user_id = '11111111-1111-4111-8111-111111111111';
 -- Kwame is a CIReN organizer.
 insert into org_members (org_id, user_id)
 values ('00000000-0000-4000-8000-00000000c12e', '33333333-3333-4333-8333-333333333333');
+
+-- A published demo event with applications open, owned by Kwame.
+insert into events (
+  id, organization_id, name, slug, description, timezone, mode, location, status,
+  applications_open_at, applications_close_at, starts_at, submission_deadline, ends_at,
+  team_size_min, team_size_max, max_tracks_per_submission, application_questions
+) values (
+  '55555555-5555-4555-8555-555555555555', '00000000-0000-4000-8000-00000000c12e',
+  'The CIReN Experience 5.0', 'the-ciren-experience-5-0',
+  E'CIReN''s next hackathon. Build something useful in a weekend with a team.\n\nBring a laptop and a charger. Meals are provided.',
+  'Africa/Accra', 'in_person', 'University of Ghana, Legon', 'published',
+  now() - interval '3 days', now() + interval '10 days',
+  now() + interval '14 days', now() + interval '15 days', now() + interval '15 days 6 hours',
+  1, 4, 2,
+  '[{"id":"why","type":"long_text","label":"Why do you want to attend?","required":true},
+    {"id":"github","type":"url","label":"GitHub profile","required":false},
+    {"id":"track","type":"single_choice","label":"Track interest","required":true,"options":["Health","FinTech","Education","Open"]}]'
+);
+insert into event_staff (event_id, user_id, role) values
+  ('55555555-5555-4555-8555-555555555555', '33333333-3333-4333-8333-333333333333', 'owner');
+insert into tracks (event_id, name, description) values
+  ('55555555-5555-4555-8555-555555555555', 'Health', 'Tools for clinics, patients and community health workers'),
+  ('55555555-5555-4555-8555-555555555555', 'FinTech', 'Payments, savings and credit'),
+  ('55555555-5555-4555-8555-555555555555', 'Education', 'Learning in and out of school'),
+  ('55555555-5555-4555-8555-555555555555', 'Open', 'Anything else');
+insert into schedule_items (event_id, title, starts_at, location) values
+  ('55555555-5555-4555-8555-555555555555', 'Check-in and breakfast', now() + interval '14 days', 'Main entrance'),
+  ('55555555-5555-4555-8555-555555555555', 'Opening and team formation', now() + interval '14 days 1 hour', 'Hall A');
+insert into applications (event_id, user_id, answers, created_at) values
+  ('55555555-5555-4555-8555-555555555555', '11111111-1111-4111-8111-111111111111',
+   '{"why":"I build small tools for my hall''s clinic and want to ship a full product in a weekend.","github":"https://github.com/amamensah","track":"Health"}',
+   now() - interval '2 days'),
+  ('55555555-5555-4555-8555-555555555555', '22222222-2222-4222-8222-222222222222',
+   '{"why":"I want to learn how to work on a team under a deadline.","track":"FinTech"}',
+   now() - interval '1 day');

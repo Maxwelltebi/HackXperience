@@ -18,6 +18,7 @@ minimumReleaseAgeExclude:
   - '@vitest/spy@5.1.1'
   - turbo@2.11.13
   - vitest@5.1.1
+  - '@aws-sdk/client-sesv2@3.1172.0'
 allowBuilds:
   '@embedded-postgres/darwin-arm64': true
   '@embedded-postgres/darwin-x64': true

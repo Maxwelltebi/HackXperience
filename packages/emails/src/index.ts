@@ -1,2 +1,3 @@
-// Email templates (HTML and plain text). Phase 2 adds the first templates.
-export {};
+// Email templates (HTML and plain text). Each render function returns subject, html and text.
+export * from './layout';
+export * from './application-decision';

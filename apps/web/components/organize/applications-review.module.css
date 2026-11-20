@@ -1,0 +1,64 @@
+.toolbar {
+  display: grid;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (min-width: 1200px) {
+  .toolbar {
+    grid-template-columns: auto minmax(240px, 1fr);
+  }
+}
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 999px;
+}
+
+@media (max-width: 720px) {
+  .bulkBar {
+    border-radius: 24px;
+  }
+}
+
+.bulkBar > span:last-child {
+  flex: 1 1 260px;
+  text-align: right;
+}
+
+.layout {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+
+.detail {
+  position: sticky;
+  top: 16px;
+}
+
+.nameButton {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nameButton:hover strong {
+  text-decoration: underline;
+}

@@ -51,7 +51,21 @@ export async function getMe(sql: ISql, userId: string): Promise<MeResponse | nul
     join profiles p on p.user_id = u.id
     where u.id = ${userId}
   `;
-  return row ? toMe(row) : null;
+  if (!row) return null;
+  const [roles, orgs] = await Promise.all([
+    sql<{ event_id: string; roles: MeResponse['event_roles'][number]['roles'] }[]>`
+      select s.event_id, array_agg(s.role::text order by s.role) as roles
+      from event_staff s join events e on e.id = s.event_id
+      where s.user_id = ${userId} and e.deleted_at is null
+      group by s.event_id
+    `,
+    sql<{ org_id: string }[]>`select org_id from org_members where user_id = ${userId}`,
+  ]);
+  return toMe(
+    row,
+    roles.map((r) => ({ event_id: r.event_id, roles: r.roles })),
+    orgs.map((o) => o.org_id),
+  );
 }
 
 /**
@@ -136,8 +150,10 @@ export async function deletePushToken(sql: ISql, userId: string, token: string):
   await sql`delete from push_tokens where token = ${token} and user_id = ${userId}`;
 }
 
-function toMe(row: MeRow): MeResponse {
+function toMe(row: MeRow, eventRoles: MeResponse['event_roles'], orgIds: string[]): MeResponse {
   return {
+    event_roles: eventRoles,
+    org_ids: orgIds,
     user: {
       id: row.id,
       email: row.email,

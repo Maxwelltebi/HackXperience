@@ -1,0 +1,75 @@
+'use client';
+
+import type { MyApplication } from '@hx/shared';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { api } from '@/lib/client/api';
+import { AlertIcon } from './icons';
+
+/** Confirm or decline an accepted place. Declining a confirmed place asks first. */
+export function RsvpButtons({
+  eventId,
+  status,
+}: {
+  eventId: string;
+  status: 'accepted' | 'confirmed';
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState<'confirm' | 'decline' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function send(response: 'confirm' | 'decline') {
+    if (
+      response === 'decline' &&
+      !window.confirm(
+        'Give up your place? Someone on the waitlist may take it, and you can’t undo this.',
+      )
+    ) {
+      return;
+    }
+    setBusy(response);
+    setError(null);
+    const result = await api<MyApplication>(`/events/${eventId}/applications/me/rsvp`, {
+      method: 'POST',
+      body: { response },
+    });
+    setBusy(null);
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <div className="stack-sm">
+      {status === 'accepted' ? (
+        <button
+          type="button"
+          className="btn btn-primary btn-block"
+          disabled={busy !== null}
+          onClick={() => void send('confirm')}
+        >
+          {busy === 'confirm' ? 'Confirming…' : 'Confirm my place'}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        className="btn btn-danger btn-block"
+        disabled={busy !== null}
+        onClick={() => void send('decline')}
+      >
+        {busy === 'decline'
+          ? 'Declining…'
+          : status === 'accepted'
+            ? 'Decline'
+            : 'I can’t come any more'}
+      </button>
+      {error ? (
+        <p className="banner banner-danger" role="alert" style={{ margin: 0 }}>
+          <AlertIcon /> {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}

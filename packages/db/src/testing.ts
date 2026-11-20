@@ -35,10 +35,93 @@ export async function createTestUser(
 }
 
 /**
- * Remove a test user and the audit rows they wrote (audit_log.actor_id has no cascade).
- * Cascades to users, profiles, and push_tokens.
+ * Remove a test user and everything that points at them without a cascade:
+ * their outbox rows, applications, decisions they made, and audit rows they wrote.
  */
 export async function deleteTestUser(sql: ISql, id: string): Promise<void> {
+  await sql`delete from notification_outbox where user_id = ${id}`;
+  await sql`update applications set decided_by = null where decided_by = ${id}`;
+  await sql`delete from applications where user_id = ${id}`;
   await sql`delete from audit_log where actor_id = ${id}`;
   await sql`delete from auth.users where id = ${id}`;
+}
+
+export interface TestEventOptions {
+  status?: 'draft' | 'published' | 'live' | 'judging' | 'completed';
+  /** Applications open: true (default) puts now inside the window, false puts it after. */
+  applicationsOpen?: boolean;
+  questions?: unknown[];
+  name?: string;
+}
+
+/**
+ * Insert an event directly (bypassing the API) with `ownerId` as owner. By default it is
+ * published, applications are open now, and the event starts in a week.
+ */
+export async function createTestEvent(
+  sql: ISql,
+  ownerId: string,
+  options: TestEventOptions = {},
+): Promise<{ id: string; slug: string }> {
+  const id = randomUUID();
+  const slug = `test-${id}`;
+  const open = options.applicationsOpen ?? true;
+  await sql`
+    insert into events (
+      id, organization_id, name, slug, timezone, mode, status,
+      applications_open_at, applications_close_at,
+      starts_at, submission_deadline, ends_at, application_questions
+    ) values (
+      ${id}, '00000000-0000-4000-8000-00000000c12e', ${options.name ?? 'Test Hackathon'}, ${slug},
+      'Africa/Accra', 'in_person', ${options.status ?? 'published'},
+      now() - interval '10 days',
+      ${open ? sql`now() + interval '5 days'` : sql`now() - interval '1 day'`},
+      now() + interval '7 days', now() + interval '8 days', now() + interval '8 days 6 hours',
+      ${sql.json((options.questions ?? []) as never)}
+    )
+  `;
+  await sql`insert into event_staff (event_id, user_id, role) values (${id}, ${ownerId}, 'owner')`;
+  return { id, slug };
+}
+
+/** Remove a test event and every row that belongs to it. */
+export async function deleteTestEvent(sql: ISql, id: string): Promise<void> {
+  await sql`delete from notification_outbox where payload->>'event_id' = ${id}`;
+  await sql`delete from audit_log where event_id = ${id}`;
+  await sql`delete from applications where event_id = ${id}`;
+  await sql`delete from awards where event_id = ${id}`;
+  await sql`delete from events where id = ${id}`;
+}
+
+/** Tracks what a test file creates and removes it all afterwards: events first, then users. */
+export function testData(sql: ISql) {
+  const users: string[] = [];
+  const events: string[] = [];
+  return {
+    async user(name = 'Test User', options: TestUserOptions = {}) {
+      const user = await createTestUser(sql, { name, ...options });
+      users.push(user.id);
+      return user;
+    },
+    async event(ownerId: string, options: TestEventOptions = {}) {
+      const event = await createTestEvent(sql, ownerId, options);
+      events.push(event.id);
+      return event;
+    },
+    /** Track an event created some other way (e.g. through the API). */
+    trackEvent(id: string) {
+      events.push(id);
+    },
+    async staff(
+      eventId: string,
+      userId: string,
+      role: 'owner' | 'admin' | 'judge' | 'mentor' | 'volunteer',
+    ) {
+      await sql`insert into event_staff (event_id, user_id, role) values (${eventId}, ${userId}, ${role})`;
+    },
+    async cleanup() {
+      for (const id of events.splice(0)) await deleteTestEvent(sql, id);
+      for (const id of users.splice(0)) await deleteTestUser(sql, id);
+    },
+  };
 }

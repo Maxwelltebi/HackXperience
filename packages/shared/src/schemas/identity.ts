@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PUSH_PLATFORMS } from '../constants';
+import { PUSH_PLATFORMS, STAFF_ROLES } from '../constants';
 import { httpsUrlSchema, isoDateTimeSchema, timezoneSchema, uuidSchema } from './base';
 
 /** Optional free-text field: trimmed, and "" becomes null so clearing a field works. */
@@ -37,10 +37,20 @@ export const profileSchema = z.object({
 });
 export type Profile = z.infer<typeof profileSchema>;
 
+/** The caller's staff roles at one event (DESIGN Step 4: /me returns roles per event). */
+export const eventRolesSchema = z.object({
+  event_id: uuidSchema,
+  roles: z.array(z.enum(STAFF_ROLES)),
+});
+export type EventRoles = z.infer<typeof eventRolesSchema>;
+
 /** GET /me */
 export const meResponseSchema = z.object({
   user: userSchema,
   profile: profileSchema,
+  event_roles: z.array(eventRolesSchema),
+  /** Organizations the caller can create events for. */
+  org_ids: z.array(uuidSchema),
 });
 export type MeResponse = z.infer<typeof meResponseSchema>;
 

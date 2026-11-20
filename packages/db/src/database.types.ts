@@ -1,6 +1,7 @@
 // Database types for the public schema.
-// Regenerate with `pnpm db:types` (needs `pnpm db:start`). This first version was
-// written by hand from migration 0001_identity in the same shape the generator uses.
+// Regenerate with `pnpm db:types` (needs `pnpm db:start`). NOTE: covers migration 0001 only;
+// regenerate after Phase 2 (0002–0004). Queries use their own row types until then.
+// Written by hand from 0001_identity in the generator's shape.
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 

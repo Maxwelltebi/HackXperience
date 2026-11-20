@@ -1,6 +1,21 @@
 import { randomUUID } from 'node:crypto';
-import { PostgresError } from '@hx/db';
-import { ApiError, clientIdSchema, IDEMPOTENCY_KEY_HEADER, type FieldErrors } from '@hx/shared';
+import {
+  canSeeEvent,
+  getSql,
+  loadEventRoles,
+  PG_ERROR,
+  PostgresError,
+  type EventAccess,
+} from '@hx/db';
+import {
+  ApiError,
+  can,
+  clientIdSchema,
+  IDEMPOTENCY_KEY_HEADER,
+  type ErrorCode,
+  type FieldErrors,
+  type Permission,
+} from '@hx/shared';
 import type { z, ZodType } from 'zod';
 import { authenticate } from './auth';
 import { errorResponse, withServerTime } from './respond';
@@ -9,7 +24,18 @@ type AuthMode = 'required' | 'optional' | 'none';
 
 type Infer<S> = S extends ZodType ? z.output<S> : undefined;
 
-interface HandlerOptions<A extends AuthMode, B, P, Q> {
+/** Load the event named by a route parameter and the caller's roles at it. */
+export interface EventOption {
+  /** Route parameter holding the event id. Default 'id'. */
+  param?: string;
+  /**
+   * Who may call this endpoint (DESIGN Step 4 permission matrix). Without it, anyone who
+   * can see the event may: everyone for published events, owners and admins for drafts.
+   */
+  permission?: Permission;
+}
+
+interface HandlerOptions<A extends AuthMode, B, P, Q, E> {
   /** Default 'required': no verified user means 401. */
   auth?: A;
   /** Zod schema for the JSON body. */
@@ -24,9 +50,14 @@ interface HandlerOptions<A extends AuthMode, B, P, Q> {
    * client sent none. Insert with ON CONFLICT (id) DO NOTHING and return the existing row.
    */
   clientId?: boolean;
+  /**
+   * The event this endpoint acts on. Missing, deleted, or a draft the caller can't see:
+   * 404. Visible but the caller lacks `permission`: 403.
+   */
+  event?: E;
 }
 
-export interface HandlerContext<A extends AuthMode, B, P, Q> {
+export interface HandlerContext<A extends AuthMode, B, P, Q, E> {
   request: Request;
   userId: A extends 'required' ? string : string | null;
   body: Infer<B>;
@@ -34,6 +65,8 @@ export interface HandlerContext<A extends AuthMode, B, P, Q> {
   query: Infer<Q>;
   /** The row id for a create. Only meaningful with the clientId option. */
   id: string;
+  /** The event and the caller's roles at it, when the `event` option is set. */
+  access: E extends EventOption ? EventAccess : null;
 }
 
 interface RouteContext {
@@ -42,17 +75,18 @@ interface RouteContext {
 
 /**
  * The wrapper every /api/v1 endpoint uses (Agent rule 11): auth, Zod validation,
- * error mapping to the one error shape, and the server_time header on every response.
- * Role checks arrive with event roles in Phase 2.
+ * event roles and permission checks, error mapping to the one error shape, and the
+ * server_time header on every response.
  */
 export function handler<
   A extends AuthMode = 'required',
   B extends ZodType | undefined = undefined,
   P extends ZodType | undefined = undefined,
   Q extends ZodType | undefined = undefined,
+  E extends EventOption | undefined = undefined,
 >(
-  options: HandlerOptions<A, B, P, Q>,
-  fn: (ctx: HandlerContext<A, B, P, Q>) => Promise<Response>,
+  options: HandlerOptions<A, B, P, Q, E>,
+  fn: (ctx: HandlerContext<A, B, P, Q, E>) => Promise<Response>,
 ): (request: Request, context?: RouteContext) => Promise<Response> {
   return async (request, context) => {
     const startedAt = new Date();
@@ -70,20 +104,21 @@ async function buildContext<
   B extends ZodType | undefined,
   P extends ZodType | undefined,
   Q extends ZodType | undefined,
+  E extends EventOption | undefined,
 >(
   request: Request,
   context: RouteContext | undefined,
-  options: HandlerOptions<A, B, P, Q>,
-): Promise<HandlerContext<A, B, P, Q>> {
+  options: HandlerOptions<A, B, P, Q, E>,
+): Promise<HandlerContext<A, B, P, Q, E>> {
   const mode: AuthMode = options.auth ?? 'required';
   const userId = mode === 'none' ? null : await authenticate(request);
   if (mode === 'required' && !userId) {
     throw new ApiError('UNAUTHENTICATED', 'Sign in to continue.');
   }
 
-  const params = options.params
-    ? parse(options.params, (await context?.params) ?? {}, 'params')
-    : undefined;
+  const rawParams = (await context?.params) ?? {};
+  const params = options.params ? parse(options.params, rawParams, 'params') : undefined;
+  const access = options.event ? await loadAccess(options.event, rawParams, userId) : null;
   const query = options.query
     ? parse(options.query, Object.fromEntries(new URL(request.url).searchParams), 'query')
     : undefined;
@@ -98,7 +133,25 @@ async function buildContext<
     body = options.body ? parse(options.body, withoutId(raw, options.clientId), 'body') : undefined;
   }
 
-  return { request, userId, body, params, query, id } as HandlerContext<A, B, P, Q>;
+  return { request, userId, body, params, query, id, access } as HandlerContext<A, B, P, Q, E>;
+}
+
+async function loadAccess(
+  option: EventOption,
+  rawParams: Record<string, string | string[] | undefined>,
+  userId: string | null,
+): Promise<EventAccess> {
+  const eventId = rawParams[option.param ?? 'id'];
+  const parsed = clientIdSchema.safeParse(eventId);
+  if (!parsed.success) throw new ApiError('NOT_FOUND', 'No such event.');
+
+  const access = await loadEventRoles(getSql(), parsed.data, userId);
+  if (!access || !canSeeEvent(access)) throw new ApiError('NOT_FOUND', 'No such event.');
+  if (option.permission && !can(access.roles, option.permission)) {
+    if (!userId) throw new ApiError('UNAUTHENTICATED', 'Sign in to continue.');
+    throw new ApiError('FORBIDDEN', "You don't have access to this.");
+  }
+  return access;
 }
 
 async function readJson(request: Request): Promise<unknown> {
@@ -169,6 +222,8 @@ function toErrorResponse(error: unknown, request: Request): Response {
   // Log the method, path and database error code only: messages can contain emails (Agent rule 17).
   const path = new URL(request.url).pathname;
   if (error instanceof PostgresError) {
+    const mapped = mapPostgresError(error.code);
+    if (mapped) return errorResponse(mapped.code, mapped.message);
     console.error(`[api] ${request.method} ${path} failed: postgres ${error.code}`);
   } else {
     console.error(
@@ -176,4 +231,25 @@ function toErrorResponse(error: unknown, request: Request): Response {
     );
   }
   return errorResponse('INTERNAL', 'Something went wrong. Try again.');
+}
+
+/** Database errors a client can act on. The rest are 500s. */
+function mapPostgresError(code: string): { code: ErrorCode; message: string } | null {
+  switch (code) {
+    case PG_ERROR.uniqueViolation:
+      return { code: 'CONFLICT', message: 'That already exists.' };
+    case PG_ERROR.foreignKeyViolation:
+      return {
+        code: 'CONFLICT',
+        message: 'Something else still refers to this, or it no longer exists.',
+      };
+    case PG_ERROR.checkViolation:
+      return { code: 'VALIDATION_FAILED', message: 'Some values are out of range.' };
+    case PG_ERROR.deadlock:
+    case PG_ERROR.serializationFailure:
+    case PG_ERROR.lockNotAvailable:
+      return { code: 'SERVICE_UNAVAILABLE', message: 'Busy right now. Try again.' };
+    default:
+      return null;
+  }
 }

@@ -201,3 +201,61 @@
   font-size: 14px;
   line-height: 20px;
 }
+
+.events {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 900px) {
+  .events {
+    grid-template-columns: 1.9fr 1fr;
+  }
+}
+
+.nextEvent {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 28px;
+}
+
+.eventName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+}
+
+.pastEvents {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 24px;
+}
+
+.pastEvents ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pastEvents li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.pastEvents a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.pastEvents a:hover {
+  text-decoration: underline;
+}

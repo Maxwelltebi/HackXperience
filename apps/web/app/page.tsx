@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { ArrowRightIcon, EnterIcon, LockIcon } from '@/components/icons';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
-import { getSessionUserId } from '@/lib/supabase/server';
+import { getSql, listPublicEvents, toEventSummary } from '@hx/db';
+import { formatDate, formatDateTime } from '@hx/shared';
+import { headerProps, getViewer } from '@/lib/server/viewer';
+import { eventPhase } from '@/lib/ui/event-phase';
+import { chipClass } from '@/lib/ui/status';
 import styles from './page.module.css';
 
 const STEPS = [
@@ -34,11 +38,16 @@ const FEATURES = [
 ];
 
 export default async function HomePage() {
-  const signedIn = (await getSessionUserId()) !== null;
+  const viewer = await getViewer();
+  const events = (await listPublicEvents(getSql())).map(toEventSummary);
+  const now = new Date();
+  const upcoming = events.filter((e) => new Date(e.ends_at) >= now);
+  const past = events.filter((e) => new Date(e.ends_at) < now);
+  const next = upcoming[0];
 
   return (
     <>
-      <SiteHeader signedIn={signedIn} />
+      <SiteHeader {...headerProps(viewer)} />
       <main className="container">
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
@@ -55,15 +64,9 @@ export default async function HomePage() {
               one place, on the web or the Android app.
             </p>
             <div className={styles.actions}>
-              {signedIn ? (
-                <Link className="btn btn-primary btn-lg" href="/profile">
-                  Your profile <ArrowRightIcon />
-                </Link>
-              ) : (
-                <Link className="btn btn-primary btn-lg" href="/sign-in">
-                  Sign in to get started <ArrowRightIcon />
-                </Link>
-              )}
+              <Link className="btn btn-primary btn-lg" href="#events">
+                See upcoming events <ArrowRightIcon />
+              </Link>
               <Link className="btn btn-lg" href="#how-it-works">
                 How it works
               </Link>
@@ -78,6 +81,68 @@ export default async function HomePage() {
               <span>Enter</span>
               <EnterIcon className={styles.keyArrow} width={36} height={36} />
             </div>
+          </div>
+        </section>
+
+        <section id="events" className={styles.section} aria-labelledby="events-title">
+          <div>
+            <p className="eyebrow">Events</p>
+            <h2 id="events-title" className={styles.sectionTitle}>
+              Upcoming hackathons
+            </h2>
+          </div>
+          <div className={styles.events}>
+            {next ? (
+              <article className={`raised ${styles.nextEvent}`}>
+                <div className="row-between">
+                  <span className={chipClass(eventPhase(next, now).tone)}>
+                    {eventPhase(next, now).label}
+                  </span>
+                  <span className="muted small">
+                    {formatDateTime(next.starts_at, viewer?.timezone ?? next.timezone)}
+                  </span>
+                </div>
+                <h3 className={styles.eventName}>{next.name}</h3>
+                <p className="muted" style={{ margin: 0 }}>
+                  {next.location ?? 'Location to be announced'}
+                  {upcoming.length > 1 ? ` · and ${upcoming.length - 1} more coming up` : ''}
+                </p>
+                <div>
+                  <Link className="btn" href={`/events/${next.slug}`}>
+                    View event
+                  </Link>
+                </div>
+              </article>
+            ) : (
+              <article className={`raised ${styles.nextEvent}`}>
+                <span className={chipClass('info')}>Coming soon</span>
+                <h3 className={styles.eventName}>The next CIReN hackathon</h3>
+                <p className="muted" style={{ margin: 0 }}>
+                  Dates, tracks and prizes appear here once organizers publish them.
+                </p>
+              </article>
+            )}
+            <aside className={`raised ${styles.pastEvents}`} aria-labelledby="past-title">
+              <h3 id="past-title" className="h2" style={{ fontSize: 16 }}>
+                Past CIReN events
+              </h3>
+              {past.length === 0 ? (
+                <p className="muted small" style={{ margin: 0 }}>
+                  Past events will be listed here.
+                </p>
+              ) : (
+                <ul>
+                  {past.slice(0, 8).map((event) => (
+                    <li key={event.id}>
+                      <Link href={`/events/${event.slug}`}>{event.name}</Link>
+                      <span className="mono small muted">
+                        {formatDate(event.starts_at, viewer?.timezone ?? event.timezone)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </aside>
           </div>
         </section>
 

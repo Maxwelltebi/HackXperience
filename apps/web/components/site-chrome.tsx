@@ -16,17 +16,29 @@ export function Brand() {
   );
 }
 
-export function SiteHeader({ signedIn }: { signedIn: boolean }) {
+export function SiteHeader({
+  signedIn,
+  canOrganize = false,
+}: {
+  signedIn: boolean;
+  canOrganize?: boolean;
+}) {
   return (
     <header className="container site-header">
       <Brand />
       <nav className="nav" aria-label="Main">
-        <Link className="nav-link" href="/#how-it-works">
-          How it works
+        <Link className="nav-link" href="/events">
+          Events
         </Link>
-        <Link className="nav-link" href="/#for-organizers">
-          For organizers
-        </Link>
+        {canOrganize ? (
+          <Link className="nav-link" href="/organize">
+            Organize
+          </Link>
+        ) : (
+          <Link className="nav-link" href="/#how-it-works">
+            How it works
+          </Link>
+        )}
         {signedIn ? (
           <Link className="btn" href="/profile">
             Profile
