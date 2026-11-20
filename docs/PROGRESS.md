@@ -154,6 +154,10 @@ Same as Phase 1, plus:
 | `@aws-sdk/client-sesv2` 3.1172.0     | web     | SES `SendEmail` (named in the build plan)                       |
 | `@hx/core`, `@hx/emails` (workspace) | db, web | State machines and templates used by the queries and the worker |
 
+### CI fix (20 Nov 2026)
+
+CI failed at `supabase start` on every commit. Supabase CLI 3 rejects the old `[inbucket]` section in `supabase/config.toml` ("no longer supported, use local_smtp"). It is renamed `[local_smtp]`, and email sign-in is now turned off with `[auth.email] enabled = false`. The CLI now loads the whole config; checked locally with `supabase start`, which then stops only because this machine has no Docker. The steps after `supabase start` (migrations on the real Supabase image, tests) have only been checked against the no-Docker database, so the next CI run is their first real check.
+
 ### Left out, and why
 
 - **Export CSV** on the applications screen: reports and CSV are Phase 7.

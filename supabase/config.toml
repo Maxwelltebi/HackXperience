@@ -26,7 +26,8 @@ enabled = true
 port = 54323
 api_url = "http://127.0.0.1"
 
-[inbucket]
+# Local email catcher (was [inbucket] before Supabase CLI 3).
+[local_smtp]
 enabled = true
 port = 54324
 
@@ -46,7 +47,7 @@ enable_signup = true
 
 # Sign-in is Google or GitHub only. No email or password accounts.
 [auth.email]
-enable_signup = false
+enabled = false
 
 # To try OAuth locally: create OAuth apps whose callback is
 # http://127.0.0.1:54321/auth/v1/callback, export the variables below,
