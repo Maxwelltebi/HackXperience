@@ -156,7 +156,9 @@ Same as Phase 1, plus:
 
 ### CI fix (20 Nov 2026)
 
-CI failed at `supabase start` on every commit. Supabase CLI 3 rejects the old `[inbucket]` section in `supabase/config.toml` ("no longer supported, use local_smtp"). It is renamed `[local_smtp]`, and email sign-in is now turned off with `[auth.email] enabled = false`. The CLI now loads the whole config; checked locally with `supabase start`, which then stops only because this machine has no Docker. The steps after `supabase start` (migrations on the real Supabase image, tests) have only been checked against the no-Docker database, so the next CI run is their first real check.
+CI failed at `supabase start` on every commit. Supabase CLI 3 rejects the old `[inbucket]` section in `supabase/config.toml` ("no longer supported, use local_smtp"). It is renamed `[local_smtp]`, and email sign-in is now turned off with `[auth.email] enabled = false`. The CLI now loads the whole config; checked locally with `supabase start`, which then stops only because this machine has no Docker. The next run (commit `4efb1fb`) got further. All four migrations and the seed applied cleanly on the real Supabase image, but the email-catcher container couldn't bind port 54324 ("address already in use"). We don't need it (sign-in is OAuth only; our email goes through SES), so `[local_smtp]` is now `enabled = false`. Lint, typecheck and tests haven't run on CI yet; they pass from a fresh clone against the no-Docker database.
+
+The nightly workflow also fails, as expected until setup: `hack.ciren.network` doesn't resolve yet (keep-alive) and the `BACKUP_*` secrets aren't set.
 
 ### Left out, and why
 
