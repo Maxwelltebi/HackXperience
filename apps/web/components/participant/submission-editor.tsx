@@ -18,10 +18,12 @@ import { Countdown } from '../countdown';
 import { AlertIcon, CheckIcon } from '../icons';
 import { Field } from '../organize/event-form';
 import styles from './submission-editor.module.css';
+import { Busy } from '@/components/loading-state';
+import { LoadingState } from '@/components/loading-state';
 
 // The markdown renderer loads only when someone opens a preview.
 const Markdown = dynamic(() => import('../markdown'), {
-  loading: () => <p className="muted small">Loading preview…</p>,
+  loading: () => <LoadingState label="Loading the preview" />,
 });
 
 interface Props {
@@ -89,6 +91,7 @@ export function SubmissionEditor(props: Props) {
   const [busy, setBusy] = useState<'save' | 'submit' | null>(null);
   const dirty = !sameDraft(draft, toDraft(saved));
   const [newer, setNewer] = useState<number | null>(null);
+  const [loadingTheirs, setLoadingTheirs] = useState(false);
 
   // "A teammate saved": hints on team:{id} carry the saved submission version.
   useLiveChannel(
@@ -103,7 +106,9 @@ export function SubmissionEditor(props: Props) {
   );
 
   async function loadTheirs() {
+    setLoadingTheirs(true);
     const result = await api<Submission>(`/events/${eventId}/teams/me/submission`);
+    setLoadingTheirs(false);
     if (!result.ok) return setNotice({ tone: 'danger', text: result.message });
     setNewer(null);
     if (dirty) {
@@ -250,8 +255,13 @@ export function SubmissionEditor(props: Props) {
         {newer !== null && newer > saved.version && !closed ? (
           <p className="banner banner-warning" role="status" style={{ margin: 0 }}>
             <AlertIcon /> A teammate saved a newer version.
-            <button className="btn" type="button" onClick={() => void loadTheirs()}>
-              {dirty ? 'Compare' : 'Load it'}
+            <button
+              className="btn"
+              type="button"
+              disabled={loadingTheirs}
+              onClick={() => void loadTheirs()}
+            >
+              {loadingTheirs ? <Busy>Loading…</Busy> : dirty ? 'Compare' : 'Load it'}
             </button>
           </p>
         ) : null}
@@ -387,7 +397,7 @@ export function SubmissionEditor(props: Props) {
               disabled={busy !== null || !dirty}
               onClick={onSave}
             >
-              {busy === 'save' ? 'Saving…' : dirty ? 'Save draft' : 'All changes saved'}
+              {busy === 'save' ? <Busy>Saving…</Busy> : dirty ? 'Save draft' : 'All changes saved'}
             </button>
             {saved.status === 'submitted' ? null : (
               <button
@@ -396,7 +406,7 @@ export function SubmissionEditor(props: Props) {
                 disabled={busy !== null || tooSmall}
                 onClick={onSubmit}
               >
-                {busy === 'submit' ? 'Submitting…' : 'Submit project'}
+                {busy === 'submit' ? <Busy>Submitting…</Busy> : 'Submit project'}
               </button>
             )}
           </span>
@@ -645,7 +655,7 @@ function ConflictView({
           Use theirs
         </button>
         <button className="btn btn-primary" type="button" disabled={busy} onClick={onKeepMine}>
-          {busy ? 'Saving…' : 'Keep mine'}
+          {busy ? <Busy>Saving…</Busy> : 'Keep mine'}
         </button>
       </div>
       <p className="muted small" style={{ margin: 0 }}>

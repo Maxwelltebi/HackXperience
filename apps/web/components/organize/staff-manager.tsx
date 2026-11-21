@@ -6,6 +6,7 @@ import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from '../icons';
 import { Field } from './event-form';
+import { Busy } from '@/components/loading-state';
 
 const ROLE_INFO: Record<StaffRole, { label: string; does: string }> = {
   owner: { label: 'Owner', does: 'Everything, including staff and the audit log' },
@@ -31,6 +32,7 @@ export function StaffManager({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   async function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,10 +60,12 @@ export function StaffManager({
       : `Remove ${member.name || member.email} as ${ROLE_INFO[member.role].label.toLowerCase()}?`;
     if (!window.confirm(question)) return;
     setFailure(null);
+    setRemoving(`${member.user_id}:${member.role}`);
     const result = await api<{ items: StaffMember[] }>(`/events/${eventId}/staff`, {
       method: 'DELETE',
       body: { user_id: member.user_id, role: member.role },
     });
+    setRemoving(null);
     if (!result.ok) {
       setFailure(result.message);
       return;
@@ -106,7 +110,7 @@ export function StaffManager({
         </div>
         <div className="row">
           <button type="submit" className="btn btn-primary" disabled={busy || !email}>
-            {busy ? 'Adding…' : 'Add'}
+            {busy ? <Busy>Adding…</Busy> : 'Add'}
           </button>
         </div>
         {failure ? (
@@ -140,9 +144,10 @@ export function StaffManager({
                     type="button"
                     className="link-button"
                     style={{ color: 'var(--danger)' }}
+                    disabled={removing !== null}
                     onClick={() => void remove(member)}
                   >
-                    Remove
+                    {removing === `${member.user_id}:${member.role}` ? 'Removing…' : 'Remove'}
                   </button>
                 </td>
               </tr>

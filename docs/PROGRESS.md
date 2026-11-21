@@ -108,6 +108,19 @@ Known gaps: the time zone field is free text (validated by the API), not a picke
 
 ---
 
+## Loading states (web; 21 Nov 2026)
+
+Every request now shows that it's running.
+
+- **The loader** (`apps/web/components/loading-state.tsx`): a 3 × 3 pixel grid with a chevron wave, one word at a time in a shuffled order ("Fetching…", "Gathering…"), and an elapsed timer in mono. This design was chosen by the product owner. It has a text shimmer (a gradient) and playful words, which the screens PDF's rules otherwise rule out. Screen readers hear a plain label such as "Loading the event" instead of the moving word. With reduced motion, the grid and shimmer stop and the word and timer still change. No Tailwind or shadcn: it's plain CSS on the existing tokens.
+- **Page loads**: a `loading.tsx` for every route group shows the header (or the organizer sidebar) with the loader, so a click always gets an answer.
+- **Buttons**: every busy label ("Saving…", "Deleting…") has the grid in front. Actions that had no busy state now do: deleting and restoring events, teams and projects; removing staff; deleting setup items; mentor resolve and cancel; team actions; manual check-in search; loading a teammate's newer draft; each decision on Applications; the sign-in buttons while the redirect starts.
+- **After a change**: `useRouterTransition` (`apps/web/lib/client/use-router-transition.ts`) keeps a button busy until the refreshed page has arrived, so it never flips back to its old label while old data still shows.
+- **Data being replaced** (Applications tabs, standings after a change) dims and shows the loader instead of going blank.
+- Live updates (announcements, mentor queue, live dashboard, check-in count) still refresh quietly: their data is already on screen.
+
+---
+
 ## UI redesign: CIReN style (web; 21 Nov 2026)
 
 The screens PDF was redrawn in CIReN's own style, replacing the soft neumorphic look. The web app now follows it.

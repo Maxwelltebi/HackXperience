@@ -5,6 +5,7 @@ import { useCallback, useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { useLiveChannel } from '@/lib/client/use-live-channel';
 import { AlertIcon, CheckIcon } from '../icons';
+import { Busy } from '@/components/loading-state';
 
 interface FeedProps {
   eventId: string;
@@ -110,7 +111,7 @@ function Composer({ eventId, onPosted }: { eventId: string; onPosted: () => void
         />
       </label>
       <button className="btn btn-primary" type="submit" disabled={busy}>
-        {busy ? 'Posting…' : 'Post announcement'}
+        {busy ? <Busy>Posting…</Busy> : 'Post announcement'}
       </button>
     </form>
   );

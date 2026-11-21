@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon, CheckIcon } from '../icons';
 import { Field } from './event-form';
+import { Busy } from '@/components/loading-state';
 
 const TYPE_LABEL: Record<QuestionType, string> = {
   short_text: 'Short answer',
@@ -254,7 +255,7 @@ export function QuestionsEditor({
           disabled={busy}
           onClick={() => void save()}
         >
-          {busy ? 'Saving…' : 'Save form'}
+          {busy ? <Busy>Saving…</Busy> : 'Save form'}
         </button>
         {message ? (
           message.tone === 'success' ? (

@@ -2,10 +2,11 @@
 
 import type { JudgingSubmission, MyScore, RubricCriterion } from '@hx/shared';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon, CheckIcon } from '../icons';
+import { Busy } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 interface Props {
   eventId: string;
@@ -33,7 +34,7 @@ export function ScoreForm({
   nextHref,
   nextLabel,
 }: Props) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [entries, setEntries] = useState<Record<string, Entry>>(() =>
     Object.fromEntries(
       criteria.map((c) => {
@@ -76,8 +77,8 @@ export function ScoreForm({
         },
       },
     );
-    setBusy(false);
     if (!result.ok) {
+      setBusy(false);
       setNotice({ tone: 'danger', text: result.message });
       return;
     }
@@ -85,7 +86,7 @@ export function ScoreForm({
       tone: 'success',
       text: 'Scores saved. You can change them until results are published.',
     });
-    router.refresh();
+    navigate.refresh(() => setBusy(false));
   }
 
   if (criteria.length === 0) {
@@ -157,7 +158,7 @@ export function ScoreForm({
       ))}
       {open ? (
         <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-          {busy ? 'Saving…' : saved ? 'Update scores' : 'Save scores'}
+          {busy ? <Busy>Saving…</Busy> : saved ? 'Update scores' : 'Save scores'}
         </button>
       ) : (
         <p className="muted small" style={{ margin: 0 }}>

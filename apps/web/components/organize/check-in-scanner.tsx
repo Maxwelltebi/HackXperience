@@ -12,6 +12,7 @@ import {
 import { api } from '@/lib/client/api';
 import { AlertIcon, CheckIcon } from '../icons';
 import styles from './check-in-scanner.module.css';
+import { Busy } from '@/components/loading-state';
 
 interface Props {
   eventId: string;
@@ -271,7 +272,7 @@ export function CheckInScanner({ eventId, eventName, timezone, canManual, initia
               disabled={offline}
             />
             <button type="submit" className="btn" disabled={offline || busy || !typed.trim()}>
-              Check in
+              {busy ? <Busy>Checking in…</Busy> : 'Check in'}
             </button>
           </form>
         </>
@@ -374,13 +375,17 @@ function ManualCheckIn({
   const [q, setQ] = useState('');
   const [people, setPeople] = useState<Attendee[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [checking, setChecking] = useState<string | null>(null);
 
   async function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setSearching(true);
     const result = await api<{ items: Attendee[] }>(
       `/events/${eventId}/check-ins/search?q=${encodeURIComponent(q.trim())}`,
     );
+    setSearching(false);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -389,12 +394,14 @@ function ManualCheckIn({
   }
 
   async function checkIn(person: Attendee) {
+    setChecking(person.user_id);
     await onSubmit(() =>
       api<CheckInResult>(`/events/${eventId}/check-ins/manual`, {
         method: 'POST',
         body: { user_id: person.user_id },
       }),
     );
+    setChecking(null);
     setPeople(null);
     setQ('');
   }
@@ -419,8 +426,12 @@ function ManualCheckIn({
           onChange={(e) => setQ(e.target.value)}
           disabled={disabled}
         />
-        <button type="submit" className="btn" disabled={disabled || q.trim().length < 2}>
-          Search
+        <button
+          type="submit"
+          className="btn"
+          disabled={disabled || searching || q.trim().length < 2}
+        >
+          {searching ? <Busy>Searching…</Busy> : 'Search'}
         </button>
       </form>
       {error ? (
@@ -449,10 +460,10 @@ function ManualCheckIn({
                   <button
                     type="button"
                     className="btn btn-sm"
-                    disabled={disabled}
+                    disabled={disabled || checking !== null}
                     onClick={() => void checkIn(person)}
                   >
-                    Check in
+                    {checking === person.user_id ? <Busy>Checking in…</Busy> : 'Check in'}
                   </button>
                 )}
               </li>

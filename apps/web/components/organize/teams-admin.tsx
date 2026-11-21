@@ -1,10 +1,11 @@
 'use client';
 
 import type { OrganizerTeam } from '@hx/shared';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from '../icons';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
+import { Busy } from '@/components/loading-state';
 
 /** Teams table with soft delete and restore for owners. */
 export function TeamsAdmin({
@@ -16,7 +17,7 @@ export function TeamsAdmin({
   teams: OrganizerTeam[];
   canDelete: boolean;
 }) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,9 +25,8 @@ export function TeamsAdmin({
     if (confirmText && !window.confirm(confirmText)) return;
     setBusy(key);
     const result = await api(path, { method });
-    setBusy(null);
     setError(result.ok ? null : result.message);
-    router.refresh();
+    navigate.refresh(() => setBusy(null));
   }
 
   if (teams.length === 0) {
@@ -99,7 +99,7 @@ export function TeamsAdmin({
                               run(t.id, `/events/${eventId}/teams/${t.id}/restore`, 'POST')
                             }
                           >
-                            Restore team
+                            {busy === t.id ? <Busy>Restoring…</Busy> : 'Restore team'}
                           </button>
                         ) : (
                           <button
@@ -115,7 +115,7 @@ export function TeamsAdmin({
                               )
                             }
                           >
-                            Delete team
+                            {busy === t.id ? <Busy>Deleting…</Busy> : 'Delete team'}
                           </button>
                         )}
                         {s && !t.deleted_at ? (
@@ -128,7 +128,7 @@ export function TeamsAdmin({
                                 run(s.id, `/events/${eventId}/submissions/${s.id}/restore`, 'POST')
                               }
                             >
-                              Restore project
+                              {busy === s.id ? <Busy>Restoring…</Busy> : 'Restore project'}
                             </button>
                           ) : (
                             <button
@@ -144,7 +144,7 @@ export function TeamsAdmin({
                                 )
                               }
                             >
-                              Delete project
+                              {busy === s.id ? <Busy>Deleting…</Busy> : 'Delete project'}
                             </button>
                           )
                         ) : null}

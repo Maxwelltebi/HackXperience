@@ -2,10 +2,11 @@
 
 import type { Answers, ApplicationQuestion, MyApplication } from '@hx/shared';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from './icons';
+import { Busy } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 interface Props {
   eventId: string;
@@ -16,7 +17,7 @@ interface Props {
 
 /** Renders the event's custom questions and submits them. Field errors come back per question. */
 export function ApplicationForm({ eventId, slug, questions, profileComplete }: Props) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [answers, setAnswers] = useState<Answers>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -33,12 +34,11 @@ export function ApplicationForm({ eventId, slug, questions, profileComplete }: P
       method: 'POST',
       body: { answers },
     });
-    setBusy(false);
     if (result.ok) {
-      router.push(`/events/${slug}`);
-      router.refresh();
+      navigate.push(`/events/${slug}`, () => setBusy(false));
       return;
     }
+    setBusy(false);
     setErrors(result.fields);
     if (Object.keys(result.fields).length === 0) setFailure(result.message);
   }
@@ -77,8 +77,12 @@ export function ApplicationForm({ eventId, slug, questions, profileComplete }: P
       ) : null}
 
       <div className="row">
-        <button className="btn btn-primary btn-lg" type="submit" disabled={busy}>
-          {busy ? 'Sending…' : 'Submit application'}
+        <button
+          className="btn btn-primary btn-lg"
+          type="submit"
+          disabled={busy || navigate.pending}
+        >
+          {busy ? <Busy>Sending…</Busy> : 'Submit application'}
         </button>
         <Link href={`/events/${slug}`}>Cancel</Link>
       </div>

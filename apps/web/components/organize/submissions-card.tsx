@@ -7,12 +7,13 @@ import {
   type ReopenSubmissionsResult,
   type SubmissionCounts,
 } from '@hx/shared';
-import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { Countdown } from '../countdown';
 import { AlertIcon, CheckIcon } from '../icons';
 import { Field } from './event-form';
+import { Busy } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 interface Props {
   eventId: string;
@@ -29,7 +30,7 @@ interface Props {
 /** Organizer overview: submission counts, deadline state, and reopen after an outage. */
 export function SubmissionsCard(props: Props) {
   const { eventId, counts, deadline, lockedAt, timezone, serverNow, canReopen } = props;
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const passed = Date.parse(serverNow) >= Date.parse(deadline);
   const closed = lockedAt !== null || passed;
   const [open, setOpen] = useState(false);
@@ -54,17 +55,19 @@ export function SubmissionsCard(props: Props) {
       method: 'POST',
       body: { submission_deadline: utc },
     });
-    setBusy(false);
     if (!result.ok) {
+      setBusy(false);
       setError(result.fields.submission_deadline ?? result.message);
       return;
     }
     setError(undefined);
-    setOpen(false);
     setNotice(
       `Submissions reopened until ${formatDateTime(result.data.submission_deadline, timezone)}.`,
     );
-    router.refresh();
+    navigate.refresh(() => {
+      setBusy(false);
+      setOpen(false);
+    });
   }
 
   return (
@@ -97,7 +100,7 @@ export function SubmissionsCard(props: Props) {
             <Countdown
               deadline={deadline}
               serverNow={serverNow}
-              onExpire={() => router.refresh()}
+              onExpire={() => navigate.refresh()}
             />
           )}
         </dd>
@@ -135,7 +138,7 @@ export function SubmissionsCard(props: Props) {
             </Field>
             <div className="row" style={{ gap: 12, flexWrap: 'wrap' }}>
               <button className="btn btn-primary" type="submit" disabled={busy}>
-                {busy ? 'Reopening…' : 'Reopen submissions'}
+                {busy ? <Busy>Reopening…</Busy> : 'Reopen submissions'}
               </button>
               <button className="btn" type="button" onClick={() => setOpen(false)}>
                 Cancel

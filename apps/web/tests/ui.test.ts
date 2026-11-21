@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatRemaining, remainingParts } from '@/components/countdown';
+import { formatElapsed, LOADING_WORDS, shuffled } from '@/components/loading-state';
 import { eventPhase } from '@/lib/ui/event-phase';
 import { initials } from '@/lib/ui/initials';
 
@@ -78,5 +79,31 @@ describe('countdown parts', () => {
   it('never goes below zero', () => {
     expect(remainingParts(-5000).map((p) => p.value)).toEqual(['00', '00', '00']);
     expect(formatRemaining(-5000)).toBe('0m 00s');
+  });
+});
+
+describe('loader words', () => {
+  /** A fixed sequence instead of Math.random, so the order is the same every run. */
+  const seeded = (values: number[]) => {
+    let i = 0;
+    return () => values[i++ % values.length] ?? 0;
+  };
+
+  it('uses every word once per round', () => {
+    const deck = shuffled(LOADING_WORDS, undefined, seeded([0.3, 0.9, 0.1, 0.6]));
+    expect([...deck].sort()).toEqual([...LOADING_WORDS].sort());
+  });
+
+  it('never repeats the word just shown when a round starts', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const deck = shuffled(['A', 'B', 'C'], 'A', seeded([seed / 20, 0.5, 0.2]));
+      expect(deck[0]).not.toBe('A');
+    }
+  });
+
+  it('formats the elapsed time in tenths, then minutes', () => {
+    expect(formatElapsed(0)).toBe('0.0s');
+    expect(formatElapsed(42)).toBe('4.2s');
+    expect(formatElapsed(630)).toBe('1m 3.0s');
   });
 });

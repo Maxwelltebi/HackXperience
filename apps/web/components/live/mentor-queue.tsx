@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { useLiveChannel } from '@/lib/client/use-live-channel';
 import { AlertIcon, CheckIcon } from '../icons';
+import { Busy } from '@/components/loading-state';
 
 const STATUS_TONE = {
   open: 'warning',
@@ -64,9 +65,9 @@ export function MentorQueue({
   async function act(id: string, action: 'claim' | 'resolve') {
     setBusy(id);
     const result = await api<MentorRequest>(`/mentor-requests/${id}/${action}`, { method: 'POST' });
-    setBusy(null);
     setError(result.ok ? null : result.message);
     await refetch();
+    setBusy(null);
   }
 
   const active = items.filter((r) => r.status === 'open' || r.status === 'claimed');
@@ -117,7 +118,7 @@ export function MentorQueue({
                   disabled={busy === r.id}
                   onClick={() => act(r.id, 'claim')}
                 >
-                  {busy === r.id ? 'Claiming…' : "I'll take it"}
+                  {busy === r.id ? <Busy>Claiming…</Busy> : "I'll take it"}
                 </button>
               ) : null}
               {r.status === 'claimed' && r.claimed_by === viewerId ? (
@@ -127,7 +128,13 @@ export function MentorQueue({
                   disabled={busy === r.id}
                   onClick={() => act(r.id, 'resolve')}
                 >
-                  <CheckIcon /> Mark resolved
+                  {busy === r.id ? (
+                    <Busy>Resolving…</Busy>
+                  ) : (
+                    <>
+                      <CheckIcon /> Mark resolved
+                    </>
+                  )}
                 </button>
               ) : null}
             </article>
@@ -171,6 +178,7 @@ export function TeamMentorPanel({
   const [description, setDescription] = useState('');
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [cancelling, setCancelling] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
     const result = await api<MentorRequestList>(`/events/${eventId}/teams/me/mentor-requests`);
@@ -192,18 +200,23 @@ export function TeamMentorPanel({
       method: 'POST',
       body: { id: crypto.randomUUID(), topic, description },
     });
-    setBusy(false);
-    if (!result.ok) return setNotice({ tone: 'danger', text: result.message });
+    if (!result.ok) {
+      setBusy(false);
+      return setNotice({ tone: 'danger', text: result.message });
+    }
     setTopic('');
     setDescription('');
     setNotice({ tone: 'success', text: 'Sent. A mentor will come to you.' });
     await refetch();
+    setBusy(false);
   }
 
   async function cancel(id: string) {
+    setCancelling(id);
     const result = await api(`/mentor-requests/${id}/cancel`, { method: 'POST' });
     if (!result.ok) setNotice({ tone: 'danger', text: result.message });
     await refetch();
+    setCancelling(null);
   }
 
   return (
@@ -239,7 +252,7 @@ export function TeamMentorPanel({
             />
           </label>
           <button className="btn btn-primary" type="submit" disabled={busy}>
-            {busy ? 'Sending…' : 'Ask for help'}
+            {busy ? <Busy>Sending…</Busy> : 'Ask for help'}
           </button>
         </form>
       ) : (
@@ -258,8 +271,13 @@ export function TeamMentorPanel({
             </span>
           </span>
           {r.status === 'open' || r.status === 'claimed' ? (
-            <button className="btn btn-sm" type="button" onClick={() => cancel(r.id)}>
-              Cancel
+            <button
+              className="btn btn-sm"
+              type="button"
+              disabled={cancelling !== null}
+              onClick={() => void cancel(r.id)}
+            >
+              {cancelling === r.id ? <Busy>Cancelling…</Busy> : 'Cancel'}
             </button>
           ) : (
             <span className={`chip chip-${STATUS_TONE[r.status]}`}>{STATUS_LABEL[r.status]}</span>

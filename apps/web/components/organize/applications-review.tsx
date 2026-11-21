@@ -17,6 +17,7 @@ import { api } from '@/lib/client/api';
 import { APPLICATION_STATUS, chipClass, type Tone } from '@/lib/ui/status';
 import { AlertIcon, CheckIcon, SearchIcon } from '../icons';
 import styles from './applications-review.module.css';
+import { Busy, LoadingState } from '@/components/loading-state';
 
 type Filter = ApplicationStatus | 'all';
 
@@ -73,7 +74,7 @@ export function ApplicationsReview({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(initial.items[0]?.id ?? null);
   const [loading, setLoading] = useState(false);
-  const [deciding, setDeciding] = useState(false);
+  const [deciding, setDeciding] = useState<DecisionStatus | null>(null);
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const firstRender = useRef(true);
 
@@ -110,14 +111,14 @@ export function ApplicationsReview({
   }, [filter, search]);
 
   async function decide(ids: string[], status: DecisionStatus) {
-    setDeciding(true);
+    setDeciding(status);
     setNotice(null);
     const result = await api<DecisionsResponse>(`/events/${eventId}/applications/decisions`, {
       method: 'POST',
       body: { application_ids: ids, status },
     });
-    setDeciding(false);
     if (!result.ok) {
+      setDeciding(null);
       setNotice({ tone: 'danger', text: result.message });
       return;
     }
@@ -129,6 +130,7 @@ export function ApplicationsReview({
     ];
     setNotice({ tone: 'success', text: parts.filter(Boolean).join(' ') });
     await load(filter, search);
+    setDeciding(null);
     router.refresh(); // sidebar count
   }
 
@@ -197,10 +199,10 @@ export function ApplicationsReview({
             key={d.status}
             type="button"
             className={d.className}
-            disabled={selected.size === 0 || deciding}
+            disabled={selected.size === 0 || deciding !== null}
             onClick={() => void decide([...selected], d.status)}
           >
-            {d.label}
+            {deciding === d.status ? <Busy>Saving…</Busy> : d.label}
           </button>
         ))}
         <span className={`small ${styles.bulkNote}`}>
@@ -218,12 +220,21 @@ export function ApplicationsReview({
       <div className={styles.layout}>
         <div className="panel">
           {items.length === 0 ? (
-            <div className="empty">
-              <strong>{loading ? 'Loading…' : 'No applications here'}</strong>
-              {!loading && search ? <span>Try a different search.</span> : null}
-            </div>
+            loading ? (
+              <div className="loading-region loading-region-sm">
+                <LoadingState label="Loading applications" />
+              </div>
+            ) : (
+              <div className="empty">
+                <strong>No applications here</strong>
+                {search ? <span>Try a different search.</span> : null}
+              </div>
+            )
           ) : (
-            <div className={`table-wrap ${styles.tableWrap}`}>
+            <div
+              className={`table-wrap ${styles.tableWrap}${loading ? ' is-refreshing' : ''}`}
+              aria-busy={loading}
+            >
               <table className="table">
                 <thead>
                   <tr>
@@ -261,9 +272,13 @@ export function ApplicationsReview({
             </div>
           )}
           <div className="row-between" style={{ padding: '12px 16px' }}>
-            <span className="muted small">
-              Showing {items.length} of {filter === 'all' ? data.counts.all : data.counts[filter]}
-            </span>
+            {loading && items.length > 0 ? (
+              <LoadingState label="Loading applications" />
+            ) : (
+              <span className="muted small">
+                Showing {items.length} of {filter === 'all' ? data.counts.all : data.counts[filter]}
+              </span>
+            )}
             {data.next_cursor ? (
               <button
                 type="button"
@@ -271,7 +286,7 @@ export function ApplicationsReview({
                 disabled={loading}
                 onClick={() => void load(filter, search, data.next_cursor ?? undefined)}
               >
-                {loading ? 'Loading…' : 'Load more'}
+                {loading ? <Busy>Loading…</Busy> : 'Load more'}
               </button>
             ) : null}
           </div>
@@ -282,7 +297,7 @@ export function ApplicationsReview({
             item={active}
             questions={questions}
             timezone={timezone}
-            busy={deciding}
+            deciding={deciding}
             onDecide={(status) => void decide([active.id], status)}
           />
         ) : null}
@@ -361,13 +376,14 @@ function Detail({
   item,
   questions,
   timezone,
-  busy,
+  deciding,
   onDecide,
 }: {
   item: ApplicationListItem;
   questions: ApplicationQuestion[];
   timezone: string;
-  busy: boolean;
+  /** The decision being saved, if any. */
+  deciding: DecisionStatus | null;
   onDecide: (status: DecisionStatus) => void;
 }) {
   const status = APPLICATION_STATUS[item.status];
@@ -453,10 +469,10 @@ function Detail({
                 type="button"
                 className={d.className}
                 aria-pressed={item.status === d.status}
-                disabled={busy || item.status === d.status}
+                disabled={deciding !== null || item.status === d.status}
                 onClick={() => onDecide(d.status)}
               >
-                {d.label}
+                {deciding === d.status ? <Busy>Saving…</Busy> : d.label}
               </button>
             ))}
           </div>

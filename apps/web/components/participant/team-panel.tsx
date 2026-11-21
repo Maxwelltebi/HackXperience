@@ -9,6 +9,7 @@ import { initials } from '@/lib/ui/initials';
 import { AlertIcon, CheckIcon } from '../icons';
 import { Field } from '../organize/event-form';
 import styles from './team-panel.module.css';
+import { Busy } from '@/components/loading-state';
 
 interface Props {
   eventId: string;
@@ -147,7 +148,7 @@ function MyTeamCard({
 
   async function remove(userId: string, name: string) {
     if (!window.confirm(`Remove ${name} from the team?`)) return;
-    const next = await run('remove', () =>
+    const next = await run(`remove:${userId}`, () =>
       api<MyTeam>(`/events/${eventId}/teams/me/members/${userId}`, { method: 'DELETE' }),
     );
     if (next) onChange(next, `${name} was removed.`);
@@ -209,7 +210,7 @@ function MyTeamCard({
                   disabled={busy !== null}
                   onClick={() => void remove(member.user_id, member.name)}
                 >
-                  Remove
+                  {busy === `remove:${member.user_id}` ? 'Removing…' : 'Remove'}
                 </button>
               ) : null}
             </li>
@@ -232,7 +233,7 @@ function MyTeamCard({
                 disabled={busy !== null}
                 onClick={() => void rotate()}
               >
-                New code
+                {busy === 'rotate' ? 'Making a new code…' : 'New code'}
               </button>
             </span>
           </div>
@@ -271,7 +272,13 @@ function MyTeamCard({
               disabled={busy !== null}
               onClick={() => void saveBoard(true)}
             >
-              {team.looking_for_members ? 'Update post' : 'Post on the board'}
+              {busy === 'board' ? (
+                <Busy>Saving…</Busy>
+              ) : team.looking_for_members ? (
+                'Update post'
+              ) : (
+                'Post on the board'
+              )}
             </button>
             {team.looking_for_members ? (
               <button
@@ -295,7 +302,7 @@ function MyTeamCard({
             disabled={busy !== null}
             onClick={() => void leave()}
           >
-            Leave team
+            {busy === 'leave' ? <Busy>Leaving…</Busy> : 'Leave team'}
           </button>
         </div>
       ) : null}
@@ -340,7 +347,7 @@ function CreateTeam({ eventId, onDone }: { eventId: string; onDone: (team: MyTea
         )}
       </Field>
       <button type="submit" className="btn btn-primary" disabled={busy || !name.trim()}>
-        {busy ? 'Creating…' : 'Create team'}
+        {busy ? <Busy>Creating…</Busy> : 'Create team'}
       </button>
     </form>
   );
@@ -385,7 +392,7 @@ function JoinTeam({ eventId, onDone }: { eventId: string; onDone: (team: MyTeam)
         )}
       </Field>
       <button type="submit" className="btn" disabled={busy || code.replace(/\s/g, '').length < 8}>
-        {busy ? 'Joining…' : 'Join team'}
+        {busy ? <Busy>Joining…</Busy> : 'Join team'}
       </button>
     </form>
   );

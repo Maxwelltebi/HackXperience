@@ -2,11 +2,12 @@
 
 import { EVENT_TRANSITIONS } from '@hx/core';
 import type { Event, EventStatus } from '@hx/shared';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api } from '@/lib/client/api';
 import { chipClass, EVENT_STATUS } from '@/lib/ui/status';
 import { AlertIcon } from '../icons';
+import { Busy } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 const ACTIONS: Record<EventStatus, { label: string; confirm?: string; primary?: boolean }> = {
   draft: { label: 'Back to draft', confirm: 'Hide the event from the public again?' },
@@ -34,7 +35,7 @@ const HELP: Record<EventStatus, string> = {
 
 /** The event's status and the changes the state machine allows from it. */
 export function StatusCard({ event, canEdit }: { event: Event; canEdit: boolean }) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [busy, setBusy] = useState<EventStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const status = EVENT_STATUS[event.status];
@@ -49,12 +50,12 @@ export function StatusCard({ event, canEdit }: { event: Event; canEdit: boolean 
       method: 'POST',
       body: { status: to },
     });
-    setBusy(null);
     if (!result.ok) {
+      setBusy(null);
       setError(result.message);
       return;
     }
-    router.refresh();
+    navigate.refresh(() => setBusy(null));
   }
 
   return (
@@ -78,7 +79,7 @@ export function StatusCard({ event, canEdit }: { event: Event; canEdit: boolean 
               disabled={busy !== null}
               onClick={() => void change(to)}
             >
-              {busy === to ? 'Working…' : ACTIONS[to].label}
+              {busy === to ? <Busy>Working…</Busy> : ACTIONS[to].label}
             </button>
           ))}
         </div>

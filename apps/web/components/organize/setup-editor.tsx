@@ -14,6 +14,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from '../icons';
 import { Field } from './event-form';
+import { Busy } from '@/components/loading-state';
 
 type Kind = 'tracks' | 'schedule' | 'rubric' | 'awards';
 type Item = Track | ScheduleItem | RubricCriterion | Award;
@@ -353,6 +354,7 @@ function Section<T extends Item>(props: SectionProps<T>) {
   const [values, setValues] = useState<FormValues>(props.empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
   function open(target: T | 'new') {
@@ -386,7 +388,9 @@ function Section<T extends Item>(props: SectionProps<T>) {
   async function remove(item: T) {
     if (!window.confirm(`Delete “${describe(item).title}”?`)) return;
     setFailure(null);
+    setDeleting(item.id);
     const result = await api<null>(`/events/${eventId}/${kind}/${item.id}`, { method: 'DELETE' });
+    setDeleting(null);
     if (!result.ok) {
       setFailure(result.message);
       return;
@@ -401,7 +405,7 @@ function Section<T extends Item>(props: SectionProps<T>) {
       </div>
       <div className="row">
         <button type="submit" className="btn btn-primary btn-sm" disabled={busy}>
-          {busy ? 'Saving…' : 'Save'}
+          {busy ? <Busy>Saving…</Busy> : 'Save'}
         </button>
         <button type="button" className="btn btn-sm" onClick={() => setEditing(null)}>
           Cancel
@@ -457,9 +461,10 @@ function Section<T extends Item>(props: SectionProps<T>) {
                     type="button"
                     className="link-button"
                     style={{ color: 'var(--danger)' }}
+                    disabled={deleting !== null}
                     onClick={() => void remove(item)}
                   >
-                    Delete
+                    {deleting === item.id ? 'Deleting…' : 'Delete'}
                   </button>
                 </span>
               </li>

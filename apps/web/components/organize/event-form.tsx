@@ -1,11 +1,12 @@
 'use client';
 
 import { utcToZoned, zonedToUtc, type Event } from '@hx/shared';
-import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import { api } from '@/lib/client/api';
 import { EVENT_MODE } from '@/lib/ui/status';
 import { AlertIcon, CheckIcon } from '../icons';
+import { Busy } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 type Props =
   | { mode: 'create'; orgId: string; timezones: string[]; defaultTimezone: string }
@@ -76,7 +77,7 @@ function initialValues(props: Props): Values {
  * time zone and sent as UTC.
  */
 export function EventForm(props: Props) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [values, setValues] = useState<Values>(() => initialValues(props));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -132,19 +133,19 @@ export function EventForm(props: Props) {
       props.mode === 'create'
         ? await api<Event>(`/orgs/${props.orgId}/events`, { method: 'POST', body })
         : await api<Event>(`/events/${props.event.id}`, { method: 'PATCH', body });
-    setBusy(false);
     if (!result.ok) {
+      setBusy(false);
       setErrors(result.fields);
       setMessage({ tone: 'danger', text: result.message });
       return;
     }
     if (props.mode === 'create') {
-      router.push(`/organize/${result.data.id}`);
+      navigate.push(`/organize/${result.data.id}`, () => setBusy(false));
       return;
     }
     setValues(initialValues({ ...props, event: result.data }));
     setMessage({ tone: 'success', text: 'Saved' });
-    router.refresh();
+    navigate.refresh(() => setBusy(false));
   }
 
   return (
@@ -318,7 +319,7 @@ export function EventForm(props: Props) {
 
       <div className="row">
         <button className="btn btn-primary btn-lg" type="submit" disabled={busy}>
-          {busy ? 'Saving…' : props.mode === 'create' ? 'Create draft' : 'Save changes'}
+          {busy ? <Busy>Saving…</Busy> : props.mode === 'create' ? 'Create draft' : 'Save changes'}
         </button>
         {message ? (
           message.tone === 'success' ? (

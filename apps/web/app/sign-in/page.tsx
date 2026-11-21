@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { AlertIcon, CodeIcon, LockIcon, MailIcon } from '@/components/icons';
+import { AlertIcon, LockIcon } from '@/components/icons';
 import { safeNext } from '@/lib/safe-next';
 import { getSessionUserId } from '@/lib/supabase/server';
 import { Brand } from '@/components/site-chrome';
 import { signInWithProvider } from './actions';
+import { ProviderButtons } from './provider-buttons';
 import styles from './page.module.css';
 
 export const metadata: Metadata = { title: 'Sign in' };
@@ -55,12 +56,7 @@ export default async function SignInPage({ searchParams }: Props) {
 
           <form action={signInWithProvider} className={styles.buttons}>
             <input type="hidden" name="next" value={next} />
-            <button className="btn btn-lg btn-block" type="submit" name="provider" value="google">
-              <MailIcon /> Continue with Google
-            </button>
-            <button className="btn btn-lg btn-block" type="submit" name="provider" value="github">
-              <CodeIcon /> Continue with GitHub
-            </button>
+            <ProviderButtons />
           </form>
 
           <p className={`well ${styles.note}`}>

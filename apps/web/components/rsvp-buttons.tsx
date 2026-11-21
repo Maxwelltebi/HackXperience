@@ -1,10 +1,11 @@
 'use client';
 
 import type { MyApplication } from '@hx/shared';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from './icons';
+import { Busy } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 /** Confirm or decline an accepted place. Declining a confirmed place asks first. */
 export function RsvpButtons({
@@ -14,7 +15,7 @@ export function RsvpButtons({
   eventId: string;
   status: 'accepted' | 'confirmed';
 }) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [busy, setBusy] = useState<'confirm' | 'decline' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,12 +34,12 @@ export function RsvpButtons({
       method: 'POST',
       body: { response },
     });
-    setBusy(null);
     if (!result.ok) {
+      setBusy(null);
       setError(result.message);
       return;
     }
-    router.refresh();
+    navigate.refresh(() => setBusy(null));
   }
 
   return (
@@ -50,7 +51,7 @@ export function RsvpButtons({
           disabled={busy !== null}
           onClick={() => void send('confirm')}
         >
-          {busy === 'confirm' ? 'Confirming…' : 'Confirm my place'}
+          {busy === 'confirm' ? <Busy>Confirming…</Busy> : 'Confirm my place'}
         </button>
       ) : null}
       <button
@@ -59,11 +60,13 @@ export function RsvpButtons({
         disabled={busy !== null}
         onClick={() => void send('decline')}
       >
-        {busy === 'decline'
-          ? 'Declining…'
-          : status === 'accepted'
-            ? 'Decline'
-            : 'I can’t come any more'}
+        {busy === 'decline' ? (
+          <Busy>Declining…</Busy>
+        ) : status === 'accepted' ? (
+          'Decline'
+        ) : (
+          'I can’t come any more'
+        )}
       </button>
       {error ? (
         <p className="banner banner-danger" role="alert" style={{ margin: 0 }}>

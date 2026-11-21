@@ -1,13 +1,15 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from '../icons';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
+import { Busy } from '@/components/loading-state';
 
 /** Owner-only: soft-delete the event (restorable from Organize). */
 export function DeleteEventButton({ eventId, name }: { eventId: string; name: string }) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function remove() {
     if (
@@ -16,15 +18,24 @@ export function DeleteEventButton({ eventId, name }: { eventId: string; name: st
       )
     )
       return;
+    setBusy(true);
+    setError(null);
     const result = await api(`/events/${eventId}`, { method: 'DELETE' });
-    if (!result.ok) return setError(result.message);
-    router.push('/organize');
-    router.refresh();
+    if (!result.ok) {
+      setBusy(false);
+      return setError(result.message);
+    }
+    navigate.push('/organize', () => setBusy(false));
   }
   return (
     <div className="stack-sm">
-      <button className="btn btn-danger" type="button" onClick={remove}>
-        Delete event
+      <button
+        className="btn btn-danger"
+        type="button"
+        disabled={busy || navigate.pending}
+        onClick={remove}
+      >
+        {busy || navigate.pending ? <Busy>Deleting…</Busy> : 'Delete event'}
       </button>
       {error ? (
         <p className="field-error" role="alert">
@@ -37,7 +48,7 @@ export function DeleteEventButton({ eventId, name }: { eventId: string; name: st
 
 /** Restore a deleted event from the Organize list. */
 export function RestoreEventButton({ eventId }: { eventId: string }) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [busy, setBusy] = useState(false);
   return (
     <button
@@ -47,11 +58,10 @@ export function RestoreEventButton({ eventId }: { eventId: string }) {
       onClick={async () => {
         setBusy(true);
         await api(`/events/${eventId}/restore`, { method: 'POST' });
-        setBusy(false);
-        router.refresh();
+        navigate.refresh(() => setBusy(false));
       }}
     >
-      Restore
+      {busy ? <Busy>Restoring…</Busy> : 'Restore'}
     </button>
   );
 }

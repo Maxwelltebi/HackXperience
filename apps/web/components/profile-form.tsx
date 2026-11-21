@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react';
 import { AlertIcon, CheckIcon } from './icons';
 import styles from './profile-form.module.css';
+import { Busy } from '@/components/loading-state';
 
 const LEVELS = ['Secondary school', 'Undergraduate', 'Postgraduate', 'Graduated', 'Other'];
 const GENDERS = ['Woman', 'Man', 'Non-binary', 'Prefer not to say'];
@@ -289,7 +290,7 @@ export function ProfileForm({ initial, timezones }: { initial: MeResponse; timez
           type="submit"
           disabled={status.kind === 'saving'}
         >
-          {status.kind === 'saving' ? 'Saving…' : 'Save profile'}
+          {status.kind === 'saving' ? <Busy>Saving…</Busy> : 'Save profile'}
         </button>
         <SaveStatus status={status} onRetry={() => void save()} />
       </div>

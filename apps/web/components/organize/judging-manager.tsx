@@ -8,10 +8,12 @@ import type {
   Standings,
   Track,
 } from '@hx/shared';
-import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon, AwardIcon, CheckIcon } from '../icons';
+import { Busy } from '@/components/loading-state';
+import { LoadingState } from '@/components/loading-state';
+import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 interface Props {
   eventId: string;
@@ -31,7 +33,7 @@ const fmt = (n: number | null, digits = 1) => (n === null ? '–' : n.toFixed(di
  * standings table that explains it, then judges and award winners.
  */
 export function JudgingManager({ eventId, status, standings, awards, tracks, rubricCount }: Props) {
-  const router = useRouter();
+  const navigate = useRouterTransition();
   const [notice, setNotice] = useState<Notice>(null);
   const judging = status === 'judging';
   const completed = status === 'completed';
@@ -47,7 +49,7 @@ export function JudgingManager({ eventId, status, standings, awards, tracks, rub
   }
   const onDone = (text: string, tone: 'success' | 'danger') => {
     setNotice({ tone, text });
-    router.refresh();
+    navigate.refresh();
   };
 
   return (
@@ -57,13 +59,17 @@ export function JudgingManager({ eventId, status, standings, awards, tracks, rub
           {notice.tone === 'success' ? <CheckIcon /> : <AlertIcon />} {notice.text}
         </p>
       ) : null}
+      {navigate.pending ? <LoadingState label="Updating the standings" /> : null}
       {rubricCount === 0 ? (
         <p className="banner banner-warning" style={{ margin: 0 }}>
           <AlertIcon /> Add rubric criteria before judging starts.
         </p>
       ) : null}
 
-      <div className="stat-strip stat-strip-lead">
+      <div
+        className={`stat-strip stat-strip-lead${navigate.pending ? ' is-refreshing' : ''}`}
+        aria-busy={navigate.pending}
+      >
         <section className="band-dark stat" aria-labelledby="scores-in">
           <h2 id="scores-in" className="eyebrow">
             Scores in
@@ -279,7 +285,13 @@ function AssignForm({
         />
       </label>
       <button className="btn btn-primary" type="submit" disabled={busy}>
-        {busy ? 'Assigning…' : hasAssignments ? 'Rebalance assignments' : 'Assign judges'}
+        {busy ? (
+          <Busy>Assigning…</Busy>
+        ) : hasAssignments ? (
+          'Rebalance assignments'
+        ) : (
+          'Assign judges'
+        )}
       </button>
       <span className="muted small" style={{ flexBasis: '100%' }}>
         Balanced and random; nobody judges their own team. Running it again keeps anything already
@@ -536,7 +548,7 @@ function AwardRow({
           </select>
           <div className="row" style={{ gap: 12 }}>
             <button className="btn btn-sm" type="button" disabled={busy || !changed} onClick={save}>
-              {busy ? 'Saving…' : 'Save winners'}
+              {busy ? <Busy>Saving…</Busy> : 'Save winners'}
             </button>
             <span className="muted small">
               Ctrl or Cmd click to pick more than one (a shared award).
