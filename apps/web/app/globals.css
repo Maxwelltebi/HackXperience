@@ -1677,3 +1677,112 @@ a.row-between > .pixel-grid:first-child {
   pointer-events: none;
   transition: opacity 120ms ease;
 }
+
+/* Skill ratings (R36): one row per skill, the name then the 1 to 5 chips. */
+.skill-ratings {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.skill-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 10px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.skill-row legend {
+  float: left;
+  padding: 0;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.rating-chip {
+  justify-content: center;
+  min-width: 44px;
+  padding: 0 12px;
+  font-family: var(--font-mono);
+}
+
+.rating-chip:has(input:checked) {
+  padding: 0 11px;
+}
+
+/* Ratings shown in tables and team cards: "C4 D2 B3 P5". */
+.ratings {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font: 500 13px/1 var(--font-mono);
+}
+
+.ratings > span {
+  padding: 3px 5px;
+  border: 1px solid var(--line);
+  background: var(--section-tint);
+}
+
+.ratings > span[data-strong='true'] {
+  border-color: var(--green);
+  background: var(--mint-tint);
+  color: var(--forest);
+}
+
+/* Organizer team-forming draft (R36): team cards in a grid, members with a "Move to" select. */
+.team-draft-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .team-draft-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+}
+
+.team-draft-members {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team-draft-member {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.team-draft-member .sub {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.team-draft-move {
+  grid-column: 1 / -1;
+  min-height: 36px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 14px;
+}
+
+.team-draft-name {
+  flex: 1;
+  min-height: 40px;
+  padding: 6px 10px;
+  font-weight: 600;
+}

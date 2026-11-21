@@ -108,9 +108,19 @@ describe('application decisions', () => {
     expect(decideApplication('accepted', 'accepted')).toEqual({ kind: 'unchanged' });
   });
 
-  it.each(['confirmed', 'declined'] as const)('refuses deciding once the applicant %s', (from) => {
-    expect(decideApplication(from, 'rejected').kind).toBe('refused');
-  });
+  it.each(['accepted', 'waitlisted', 'rejected'] as const)(
+    'lets organizers change a confirmed applicant (%s)',
+    (to) => {
+      expect(decideApplication('confirmed', to)).toEqual({ kind: 'change', to });
+    },
+  );
+
+  it.each(['accepted', 'waitlisted', 'rejected'] as const)(
+    'lets organizers decide again after a decline (%s)',
+    (to) => {
+      expect(decideApplication('declined', to)).toEqual({ kind: 'change', to });
+    },
+  );
 });
 
 describe('RSVP', () => {

@@ -1,9 +1,37 @@
-/* Check-in scanner (screens PDF page 10). */
-.wrap {
+/* Check-in scanner (screens PDF page 10). Phones: one column, the count first. Wide screens:
+   the camera on the left, the count and manual check-in on the right. */
+.layout {
   display: grid;
   gap: 20px;
-  width: 100%;
-  max-width: 560px;
+  grid-template-areas:
+    'status'
+    'scan'
+    'manual';
+  align-items: start;
+}
+
+@media (min-width: 1100px) {
+  .layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+    grid-template-areas:
+      'scan status'
+      'scan manual';
+    grid-template-rows: auto 1fr;
+    gap: 24px 32px;
+  }
+}
+
+.status {
+  grid-area: status;
+}
+
+.scan {
+  grid-area: scan;
+  max-width: 720px;
+}
+
+.manual {
+  grid-area: manual;
 }
 
 .count {

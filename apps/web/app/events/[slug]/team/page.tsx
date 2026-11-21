@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { TeamMentorPanel } from '@/components/live/mentor-queue';
+import { SkillsPanel } from '@/components/participant/skills-panel';
 import { TeamPanel } from '@/components/participant/team-panel';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
@@ -56,6 +57,9 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
           teamSizeMax={event.team_size_max}
           closed={closed}
         />
+        {!team && !closed ? (
+          <SkillsPanel eventId={event.id} initial={application.skill_ratings} />
+        ) : null}
         {team ? (
           <TeamMentorPanel
             eventId={event.id}

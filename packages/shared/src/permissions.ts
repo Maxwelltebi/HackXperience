@@ -14,9 +14,14 @@ export const PERMISSIONS = {
   'staff.manage': ['owner'],
   'audit.read': ['owner'],
   'submissions.reopen': ['owner'],
-  /** List, read and decide applications. Volunteers never see applications (DESIGN rule 3). */
+  /**
+   * List, read and decide applications, at any status, confirmed and declined included (R34,
+   * R35). Volunteers never see applications (DESIGN rule 3).
+   */
   'applications.decide': ['owner', 'admin'],
   'checkins.manual': ['owner', 'admin'],
+  /** Form teams for participants from their skill ratings (R36). */
+  'teams.form': ['owner', 'admin'],
   'checkins.scan': ['owner', 'admin', 'volunteer'],
   /** Assign judges, read standings, choose award winners. */
   'judging.manage': ['owner', 'admin'],

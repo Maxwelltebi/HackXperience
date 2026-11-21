@@ -14,7 +14,7 @@ export const POST = handler(
   async ({ access, userId, body }) => {
     await hitRateLimit(getSql(), `apply:${userId}`, RATE_LIMITS_PER_MINUTE.apply, 60);
     const { application, created } = await tx((sql) =>
-      applyToEvent(sql, access.event.id, userId, body.answers),
+      applyToEvent(sql, access.event.id, userId, body.answers, body.skill_ratings ?? null),
     );
     return json(application, created ? 201 : 200);
   },

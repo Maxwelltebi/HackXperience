@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, renderApplicationDecision, renderSubmissionReminder } from './index';
+import {
+  escapeHtml,
+  renderApplicationDecision,
+  renderSubmissionReminder,
+  renderTeamAssigned,
+} from './index';
 
 const base = {
   name: 'Ama Mensah',
@@ -68,4 +73,31 @@ describe('renderSubmissionReminder', () => {
       expect(email.html).toContain(`href="${reminder.editorUrl}"`);
     },
   );
+});
+
+describe('renderTeamAssigned', () => {
+  it('names the team and the teammates, with a link to the team page', () => {
+    const email = renderTeamAssigned({
+      name: 'Ama Mensah',
+      eventName: 'The CIReN Experience 5.0',
+      teamName: 'Team 3',
+      teammates: ['Efua Owusu', 'Kwame Boateng'],
+      teamUrl: 'https://hack.ciren.network/events/x/team',
+    });
+    expect(email.subject).toBe('Your team for The CIReN Experience 5.0: Team 3');
+    expect(email.text).toContain('Efua Owusu, Kwame Boateng');
+    expect(email.html).toContain('https://hack.ciren.network/events/x/team');
+  });
+
+  it('escapes names in the HTML', () => {
+    const email = renderTeamAssigned({
+      name: '<b>Ama</b>',
+      eventName: 'Event',
+      teamName: 'Team <1>',
+      teammates: [],
+      teamUrl: 'https://hack.ciren.network/events/x/team',
+    });
+    expect(email.html).not.toContain('<b>Ama</b>');
+    expect(email.html).not.toContain('Team <1>');
+  });
 });

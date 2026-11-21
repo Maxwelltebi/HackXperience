@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { APPLICATION_STATUSES, DECISION_STATUSES, MAX_BULK_DECISIONS } from '../constants';
+import {
+  APPLICATION_STATUSES,
+  DECISION_STATUSES,
+  MAX_BULK_DECISIONS,
+  SKILL_SCALE,
+} from '../constants';
 import { isoDateTimeSchema, uuidSchema } from './base';
 
 export const applicationStatusSchema = z.enum(APPLICATION_STATUSES);
@@ -12,8 +17,30 @@ export const answersSchema = z.record(
 );
 export type Answers = z.infer<typeof answersSchema>;
 
-/** POST /events/{id}/applications */
-export const applyBodySchema = z.object({ answers: answersSchema }).strict();
+const ratingSchema = z
+  .number({ error: 'Pick a rating.' })
+  .int()
+  .min(SKILL_SCALE.min, 'Pick a rating.')
+  .max(SKILL_SCALE.max, 'Pick a rating.');
+
+/** The built-in skill ratings (R36): every skill in SKILLS, 1 to 5. */
+export const skillRatingsSchema = z
+  .object({
+    coding: ratingSchema,
+    design: ratingSchema,
+    business: ratingSchema,
+    presentation: ratingSchema,
+  })
+  .strict();
+export type SkillRatings = z.infer<typeof skillRatingsSchema>;
+
+/** POST /events/{id}/applications. Ratings are optional for older clients; the web form asks. */
+export const applyBodySchema = z
+  .object({ answers: answersSchema, skill_ratings: skillRatingsSchema.optional() })
+  .strict();
+
+/** PUT /events/{id}/applications/me/skills */
+export const skillsBodySchema = z.object({ skill_ratings: skillRatingsSchema }).strict();
 
 /** The applicant's own view of their application. */
 export const myApplicationSchema = z.object({
@@ -21,6 +48,7 @@ export const myApplicationSchema = z.object({
   event_id: uuidSchema,
   status: applicationStatusSchema,
   answers: answersSchema,
+  skill_ratings: skillRatingsSchema.nullable(),
   /** Set when the applicant confirms. Shown as a QR ticket from Phase 3. */
   ticket_code: z.string().nullable(),
   created_at: isoDateTimeSchema,
@@ -44,6 +72,7 @@ export const applicationListItemSchema = z.object({
   github_username: z.string().nullable(),
   status: applicationStatusSchema,
   answers: answersSchema,
+  skill_ratings: skillRatingsSchema.nullable(),
   created_at: isoDateTimeSchema,
   decided_at: isoDateTimeSchema.nullable(),
 });

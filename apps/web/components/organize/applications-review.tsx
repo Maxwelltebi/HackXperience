@@ -17,6 +17,7 @@ import { api } from '@/lib/client/api';
 import { APPLICATION_STATUS, chipClass, type Tone } from '@/lib/ui/status';
 import { AlertIcon, CheckIcon, SearchIcon } from '../icons';
 import styles from './applications-review.module.css';
+import { Ratings } from './team-formation';
 import { Busy, PixelGrid } from '@/components/loading-state';
 
 type Filter = ApplicationStatus | 'all';
@@ -113,6 +114,19 @@ export function ApplicationsReview({
   }, [filter, search]);
 
   async function decide(ids: string[], status: DecisionStatus) {
+    const confirmedCount = data.items.filter(
+      (item) => ids.includes(item.id) && item.status === 'confirmed',
+    ).length;
+    if (
+      confirmedCount > 0 &&
+      !window.confirm(
+        `${confirmedCount === 1 ? 'This person has' : `${confirmedCount} people have`} confirmed. ` +
+          `Changing it cancels ${confirmedCount === 1 ? 'their ticket' : 'their tickets'}, and ` +
+          `they get an email about the new decision. Continue?`,
+      )
+    ) {
+      return;
+    }
     setDeciding(status);
     setNotice(null);
     const result = await api<DecisionsResponse>(`/events/${eventId}/applications/decisions`, {
@@ -128,7 +142,9 @@ export function ApplicationsReview({
     const parts = [
       `${DECIDED_WORD[status]} ${updated.length}.`,
       updated.length > 0 ? `Emails go out in ${DECISION_EMAIL_DELAY_MINUTES} minutes.` : '',
-      skipped.length > 0 ? `${skipped.length} skipped: the applicant already replied.` : '',
+      skipped.length > 0
+        ? `${skipped.length} skipped: ${skipped.length === 1 ? 'the application was' : 'those applications were'} not found.`
+        : '',
     ];
     setNotice({ tone: 'success', text: parts.filter(Boolean).join(' ') });
     await load(filter, search);
@@ -399,7 +415,6 @@ function Detail({
   onDecide: (status: DecisionStatus) => void;
 }) {
   const status = APPLICATION_STATUS[item.status];
-  const decided = item.status === 'confirmed' || item.status === 'declined';
   return (
     <aside
       className={`panel card stack ${styles.detail}`}
@@ -431,6 +446,11 @@ function Detail({
           <dd className="mono small">{formatDateTime(item.created_at, timezone)}</dd>
         </div>
       </dl>
+
+      <div className="stack-sm" style={{ gap: 4 }}>
+        <strong className="small">Skills</strong>
+        <Ratings ratings={item.skill_ratings} />
+      </div>
 
       {questions.map((question) => {
         const answer = item.answers[question.id];
@@ -468,34 +488,38 @@ function Detail({
         </div>
       ) : null}
 
-      {decided ? (
-        <p className="muted small" style={{ margin: 0 }}>
-          The applicant has {item.status} their place, so the decision is theirs now.
+      <div className="row">
+        {DECISIONS.map((d) => (
+          <button
+            key={d.status}
+            type="button"
+            className={d.className}
+            aria-pressed={item.status === d.status}
+            disabled={deciding !== null || item.status === d.status}
+            onClick={() => onDecide(d.status)}
+          >
+            {deciding === d.status ? <Busy>Saving…</Busy> : d.label}
+          </button>
+        ))}
+      </div>
+      {item.status === 'confirmed' ? (
+        <p className="hint" style={{ margin: 0 }}>
+          They confirmed their place. Changing it cancels their ticket, and they get an email about
+          the new decision.
         </p>
-      ) : (
-        <>
-          <div className="row">
-            {DECISIONS.map((d) => (
-              <button
-                key={d.status}
-                type="button"
-                className={d.className}
-                aria-pressed={item.status === d.status}
-                disabled={deciding !== null || item.status === d.status}
-                onClick={() => onDecide(d.status)}
-              >
-                {deciding === d.status ? <Busy>Saving…</Busy> : d.label}
-              </button>
-            ))}
-          </div>
-          <p className="hint" style={{ margin: 0 }}>
-            {item.decided_at
-              ? `Decided ${formatDateTime(item.decided_at, timezone)}.`
-              : 'No decision yet.'}{' '}
-            Every decision is recorded in the audit log.
-          </p>
-        </>
-      )}
+      ) : null}
+      {item.status === 'declined' ? (
+        <p className="hint" style={{ margin: 0 }}>
+          They declined their place. Accepting offers it again: they get a new email and confirm
+          again.
+        </p>
+      ) : null}
+      <p className="hint" style={{ margin: 0 }}>
+        {item.decided_at
+          ? `Decided ${formatDateTime(item.decided_at, timezone)}.`
+          : 'No decision yet.'}{' '}
+        Every decision is recorded in the audit log.
+      </p>
     </aside>
   );
 }

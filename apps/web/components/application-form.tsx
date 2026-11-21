@@ -7,6 +7,7 @@ import { api } from '@/lib/client/api';
 import { AlertIcon } from './icons';
 import { Busy } from '@/components/loading-state';
 import { useRouterTransition } from '@/lib/client/use-router-transition';
+import { ratingsComplete, SkillRatingsInput, type RatingsDraft } from './skill-ratings-input';
 
 interface Props {
   eventId: string;
@@ -19,6 +20,7 @@ interface Props {
 export function ApplicationForm({ eventId, slug, questions, profileComplete }: Props) {
   const navigate = useRouterTransition();
   const [answers, setAnswers] = useState<Answers>({});
+  const [ratings, setRatings] = useState<RatingsDraft>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -28,11 +30,15 @@ export function ApplicationForm({ eventId, slug, questions, profileComplete }: P
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
     setFailure(null);
+    if (!ratingsComplete(ratings)) {
+      setErrors((current) => ({ ...current, skill_ratings: 'Rate all four skills.' }));
+      return;
+    }
+    setBusy(true);
     const result = await api<MyApplication>(`/events/${eventId}/applications`, {
       method: 'POST',
-      body: { answers },
+      body: { answers, skill_ratings: ratings },
     });
     if (result.ok) {
       navigate.push(`/events/${slug}`, () => setBusy(false));
@@ -68,6 +74,17 @@ export function ApplicationForm({ eventId, slug, questions, profileComplete }: P
             />
           ))
         )}
+      </section>
+
+      <section className="panel card">
+        <SkillRatingsInput
+          value={ratings}
+          onChange={(next) => {
+            setRatings(next);
+            if (ratingsComplete(next)) setErrors(({ skill_ratings: _, ...rest }) => rest);
+          }}
+          error={errors.skill_ratings}
+        />
       </section>
 
       {failure ? (

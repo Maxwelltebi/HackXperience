@@ -220,7 +220,7 @@ describe('organizer review', () => {
 });
 
 describe('RSVP', () => {
-  it('confirms with a ticket code, then can decline; organizers can no longer change it', async () => {
+  it('confirms with a ticket code, then can decline; organizers can still decide again', async () => {
     const { event, people } = await fx.eventWithRoles({ questions });
     const params = { id: event.id };
     const applied = myApplicationSchema.parse(
@@ -264,14 +264,6 @@ describe('RSVP', () => {
     expect(confirmed.status).toBe('confirmed');
     expect(confirmed.ticket_code).toMatch(/^[A-Za-z0-9_-]{16,}$/);
 
-    const later = await call(decide, {
-      method: 'POST',
-      as: people.owner.id,
-      params,
-      body: { application_ids: [applied.id], status: 'rejected' },
-    });
-    expect((await later.json()).skipped).toEqual([{ id: applied.id, reason: expect.any(String) }]);
-
     const declined = myApplicationSchema.parse(
       await (
         await call(rsvp, {
@@ -287,5 +279,42 @@ describe('RSVP', () => {
     const audits =
       await sql`select 1 from audit_log where entity_id = ${applied.id} and action = 'application.rsvp'`;
     expect(audits).toHaveLength(2);
+
+    // After a decline, organizers can offer the place again (R34), with a new email.
+    const reoffer = await call(decide, {
+      method: 'POST',
+      as: people.owner.id,
+      params,
+      body: { application_ids: [applied.id], status: 'accepted' },
+    });
+    expect((await reoffer.json()).updated).toEqual([applied.id]);
+    const emails = await sql`
+      select dedupe_key from notification_outbox
+      where template = 'application_decision' and payload->>'application_id' = ${applied.id}
+        and dedupe_key like '%:reoffer:%'`;
+    expect(emails).toHaveLength(1);
+    const again = myApplicationSchema.parse(
+      await (
+        await call(rsvp, {
+          method: 'POST',
+          as: people.participant.id,
+          params,
+          body: { response: 'confirm' },
+        })
+      ).json(),
+    );
+    expect(again.status).toBe('confirmed');
+
+    // An admin (or the owner) can change a confirmed place (R35); the ticket stops working.
+    const removed = await call(decide, {
+      method: 'POST',
+      as: people.admin.id,
+      params,
+      body: { application_ids: [applied.id], status: 'rejected' },
+    });
+    expect((await removed.json()).updated).toEqual([applied.id]);
+    const [row] = await sql<[{ status: string }]>`
+      select status from applications where id = ${applied.id}`;
+    expect(row.status).toBe('rejected');
   });
 });

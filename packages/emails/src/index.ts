@@ -2,3 +2,4 @@
 export * from './layout';
 export * from './application-decision';
 export * from './submission-reminder';
+export * from './team-assigned';

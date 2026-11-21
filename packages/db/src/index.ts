@@ -11,6 +11,7 @@ export * from './suppressions';
 export type * from './database.types';
 export * from './guards';
 export * from './teams';
+export * from './team-formation';
 export * from './checkins';
 export * from './submissions';
 export * from './reminders';

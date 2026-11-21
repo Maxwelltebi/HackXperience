@@ -1,22 +1,18 @@
 import type { ApplicationStatus, DecisionStatus, EventStatus } from '@hx/shared';
 
-/** Statuses an organizer may still change. After the applicant's RSVP the decision is theirs. */
-const DECIDABLE: readonly ApplicationStatus[] = ['submitted', 'accepted', 'waitlisted', 'rejected'];
-
 export type StatusChange =
   | { kind: 'change'; to: ApplicationStatus }
   | { kind: 'unchanged' }
   | { kind: 'refused'; reason: string };
 
 /**
- * An organizer's decision. Accept, waitlist and reject can replace each other freely until the
- * applicant RSVPs (the 10-minute email undo window depends on this).
+ * An organizer's decision (owners and admins). Accept, waitlist and reject replace each other
+ * freely, at any status: before the applicant replies (the 10-minute email undo window depends
+ * on this), after a decline (R34) and after a confirm (R35). A new decision after a reply starts
+ * over: an accepted applicant confirms again, and a confirmed one who is moved loses the ticket.
  */
 export function decideApplication(from: ApplicationStatus, to: DecisionStatus): StatusChange {
   if (from === to) return { kind: 'unchanged' };
-  if (!DECIDABLE.includes(from)) {
-    return { kind: 'refused', reason: `The applicant already ${from} their place.` };
-  }
   return { kind: 'change', to };
 }
 

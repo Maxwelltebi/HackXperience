@@ -1,6 +1,7 @@
 import {
   renderApplicationDecision,
   renderSubmissionReminder,
+  renderTeamAssigned,
   type RenderedEmail,
 } from '@hx/emails';
 import { formatDateTime } from '@hx/shared';
@@ -148,6 +149,7 @@ type Prepared =
 
 async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
   if (row.template === 'submission_reminder') return prepareReminder(sql, row, deps);
+  if (row.template === 'team_assigned') return prepareTeamAssigned(sql, row, deps);
   if (row.template === 'application_decision') {
     const applicationId = String(row.payload.application_id);
     const status = String(row.payload.status);
@@ -177,6 +179,38 @@ async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prep
     };
   }
   return { kind: 'failed', reason: `unknown template ${row.template}` };
+}
+
+/** "You're on a team" (R36), re-checked at send time: superseded once they left or it was deleted. */
+async function prepareTeamAssigned(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
+  const teamId = String(row.payload.team_id);
+  const [current] = await sql<
+    [{ email: string; name: string; team_name: string; event_name: string; slug: string }?]
+  >`
+    select u.email, u.name, t.name as team_name, e.name as event_name, e.slug
+    from team_members m
+    join users u on u.id = m.user_id
+    join teams t on t.id = m.team_id and t.deleted_at is null
+    join events e on e.id = t.event_id and e.deleted_at is null
+    where m.team_id = ${teamId} and m.user_id = ${row.user_id}
+  `;
+  if (!current) return { kind: 'superseded' };
+  const others = await sql<{ name: string }[]>`
+    select u.name from team_members m join users u on u.id = m.user_id
+    where m.team_id = ${teamId} and m.user_id <> ${row.user_id}
+    order by m.joined_at, u.name
+  `;
+  return {
+    kind: 'send',
+    to: current.email,
+    email: renderTeamAssigned({
+      name: current.name,
+      eventName: current.event_name,
+      teamName: current.team_name,
+      teammates: others.map((o) => o.name),
+      teamUrl: `${deps.appUrl}/events/${current.slug}/team`,
+    }),
+  };
 }
 
 /**

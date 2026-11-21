@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { MAX_DRAFT_TEAMS } from '../constants';
+import { skillRatingsSchema } from './applications';
 import { isoDateTimeSchema, uuidSchema } from './base';
 
 // ---------- Tickets and check-in ----------
@@ -115,3 +117,72 @@ export interface OrganizerTeam {
   deleted_at: string | null;
   submission: { id: string; title: string; status: string; deleted_at: string | null } | null;
 }
+
+// ---------- Organizer team forming (R36) ----------
+
+/** A confirmed participant with no team: someone organizers can place. */
+export const formationPersonSchema = z.object({
+  user_id: uuidSchema,
+  name: z.string(),
+  school: z.string().nullable(),
+  /** Null when they applied before ratings existed and haven't added them. */
+  skill_ratings: skillRatingsSchema.nullable(),
+});
+export type FormationPerson = z.infer<typeof formationPersonSchema>;
+
+export const draftTeamSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Enter a team name.').max(60),
+    member_ids: z.array(uuidSchema).max(50),
+  })
+  .strict();
+export type DraftTeam = z.infer<typeof draftTeamSchema>;
+
+/** The organizers' draft: proposed teams nobody sees until it's published. */
+export const teamDraftSchema = z.object({
+  version: z.number().int(),
+  teams: z.array(draftTeamSchema),
+  updated_at: isoDateTimeSchema,
+});
+export type TeamDraft = z.infer<typeof teamDraftSchema>;
+
+/** GET /events/{id}/team-formation */
+export const teamFormationSchema = z.object({
+  pool: z.array(formationPersonSchema),
+  draft: teamDraftSchema.nullable(),
+  team_size_min: z.number().int(),
+  team_size_max: z.number().int(),
+});
+export type TeamFormation = z.infer<typeof teamFormationSchema>;
+
+/** POST /events/{id}/team-formation/auto. `version` is the draft's (0 when there is none). */
+export const autoGroupBodySchema = z
+  .object({ team_size: z.number().int().min(1).max(50), version: z.number().int().min(0) })
+  .strict();
+
+/** PUT /events/{id}/team-formation/draft */
+export const saveDraftBodySchema = z
+  .object({
+    version: z.number().int().min(0),
+    teams: z
+      .array(draftTeamSchema)
+      .max(MAX_DRAFT_TEAMS)
+      .refine((teams) => {
+        const ids = teams.flatMap((t) => t.member_ids);
+        return new Set(ids).size === ids.length;
+      }, 'Each person can be on one team only.'),
+  })
+  .strict();
+
+/** POST /events/{id}/team-formation/publish */
+export const publishDraftBodySchema = z.object({ version: z.number().int().min(1) }).strict();
+
+export const publishDraftResultSchema = z.object({
+  /** Teams created. */
+  teams: z.number().int(),
+  /** People placed on them. */
+  placed: z.number().int(),
+  /** People left out: they joined a team or lost their place since the draft was made. */
+  skipped: z.array(z.object({ user_id: uuidSchema, name: z.string() })),
+});
+export type PublishDraftResult = z.infer<typeof publishDraftResultSchema>;

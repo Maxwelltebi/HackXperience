@@ -8,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
   type FormEvent,
+  type ReactNode,
 } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon, CheckIcon } from '../icons';
@@ -16,7 +17,8 @@ import { Busy } from '@/components/loading-state';
 
 interface Props {
   eventId: string;
-  eventName: string;
+  /** The event name and status badge above the title. */
+  crumb: ReactNode;
   timezone: string;
   canManual: boolean;
   initialStats: CheckInStats;
@@ -55,7 +57,7 @@ function useOnline(): boolean {
   );
 }
 
-export function CheckInScanner({ eventId, eventName, timezone, canManual, initialStats }: Props) {
+export function CheckInScanner({ eventId, crumb, timezone, canManual, initialStats }: Props) {
   const online = useOnline();
   const [unreachable, setUnreachable] = useState(false);
   const offline = !online || unreachable;
@@ -196,11 +198,11 @@ export function CheckInScanner({ eventId, eventName, timezone, canManual, initia
   }
 
   return (
-    <div className={styles.wrap}>
-      <div className="row-between">
+    <>
+      <div className="page-head">
         <div>
+          {crumb}
           <h1 className="h1">Check-in</h1>
-          <span className="muted small">{eventName}</span>
         </div>
         <span
           className={offline ? 'chip chip-warning chip-dot' : 'chip chip-success chip-dot'}
@@ -210,85 +212,94 @@ export function CheckInScanner({ eventId, eventName, timezone, canManual, initia
         </span>
       </div>
 
-      <div className={`panel ${styles.count}`}>
-        <p style={{ margin: 0 }}>
-          <span className={styles.countValue}>{stats.checked_in}</span> of {stats.confirmed}{' '}
-          confirmed checked in
-        </p>
-        <div
-          className="meter"
-          role="progressbar"
-          aria-label="Checked in"
-          aria-valuemin={0}
-          aria-valuemax={stats.confirmed}
-          aria-valuenow={stats.checked_in}
-        >
-          <span
-            style={{
-              width: `${stats.confirmed > 0 ? Math.min(100, (stats.checked_in / stats.confirmed) * 100) : 0}%`,
-            }}
-          />
-        </div>
-      </div>
-
-      {offline ? (
-        <p className="banner banner-warning" role="alert" style={{ margin: 0 }}>
-          <AlertIcon /> You&apos;re offline. Connect to check people in.
-        </p>
-      ) : null}
-
-      {!outcome ? (
-        <>
-          <div>
-            <div className={styles.camera}>
-              <video
-                ref={videoRef}
-                className={styles.video}
-                muted
-                playsInline
-                aria-label="Camera view"
+      <div className={styles.layout}>
+        <div className={`stack ${styles.status}`}>
+          <div className={`panel ${styles.count}`}>
+            <p style={{ margin: 0 }}>
+              <span className={styles.countValue}>{stats.checked_in}</span> of {stats.confirmed}{' '}
+              confirmed checked in
+            </p>
+            <div
+              className="meter"
+              role="progressbar"
+              aria-label="Checked in"
+              aria-valuemin={0}
+              aria-valuemax={stats.confirmed}
+              aria-valuenow={stats.checked_in}
+            >
+              <span
+                style={{
+                  width: `${stats.confirmed > 0 ? Math.min(100, (stats.checked_in / stats.confirmed) * 100) : 0}%`,
+                }}
               />
-              <span className={styles.corners} aria-hidden="true" />
-              <span className={styles.hint}>
-                {offline ? 'Scanning paused' : busy ? 'Checking…' : 'Point the camera at a ticket'}
-              </span>
             </div>
           </div>
-          {cameraError ? (
+          {offline ? (
+            <p className="banner banner-warning" role="alert" style={{ margin: 0 }}>
+              <AlertIcon /> You&apos;re offline. Connect to check people in.
+            </p>
+          ) : null}
+          {cameraError && !outcome ? (
             <p className="banner banner-warning" style={{ margin: 0 }}>
               <AlertIcon /> {cameraError}
             </p>
           ) : null}
-          <form className="row" onSubmit={submitTyped}>
-            <input
-              className="input mono"
-              style={{ flex: '1 1 220px' }}
-              aria-label="Ticket code"
-              placeholder="Or type the ticket code"
-              autoComplete="off"
-              spellCheck={false}
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              disabled={offline}
-            />
-            <button type="submit" className="btn" disabled={offline || busy || !typed.trim()}>
-              {busy ? <Busy>Checking in…</Busy> : 'Check in'}
-            </button>
-          </form>
-        </>
-      ) : (
-        <Result outcome={outcome} timezone={timezone} onNext={next} />
-      )}
+        </div>
 
-      {canManual ? (
-        <ManualCheckIn
-          eventId={eventId}
-          disabled={offline || busy}
-          onSubmit={submit}
-          timezone={timezone}
-        />
-      ) : null}
-    </div>
+        <div className={`stack ${styles.scan}`}>
+          {!outcome ? (
+            <>
+              <div className={styles.camera}>
+                <video
+                  ref={videoRef}
+                  className={styles.video}
+                  muted
+                  playsInline
+                  aria-label="Camera view"
+                />
+                <span className={styles.corners} aria-hidden="true" />
+                <span className={styles.hint}>
+                  {offline
+                    ? 'Scanning paused'
+                    : busy
+                      ? 'Checking…'
+                      : 'Point the camera at a ticket'}
+                </span>
+              </div>
+              <form className="row" onSubmit={submitTyped}>
+                <input
+                  className="input mono"
+                  style={{ flex: '1 1 220px' }}
+                  aria-label="Ticket code"
+                  placeholder="Or type the ticket code"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={typed}
+                  onChange={(e) => setTyped(e.target.value)}
+                  disabled={offline}
+                />
+                <button type="submit" className="btn" disabled={offline || busy || !typed.trim()}>
+                  {busy ? <Busy>Checking in…</Busy> : 'Check in'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <Result outcome={outcome} timezone={timezone} onNext={next} />
+          )}
+        </div>
+
+        {canManual ? (
+          <div className={styles.manual}>
+            <ManualCheckIn
+              eventId={eventId}
+              disabled={offline || busy}
+              onSubmit={submit}
+              timezone={timezone}
+            />
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
 

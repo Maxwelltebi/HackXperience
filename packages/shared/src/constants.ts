@@ -63,3 +63,17 @@ export const RATE_LIMITS_PER_MINUTE = {
   inviteRotate: 5,
   mentorRequest: 5,
 } as const;
+
+/** The built-in skills every applicant rates, 1 to 5, for organizer team forming (R36). */
+export const SKILLS = ['coding', 'design', 'business', 'presentation'] as const;
+export type Skill = (typeof SKILLS)[number];
+export const SKILL_LABELS: Record<Skill, string> = {
+  coding: 'Coding',
+  design: 'Design',
+  business: 'Business',
+  presentation: 'Presentation',
+};
+/** What each rating means, shown next to the 1 to 5 scale. */
+export const SKILL_SCALE = { min: 1, max: 5, low: 'New to it', high: 'Expert' } as const;
+/** Teams in one organizer draft, at most. */
+export const MAX_DRAFT_TEAMS = 200;

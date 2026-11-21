@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/v1/events/{id}/applications/decisions {application_ids, status}: owner, admin.
- * One audit row and one delayed decision email per changed application.
+ * One audit row and one delayed decision email per changed application, at any status (R34,
+ * R35): changing a confirmed applicant cancels their ticket.
  */
 export const POST = handler(
   { event: { permission: 'applications.decide' }, body: decisionsBodySchema },

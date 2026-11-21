@@ -45,6 +45,13 @@ test('a hackathon from application to published results', async ({ browser }) =>
     for (const page of [alice, bob]) {
       await page.goto(eventPage);
       await page.getByRole('link', { name: 'Apply now' }).click();
+      // The built-in skill ratings (R36): every skill needs a rating.
+      for (const skill of ['Coding', 'Design', 'Business', 'Presentation']) {
+        await page
+          .getByRole('group', { name: skill, exact: true })
+          .getByRole('radio', { name: '3', exact: true })
+          .check({ force: true });
+      }
       await page.getByRole('button', { name: 'Submit application' }).click();
       await expect(page.getByRole('heading', { name: 'Your application' })).toBeVisible();
       await expect(page.getByText("We've got your application.")).toBeVisible();

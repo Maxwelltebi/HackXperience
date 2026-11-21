@@ -18,6 +18,7 @@ import {
   type DecisionStatus,
   type DecisionsResponse,
   type MyApplication,
+  type SkillRatings,
 } from '@hx/shared';
 import { audit } from './audit';
 import type { ISql } from './client';
@@ -28,6 +29,7 @@ interface MyApplicationRow {
   event_id: string;
   status: ApplicationStatus;
   answers: Answers;
+  skill_ratings: SkillRatings | null;
   ticket_code: string | null;
   created_at: Date;
   decided_at: Date | null;
@@ -39,6 +41,7 @@ function toMyApplication(row: MyApplicationRow): MyApplication {
     event_id: row.event_id,
     status: row.status,
     answers: row.answers,
+    skill_ratings: row.skill_ratings,
     ticket_code: row.ticket_code,
     created_at: iso(row.created_at),
     decided_at: iso(row.decided_at),
@@ -51,7 +54,7 @@ export async function getMyApplication(
   userId: string,
 ): Promise<MyApplication | null> {
   const [row] = await sql<[MyApplicationRow?]>`
-    select id, event_id, status, answers, ticket_code, created_at, decided_at
+    select id, event_id, status, answers, skill_ratings, ticket_code, created_at, decided_at
     from applications where event_id = ${eventId} and user_id = ${userId}
   `;
   return row ? toMyApplication(row) : null;
@@ -66,6 +69,7 @@ export async function applyToEvent(
   eventId: string,
   userId: string,
   answers: Answers,
+  skillRatings: SkillRatings | null = null,
 ): Promise<{ application: MyApplication; created: boolean }> {
   const [event] = await sql<
     [
@@ -102,10 +106,11 @@ export async function applyToEvent(
   if (!checked.ok) throw ApiError.validation('Some answers need fixing.', checked.fields);
 
   const [row] = await sql<[MyApplicationRow?]>`
-    insert into applications (event_id, user_id, answers)
-    values (${eventId}, ${userId}, ${sql.json(checked.answers)})
+    insert into applications (event_id, user_id, answers, skill_ratings)
+    values (${eventId}, ${userId}, ${sql.json(checked.answers)},
+            ${skillRatings ? sql.json(skillRatings) : null})
     on conflict (event_id, user_id) do nothing
-    returning id, event_id, status, answers, ticket_code, created_at, decided_at
+    returning id, event_id, status, answers, skill_ratings, ticket_code, created_at, decided_at
   `;
   if (row) return { application: toMyApplication(row), created: true };
   const raced = await getMyApplication(sql, eventId, userId);
@@ -129,7 +134,7 @@ export async function rsvp(
   }
 
   const [current] = await sql<[MyApplicationRow?]>`
-    select id, event_id, status, answers, ticket_code, created_at, decided_at
+    select id, event_id, status, answers, skill_ratings, ticket_code, created_at, decided_at
     from applications where event_id = ${eventId} and user_id = ${userId}
     for update
   `;
@@ -144,7 +149,7 @@ export async function rsvp(
   const [row] = await sql<[MyApplicationRow]>`
     update applications set status = ${change.to}, ticket_code = ${ticket}
     where id = ${current.id}
-    returning id, event_id, status, answers, ticket_code, created_at, decided_at
+    returning id, event_id, status, answers, skill_ratings, ticket_code, created_at, decided_at
   `;
   await audit(sql, {
     eventId,
@@ -155,6 +160,35 @@ export async function rsvp(
     before: { status: current.status },
     after: { status: change.to },
   });
+  return toMyApplication(row);
+}
+
+/**
+ * PUT /events/{id}/applications/me/skills: add or change your skill ratings (R36), for people
+ * who applied before ratings existed. Not after the submission deadline: teams are final then.
+ * Run inside tx().
+ */
+export async function setMySkills(
+  sql: ISql,
+  eventId: string,
+  userId: string,
+  skillRatings: SkillRatings,
+): Promise<MyApplication> {
+  const [event] = await sql<[{ open: boolean }?]>`
+    select (submissions_locked_at is null and now() < submission_deadline) as open
+    from events where id = ${eventId} and deleted_at is null
+    for share
+  `;
+  if (!event) throw new ApiError('NOT_FOUND', 'No such event.');
+  if (!event.open) {
+    throw new ApiError('SUBMISSION_LOCKED', 'Teams are final, so ratings can no longer change.');
+  }
+  const [row] = await sql<[MyApplicationRow?]>`
+    update applications set skill_ratings = ${sql.json(skillRatings)}
+    where event_id = ${eventId} and user_id = ${userId}
+    returning id, event_id, status, answers, skill_ratings, ticket_code, created_at, decided_at
+  `;
+  if (!row) throw new ApiError('NOT_FOUND', "You haven't applied to this event.");
   return toMyApplication(row);
 }
 
@@ -172,6 +206,7 @@ interface ListRow {
   github_username: string | null;
   status: ApplicationStatus;
   answers: Answers;
+  skill_ratings: SkillRatings | null;
   created_at: Date;
   decided_at: Date | null;
   /** created_at with microseconds; a JS Date keeps only milliseconds. */
@@ -212,7 +247,8 @@ export async function listApplications(
 
   const rows = await sql<ListRow[]>`
     select a.id, a.user_id, u.name, u.email, p.school, p.level_of_study, p.graduation_year,
-           p.country, p.github_username, a.status, a.answers, a.created_at, a.decided_at,
+           p.country, p.github_username, a.status, a.answers, a.skill_ratings, a.created_at,
+           a.decided_at,
            to_char(a.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_at
     from applications a
     join users u on u.id = a.user_id
@@ -310,9 +346,14 @@ export async function decideApplications(
     insert into notification_outbox (user_id, channel, template, payload, dedupe_key, send_after)
     select x.user_id, 'email', 'application_decision',
            jsonb_build_object('application_id', x.id, 'event_id', ${eventId}::uuid, 'status', ${status}::text),
-           'decision:' || x.id || ':' || ${status}::text,
+           -- A new decision after the applicant replied (declined or confirmed) gets its own
+           -- email, even if the same decision was emailed before.
+           'decision:' || x.id || ':' || ${status}::text
+             || case when x.previous in ('declined', 'confirmed')
+                  then ':reoffer:' || (extract(epoch from now()) * 1000)::bigint
+                  else '' end,
            now() + make_interval(mins => ${DECISION_EMAIL_DELAY_MINUTES})
-    from unnest(${ids}::uuid[], ${userIds}::uuid[]) as x(id, user_id)
+    from unnest(${ids}::uuid[], ${userIds}::uuid[], ${previous}::text[]) as x(id, user_id, previous)
     on conflict (dedupe_key) do update
       set status = 'pending', send_after = excluded.send_after, attempts = 0,
           last_error = null, locked_until = null
