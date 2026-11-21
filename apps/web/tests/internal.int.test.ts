@@ -1,6 +1,7 @@
 // Internal endpoints: the tick secret and SNS signature checks (Agent rule 18).
 import { createSign, generateKeyPairSync } from 'node:crypto';
 import { closeSql, getSql } from '@hx/db';
+import type * as Db from '@hx/db';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { POST as sesEvents } from '@/app/api/internal/ses-events/route';
 import { POST as tick } from '@/app/api/internal/tick/route';
@@ -15,6 +16,14 @@ const keys = await vi.hoisted(async () => {
 vi.mock('@/lib/server/sns-cert', () => ({
   fetchSigningCertificate: async () =>
     keys.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+}));
+
+// The real tick locks every due event in the shared test database and calls GitHub, which would
+// race other test files; here we only check the route's secret and wiring.
+const runTick = vi.hoisted(() => vi.fn());
+vi.mock('@hx/db', async (original) => ({
+  ...(await original<typeof Db>()),
+  runTick,
 }));
 
 const TOPIC = 'arn:aws:sns:eu-west-2:123456789012:hx-ses-events';
@@ -52,11 +61,14 @@ describe('POST /api/internal/tick', () => {
   });
 
   it('runs with the right secret; without SES config, emails wait in the outbox', async () => {
+    runTick.mockResolvedValueOnce({ skipped: true });
     const response = await post(tick, '{}', { 'x-tick-secret': 'test-tick-secret' });
     expect(response.status).toBe(200);
     expectServerTime(response);
-    const body = (await response.json()) as { skipped: boolean; outbox?: unknown };
-    if (!body.skipped) expect(body.outbox).toBe('not_configured');
+    expect(await response.json()).toEqual({ skipped: true });
+    const [, deps] = runTick.mock.calls[0] as [unknown, { outbox: unknown; fetchCommit: unknown }];
+    expect(deps.outbox).toBeNull();
+    expect(typeof deps.fetchCommit).toBe('function');
   });
 });
 

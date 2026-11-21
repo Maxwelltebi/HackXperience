@@ -2,6 +2,8 @@ import { getSql, runTick } from '@hx/db';
 import { ApiError } from '@hx/shared';
 import { handler } from '@/lib/api/handler';
 import { json } from '@/lib/api/respond';
+import { pushDeps } from '@/lib/server/expo';
+import { commitFetcher } from '@/lib/server/github';
 import { outboxDeps } from '@/lib/server/ses';
 import { secretMatches, TICK_SECRET_HEADER } from '@/lib/server/secrets';
 
@@ -16,5 +18,11 @@ export const POST = handler({ auth: 'none' }, async ({ request }) => {
   if (!secretMatches(request.headers.get(TICK_SECRET_HEADER), process.env.TICK_SECRET)) {
     throw new ApiError('UNAUTHENTICATED', 'Wrong or missing tick secret.');
   }
-  return json(await runTick(getSql(), outboxDeps()));
+  return json(
+    await runTick(getSql(), {
+      outbox: outboxDeps(),
+      fetchCommit: commitFetcher(),
+      push: pushDeps(),
+    }),
+  );
 });

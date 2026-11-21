@@ -259,7 +259,12 @@ describe('tick', () => {
     const sender = fakeSender();
     await sql.begin(async (t) => {
       await t`select pg_advisory_xact_lock(${TICK_LOCK_KEY}::bigint)`;
-      expect(await runTick(sql, { sendEmail: sender.send, appUrl })).toEqual({ skipped: true });
+      const deps = {
+        outbox: { sendEmail: sender.send, appUrl },
+        fetchCommit: () => Promise.reject(new Error('not called')),
+        push: null,
+      };
+      expect(await runTick(sql, deps)).toEqual({ skipped: true });
     });
     expect(sender.sent).toEqual([]);
   });

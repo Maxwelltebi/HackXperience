@@ -1,4 +1,9 @@
-import { renderApplicationDecision, type RenderedEmail } from '@hx/emails';
+import {
+  renderApplicationDecision,
+  renderSubmissionReminder,
+  type RenderedEmail,
+} from '@hx/emails';
+import { formatDateTime } from '@hx/shared';
 import type { ISql, Sql } from './client';
 
 /** Retries wait 1, 5, 30, then 120 minutes; the 5th failed attempt marks the row failed. */
@@ -62,6 +67,7 @@ export async function claimOutbox(
   sql: ISql,
   limit = CLAIM_LIMIT,
   userIds?: string[],
+  channel: 'email' | 'push' = 'email',
 ): Promise<OutboxRow[]> {
   return sql<OutboxRow[]>`
     update notification_outbox o
@@ -70,7 +76,7 @@ export async function claimOutbox(
         attempts = o.attempts + 1
     where o.id in (
       select id from notification_outbox
-      where status = 'pending' and channel = 'email' and send_after <= now()
+      where status = 'pending' and channel = ${channel} and send_after <= now()
         ${userIds ? sql`and user_id = any(${userIds}::uuid[])` : sql``}
       order by send_after
       limit ${limit}
@@ -105,9 +111,9 @@ export async function processOutbox(
   return result;
 }
 
-type Outcome = 'sent' | 'superseded' | 'suppressed' | 'retrying' | 'failed';
+export type OutboxOutcome = 'sent' | 'superseded' | 'suppressed' | 'retrying' | 'failed';
 
-async function deliver(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Outcome> {
+async function deliver(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<OutboxOutcome> {
   let prepared: Prepared;
   try {
     prepared = await prepare(sql, row, deps);
@@ -141,6 +147,7 @@ type Prepared =
   | { kind: 'failed'; reason: string };
 
 async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
+  if (row.template === 'submission_reminder') return prepareReminder(sql, row, deps);
   if (row.template === 'application_decision') {
     const applicationId = String(row.payload.application_id);
     const status = String(row.payload.status);
@@ -172,12 +179,67 @@ async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prep
   return { kind: 'failed', reason: `unknown template ${row.template}` };
 }
 
+/**
+ * A deadline reminder, re-checked at send time: superseded once the team has submitted, the
+ * person left the team or turned reminders off, or the deadline has passed.
+ */
+async function prepareReminder(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
+  const kind = String(row.payload.kind);
+  if (kind !== '24h' && kind !== '1h')
+    return { kind: 'failed', reason: `unknown reminder ${kind}` };
+  const eventId = String(row.payload.event_id);
+  const teamId = String(row.payload.team_id);
+  const [current] = await sql<
+    [
+      {
+        email: string;
+        name: string;
+        timezone: string;
+        email_reminders: boolean;
+        event_name: string;
+        slug: string;
+        submission_deadline: Date;
+        open: boolean;
+        on_team: boolean;
+        submitted: boolean;
+      }?,
+    ]
+  >`
+    select u.email, u.name, p.timezone, p.email_reminders,
+           e.name as event_name, e.slug, e.submission_deadline,
+           (e.submissions_locked_at is null and e.submission_deadline > now()
+              and e.deleted_at is null) as open,
+           exists (select 1 from team_members m
+                   where m.team_id = ${teamId} and m.user_id = u.id) as on_team,
+           exists (select 1 from submissions s
+                   where s.team_id = ${teamId} and s.status = 'submitted') as submitted
+    from users u
+    join profiles p on p.user_id = u.id
+    join events e on e.id = ${eventId}
+    where u.id = ${row.user_id}
+  `;
+  if (!current?.open || !current.on_team || current.submitted || !current.email_reminders) {
+    return { kind: 'superseded' };
+  }
+  return {
+    kind: 'send',
+    to: current.email,
+    email: renderSubmissionReminder({
+      name: current.name,
+      eventName: current.event_name,
+      kind,
+      deadlineText: formatDateTime(current.submission_deadline.toISOString(), current.timezone),
+      editorUrl: `${deps.appUrl}/events/${current.slug}/submission`,
+    }),
+  };
+}
+
 async function finish(
   sql: Sql,
   id: string,
   status: 'superseded' | 'suppressed' | 'failed',
   reason?: string,
-): Promise<Outcome> {
+): Promise<OutboxOutcome> {
   await sql`
     update notification_outbox
     set status = ${status}, locked_until = null, last_error = ${reason ?? null}
@@ -187,7 +249,11 @@ async function finish(
 }
 
 /** A failed attempt: retry after the next delay, or give up after MAX_ATTEMPTS. */
-async function markFailed(sql: Sql, row: OutboxRow, error: unknown): Promise<Outcome> {
+export async function markFailed(
+  sql: Sql,
+  row: OutboxRow,
+  error: unknown,
+): Promise<'retrying' | 'failed'> {
   const giveUp = row.attempts >= MAX_ATTEMPTS;
   const delay = RETRY_DELAYS_MINUTES[Math.min(row.attempts, RETRY_DELAYS_MINUTES.length) - 1] ?? 1;
   await sql`

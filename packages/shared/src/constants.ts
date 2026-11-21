@@ -38,3 +38,28 @@ export const DECISION_EMAIL_DELAY_MINUTES = 10;
 
 /** Most applications one bulk decision can touch. */
 export const MAX_BULK_DECISIONS = 500;
+
+/** Team join attempts allowed per user per minute (build plan Phase 3). */
+export const TEAM_JOIN_LIMIT_PER_MINUTE = 10;
+
+/** Request header carrying the submission version a save is based on (DESIGN Step 4). */
+export const IF_MATCH_HEADER = 'if-match';
+
+export const SUBMISSION_STATUSES = ['draft', 'submitted'] as const;
+export const SHA_STATES = ['none', 'pending', 'captured', 'unreachable'] as const;
+export type SubmissionStatus = (typeof SUBMISSION_STATUSES)[number];
+export type ShaState = (typeof SHA_STATES)[number];
+
+/** Submission field limits. The write-up is markdown. */
+export const SUBMISSION_LIMITS = { title: 80, tagline: 140, writeUp: 20_000 } as const;
+
+/** Deadline reminder emails go out this long before the deadline (build plan Phase 4 item 8). */
+export const REMINDER_KINDS = ['24h', '1h'] as const;
+export type ReminderKind = (typeof REMINDER_KINDS)[number];
+
+/** Rate limits per user per minute (build plan Phase 7 item 5). Joining is TEAM_JOIN_LIMIT_PER_MINUTE. */
+export const RATE_LIMITS_PER_MINUTE = {
+  apply: 5,
+  inviteRotate: 5,
+  mentorRequest: 5,
+} as const;

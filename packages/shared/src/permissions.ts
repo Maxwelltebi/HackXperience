@@ -18,8 +18,22 @@ export const PERMISSIONS = {
   'applications.decide': ['owner', 'admin'],
   'checkins.manual': ['owner', 'admin'],
   'checkins.scan': ['owner', 'admin', 'volunteer'],
+  /** Assign judges, read standings, choose award winners. */
+  'judging.manage': ['owner', 'admin'],
+  /** Read any submission, and the submission list before results are public. */
+  'submissions.read_all': ['owner', 'admin'],
   'scores.write': ['judge'],
   'mentor.claim': ['mentor'],
+  /** See the mentor queue (mentors work it; owners and admins watch it). */
+  'mentor.view': ['owner', 'admin', 'mentor'],
+  /** Post announcements. */
+  'announcements.write': ['owner', 'admin'],
+  /** The live staff dashboard. */
+  'live.view': ['owner', 'admin'],
+  /** Impact reports. */
+  'reports.read': ['owner', 'admin'],
+  /** Soft delete and restore events, teams and submissions (audited). */
+  'records.delete': ['owner'],
 } as const satisfies Record<string, readonly StaffRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

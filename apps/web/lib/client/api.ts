@@ -1,5 +1,6 @@
 import {
   API_PREFIX,
+  SERVER_TIME_HEADER,
   errorBodySchema,
   fieldErrorsOf,
   type ErrorDetails,
@@ -18,19 +19,39 @@ export type ApiResult<T> =
       details: ErrorDetails | undefined;
     };
 
+let serverOffset = 0;
+
+/**
+ * Milliseconds to add to the device clock to get the server's (DESIGN Step 6 part 1: phone and
+ * laptop clocks are wrong). Updated from the server_time header of every API response, and
+ * seeded by pages that render with the server's clock.
+ */
+export function serverOffsetMs(): number {
+  return serverOffset;
+}
+
+/** Record the server's clock as of now, e.g. from a server-rendered page. */
+export function syncServerTime(serverIso: string): void {
+  const server = Date.parse(serverIso);
+  if (!Number.isNaN(server)) serverOffset = server - Date.now();
+}
+
 /**
  * Browser calls to /api/v1 with the session cookie. Never throws: failures come back as
  * `ok: false` with the error code, message and field problems ready for the form.
  */
 export async function api<T>(
   path: string,
-  init: { method?: string; body?: unknown } = {},
+  init: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
 ): Promise<ApiResult<T>> {
   let response: Response;
   try {
     response = await fetch(`${API_PREFIX}${path}`, {
       method: init.method ?? 'GET',
-      headers: init.body === undefined ? undefined : { 'content-type': 'application/json' },
+      headers: {
+        ...(init.body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...init.headers,
+      },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
     });
   } catch {
@@ -43,6 +64,9 @@ export async function api<T>(
       details: undefined,
     };
   }
+
+  const serverTime = response.headers.get(SERVER_TIME_HEADER);
+  if (serverTime) syncServerTime(serverTime);
 
   const json: unknown = response.status === 204 ? null : await response.json().catch(() => null);
   if (response.ok) return { ok: true, status: response.status, data: json as T };

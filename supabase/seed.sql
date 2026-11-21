@@ -55,3 +55,16 @@ insert into applications (event_id, user_id, answers, created_at) values
   ('55555555-5555-4555-8555-555555555555', '22222222-2222-4222-8222-222222222222',
    '{"why":"I want to learn how to work on a team under a deadline.","track":"FinTech"}',
    now() - interval '1 day');
+
+-- Ama accepted and confirmed (ticket code below), on team ClinicQ with invite code K7QMX4PR.
+update applications
+set status = 'confirmed', ticket_code = 'seed-ticket-ama-mensah-0001',
+    decided_by = '33333333-3333-4333-8333-333333333333', decided_at = now() - interval '1 day'
+where event_id = '55555555-5555-4555-8555-555555555555'
+  and user_id = '11111111-1111-4111-8111-111111111111';
+insert into teams (id, event_id, name, invite_code, owner_id, looking_for_members, looking_for)
+values ('66666666-6666-4666-8666-666666666666', '55555555-5555-4555-8555-555555555555',
+        'ClinicQ', 'K7QMX4PR', '11111111-1111-4111-8111-111111111111', true, 'A designer');
+insert into team_members (team_id, event_id, user_id)
+values ('66666666-6666-4666-8666-666666666666', '55555555-5555-4555-8555-555555555555',
+        '11111111-1111-4111-8111-111111111111');

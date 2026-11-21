@@ -3,6 +3,8 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { safeNext } from '@/lib/safe-next';
+import { checkAuthAvailability } from '@/lib/supabase/availability';
+import { supabaseEnv } from '@/lib/supabase/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const PROVIDERS = ['google', 'github'] as const;
@@ -17,6 +19,11 @@ export async function signInWithProvider(formData: FormData): Promise<void> {
   const provider = formData.get('provider');
   const next = safeNext(formData.get('next')?.toString());
   if (!isProvider(provider)) redirect('/sign-in?error=provider');
+
+  const { url, anonKey } = supabaseEnv();
+  const availability = await checkAuthAvailability(url, anonKey);
+  if (availability === 'not_configured') redirect('/sign-in?error=not_configured');
+  if (availability === 'unreachable') redirect('/sign-in?error=oauth');
 
   const origin = await requestOrigin();
   const supabase = await createSupabaseServerClient();

@@ -1,0 +1,32 @@
+.page {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 20px;
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+
+.card {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.qr {
+  width: 100%;
+  padding: 18px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: var(--inset);
+}
+
+.qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}

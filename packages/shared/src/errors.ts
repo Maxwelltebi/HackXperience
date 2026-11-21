@@ -18,6 +18,37 @@ export const ERROR_STATUS = {
   LAST_OWNER: 409,
   /** Applying outside the application window, or to an event that is not open. */
   APPLICATIONS_CLOSED: 423,
+  /** Deadline-sensitive write after the submission deadline or the lock (Agent rule 7). */
+  SUBMISSION_LOCKED: 423,
+  /** Teams and tickets are for applicants who confirmed their place. */
+  NOT_CONFIRMED: 403,
+  TEAM_FULL: 409,
+  /** One team per person per event (DESIGN Step 6 part 2). */
+  ALREADY_ON_TEAM: 409,
+  INVALID_INVITE_CODE: 404,
+  NOT_ON_TEAM: 404,
+  /** Second scan of a ticket; details.checked_in_at holds the first time. */
+  ALREADY_CHECKED_IN: 409,
+  TICKET_NOT_FOUND: 404,
+  /** The ticket exists but its holder declined their place. */
+  TICKET_CANCELLED: 409,
+  /**
+   * Submission save with an old If-Match version: a teammate saved first.
+   * details.current holds the saved submission, so the client can show both versions.
+   */
+  STALE_VERSION: 409,
+  /** Submit pressed by a team smaller than the event's team_size_min. */
+  TEAM_TOO_SMALL: 409,
+  /** Scores can only be entered or changed while the event status is judging. */
+  JUDGING_CLOSED: 423,
+  /** Results, the gallery and judge feedback are public only once the event is completed. */
+  RESULTS_NOT_PUBLISHED: 404,
+  /** Award winners and the rubric are frozen once results are published. */
+  RESULTS_PUBLISHED: 409,
+  /** A mentor claim that lost the race: another mentor claimed it first. */
+  ALREADY_CLAIMED: 409,
+  /** Mentor requests are open only while the event is live. */
+  MENTORING_CLOSED: 423,
   RATE_LIMITED: 429,
   INTERNAL: 500,
   SERVICE_UNAVAILABLE: 503,

@@ -109,7 +109,7 @@ interface PublicProfileRow {
   school: string | null;
 }
 
-/** Public profile. Badges come from award_winners in Phase 5; until then the list is empty. */
+/** Public profile, with winner badges from events whose results are published. */
 export async function getPublicProfile(sql: ISql, userId: string): Promise<PublicProfile | null> {
   const [row] = await sql<[PublicProfileRow?]>`
     select u.id, u.name, p.avatar_url, p.bio, p.github_username, p.school
@@ -117,7 +117,20 @@ export async function getPublicProfile(sql: ISql, userId: string): Promise<Publi
     join profiles p on p.user_id = u.id
     where u.id = ${userId}
   `;
-  return row ? { ...row, badges: [] } : null;
+  if (!row) return null;
+  // Badges are computed (DESIGN Step 3 decision 4), and only for published results.
+  const badges = await sql<PublicProfile['badges']>`
+    select a.id as award_id, a.name as award_name, e.id as event_id, e.name as event_name,
+           e.slug as event_slug, t.name as team_name
+    from team_members m
+    join teams t on t.id = m.team_id
+    join award_winners w on w.team_id = t.id
+    join awards a on a.id = w.award_id
+    join events e on e.id = a.event_id and e.status = 'completed' and e.deleted_at is null
+    where m.user_id = ${userId}
+    order by e.starts_at desc, a.rank nulls last, a.name
+  `;
+  return { ...row, badges: [...badges] };
 }
 
 interface PushTokenRow {

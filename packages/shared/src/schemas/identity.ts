@@ -60,6 +60,7 @@ export const badgeSchema = z.object({
   award_name: z.string(),
   event_id: uuidSchema,
   event_name: z.string(),
+  event_slug: z.string(),
   team_name: z.string(),
 });
 export type Badge = z.infer<typeof badgeSchema>;

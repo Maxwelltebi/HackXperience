@@ -26,3 +26,17 @@ export function withServerTime(response: Response, now: Date = new Date()): Resp
     headers,
   });
 }
+
+/**
+ * A CSV download. The byte-order mark makes Excel read the file as UTF-8, so names with
+ * accents survive.
+ */
+export function csvResponse(csv: string, filename: string): Response {
+  return new Response(`\uFEFF${csv}`, {
+    headers: {
+      'content-type': 'text/csv; charset=utf-8',
+      'content-disposition': `attachment; filename="${filename.replace(/[^\w.-]/g, '_')}"`,
+      'cache-control': 'no-store',
+    },
+  });
+}

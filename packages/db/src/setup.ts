@@ -111,6 +111,7 @@ export async function createSetupItem(
   eventId: string,
   values: Record<string, unknown>,
 ): Promise<SetupItem> {
+  await assertSetupEditable(sql, kind, eventId);
   const { table, columns } = TABLES[kind];
   const clean = pick(values, columns);
   await checkRules(sql, kind, eventId, clean, null);
@@ -128,6 +129,7 @@ export async function updateSetupItem(
   itemId: string,
   values: Record<string, unknown>,
 ): Promise<SetupItem> {
+  await assertSetupEditable(sql, kind, eventId);
   const { table, columns } = TABLES[kind];
   const clean = pick(values, columns);
   const [current] = await sql<[Row?]>`
@@ -155,6 +157,7 @@ export async function deleteSetupItem(
   itemId: string,
   actorId: string,
 ): Promise<void> {
+  await assertSetupEditable(sql, kind, eventId);
   const { table, columns, entity } = TABLES[kind];
   if (kind === 'tracks') {
     const used = await sql`select 1 from awards where track_id = ${itemId}`;
@@ -178,6 +181,23 @@ export async function deleteSetupItem(
     entityId: itemId,
     before: JSON.parse(JSON.stringify(toItem(kind, row))) as Json,
   });
+}
+
+/**
+ * The rubric is fixed once judging starts (scores depend on it), and awards once results are
+ * published (badges come from them).
+ */
+async function assertSetupEditable(sql: ISql, kind: SetupKind, eventId: string): Promise<void> {
+  if (kind !== 'rubric' && kind !== 'awards') return;
+  const [event] = await sql<[{ status: string }?]>`
+    select status from events where id = ${eventId} for share
+  `;
+  if (kind === 'rubric' && (event?.status === 'judging' || event?.status === 'completed')) {
+    throw new ApiError('CONFLICT', 'The rubric is fixed once judging starts.');
+  }
+  if (kind === 'awards' && event?.status === 'completed') {
+    throw new ApiError('RESULTS_PUBLISHED', 'Results are published, so awards are final.');
+  }
 }
 
 function pick(

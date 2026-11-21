@@ -22,14 +22,25 @@ export default async function OrganizeEventLayout({
   const roles = access.roles;
 
   const items: NavItem[] = [{ href: base, label: 'Overview' }];
+  if (can(roles, 'live.view')) items.push({ href: `${base}/live`, label: 'Live dashboard' });
+  if (can(roles, 'announcements.write')) {
+    items.push({ href: `${base}/announcements`, label: 'Announcements' });
+  }
+  if (can(roles, 'mentor.view')) items.push({ href: `${base}/mentors`, label: 'Mentor queue' });
   if (can(roles, 'applications.decide')) {
     const counts = await countApplications(getSql(), id);
     items.push({ href: `${base}/applications`, label: 'Applications', count: counts.submitted });
+  }
+  if (can(roles, 'checkins.scan')) items.push({ href: `${base}/check-in`, label: 'Check-in' });
+  if (can(roles, 'judging.manage') || can(roles, 'scores.write')) {
+    items.push({ href: `${base}/judging`, label: 'Judging' });
   }
   if (can(roles, 'event.edit')) {
     items.push({ href: `${base}/setup`, label: 'Tracks and schedule' });
     items.push({ href: `${base}/questions`, label: 'Application form' });
   }
+  if (can(roles, 'event.view_staff')) items.push({ href: `${base}/teams`, label: 'Teams' });
+  if (can(roles, 'reports.read')) items.push({ href: `${base}/report`, label: 'Impact report' });
   if (can(roles, 'staff.manage')) items.push({ href: `${base}/staff`, label: 'Staff' });
 
   return (

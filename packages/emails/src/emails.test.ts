@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, renderApplicationDecision } from './index';
+import { escapeHtml, renderApplicationDecision, renderSubmissionReminder } from './index';
 
 const base = {
   name: 'Ama Mensah',
@@ -48,4 +48,24 @@ describe('escapeHtml', () => {
       '&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;',
     );
   });
+});
+
+describe('renderSubmissionReminder', () => {
+  const reminder = {
+    name: 'Ama Mensah',
+    eventName: 'The CIReN Experience 5.0',
+    deadlineText: 'Sat 6 Dec 2026, 18:00 GMT',
+    editorUrl: 'https://hack.ciren.network/events/the-ciren-experience-5-0/submission',
+  };
+
+  it.each(['24h', '1h'] as const)(
+    'renders the %s reminder with the deadline and a link',
+    (kind) => {
+      const email = renderSubmissionReminder({ ...reminder, kind });
+      expect(email.subject).toContain(kind === '24h' ? '24 hours' : '1 hour');
+      expect(email.text).toContain(reminder.deadlineText);
+      expect(email.text).toContain(`Open your submission: ${reminder.editorUrl}`);
+      expect(email.html).toContain(`href="${reminder.editorUrl}"`);
+    },
+  );
 });

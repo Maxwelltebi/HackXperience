@@ -1,5 +1,5 @@
-import { applyToEvent, getSql, listApplications, tx } from '@hx/db';
-import { applicationListQuerySchema, applyBodySchema } from '@hx/shared';
+import { applyToEvent, getSql, hitRateLimit, listApplications, tx } from '@hx/db';
+import { applicationListQuerySchema, applyBodySchema, RATE_LIMITS_PER_MINUTE } from '@hx/shared';
 import { handler } from '@/lib/api/handler';
 import { json } from '@/lib/api/respond';
 
@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 export const POST = handler(
   { event: {}, body: applyBodySchema },
   async ({ access, userId, body }) => {
+    await hitRateLimit(getSql(), `apply:${userId}`, RATE_LIMITS_PER_MINUTE.apply, 60);
     const { application, created } = await tx((sql) =>
       applyToEvent(sql, access.event.id, userId, body.answers),
     );

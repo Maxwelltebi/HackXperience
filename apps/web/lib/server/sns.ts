@@ -1,3 +1,4 @@
+import 'server-only';
 import { createVerify } from 'node:crypto';
 import { z } from 'zod';
 import { fetchSigningCertificate } from './sns-cert';

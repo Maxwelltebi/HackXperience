@@ -41,6 +41,14 @@ export async function createTestUser(
 export async function deleteTestUser(sql: ISql, id: string): Promise<void> {
   await sql`delete from notification_outbox where user_id = ${id}`;
   await sql`update applications set decided_by = null where decided_by = ${id}`;
+  await sql`delete from check_ins where user_id = ${id} or checked_in_by = ${id}`;
+  await sql`delete from team_members where user_id = ${id}`;
+  await sql`delete from mentor_requests where requested_by = ${id} or claimed_by = ${id}`;
+  await sql`delete from announcements where author_id = ${id}`;
+  await sql`delete from scores where judge_id = ${id}`;
+  await sql`delete from judge_assignments where judge_id = ${id}`;
+  await sql`delete from submissions where team_id in (select id from teams where owner_id = ${id})`;
+  await sql`delete from teams where owner_id = ${id}`;
   await sql`delete from applications where user_id = ${id}`;
   await sql`delete from audit_log where actor_id = ${id}`;
   await sql`delete from auth.users where id = ${id}`;
@@ -87,10 +95,32 @@ export async function createTestEvent(
 /** Remove a test event and every row that belongs to it. */
 export async function deleteTestEvent(sql: ISql, id: string): Promise<void> {
   await sql`delete from notification_outbox where payload->>'event_id' = ${id}`;
+  await sql`delete from check_ins where event_id = ${id}`;
+  await sql`delete from mentor_requests where event_id = ${id}`;
+  await sql`delete from announcements where event_id = ${id}`;
+  await sql`delete from scores where submission_id in (select id from submissions where event_id = ${id})`;
+  await sql`delete from judge_assignments where event_id = ${id}`;
+  await sql`delete from award_winners where award_id in (select id from awards where event_id = ${id})`;
+  await sql`delete from submissions where event_id = ${id}`;
+  await sql`delete from teams where event_id = ${id}`;
   await sql`delete from audit_log where event_id = ${id}`;
   await sql`delete from applications where event_id = ${id}`;
   await sql`delete from awards where event_id = ${id}`;
   await sql`delete from events where id = ${id}`;
+}
+
+/** An application already accepted and confirmed, with a ticket code: a ready participant. */
+export async function confirmApplicant(
+  sql: ISql,
+  eventId: string,
+  userId: string,
+): Promise<string> {
+  const ticket = `tkt-${randomUUID()}`;
+  await sql`
+    insert into applications (event_id, user_id, status, ticket_code)
+    values (${eventId}, ${userId}, 'confirmed', ${ticket})
+  `;
+  return ticket;
 }
 
 /** Tracks what a test file creates and removes it all afterwards: events first, then users. */

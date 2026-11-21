@@ -1,36 +1,74 @@
 import type { Sql } from './client';
 import { processOutbox, recoverStuckOutbox, type OutboxDeps, type OutboxResult } from './outbox';
+import { checkPushReceipts, processPushOutbox, type PushDeps, type PushResult } from './push';
+import { enqueueDeadlineReminders } from './reminders';
+import {
+  capturePendingHashes,
+  lockDueDeadlines,
+  type CommitFetcher,
+  type DeadlineLockResult,
+  type HashResult,
+} from './submissions';
 
 /** Advisory lock key for the tick: "HX" plus 1. Any fixed bigint works; it must never change. */
 export const TICK_LOCK_KEY = 7_288_001;
 
+export interface TickDeps {
+  /** Sends email. Null when email isn't configured: emails wait in the outbox. */
+  outbox: OutboxDeps | null;
+  /** Fetches commit hashes from GitHub. */
+  fetchCommit: CommitFetcher;
+  /** Sends push notifications through Expo. Null: pushes wait in the outbox. */
+  push: PushDeps | null;
+}
+
 export type TickResult =
   | { skipped: true }
-  | { skipped: false; recovered: number; outbox: OutboxResult | 'not_configured' };
+  | {
+      skipped: false;
+      recovered: number;
+      locked: DeadlineLockResult[];
+      reminders: number;
+      hashes: HashResult;
+      outbox: OutboxResult | 'not_configured';
+      push: (PushResult & { receipts_checked: number; tokens_removed: number }) | 'not_configured';
+    };
 
 /**
  * One run of POST /api/internal/tick (every minute from pg_cron).
  *
- * The database-only steps run in one transaction holding pg_try_advisory_xact_lock, so two
- * ticks never run them at once; a tick that can't get the lock does nothing. The lock is the
- * transaction-scoped kind because the production pooler runs in transaction mode, where a
- * session lock could stay stuck on a pooled connection.
- * Network steps (sending) run after that commit, outside any transaction (Agent rule 9);
- * they are safe to overlap because claiming uses FOR UPDATE SKIP LOCKED.
- * Later phases add steps: deadline locks and reminders (Phase 4), push receipts (Phase 6).
+ * The database-only steps (recover stuck emails, lock deadlines, queue reminders) run in one
+ * transaction holding pg_try_advisory_xact_lock, so two ticks never run them at once; a tick
+ * that can't get the lock does nothing. The lock is the transaction-scoped kind because the
+ * production pooler runs in transaction mode, where a session lock could stay stuck on a
+ * pooled connection. The deadline lock is also safe on its own: it only touches events whose
+ * submissions_locked_at is still null, re-checked under the event row lock.
  *
- * With `deps` null (email not configured), emails wait in the outbox instead of failing.
+ * Network steps (commit hashes, then sending) run after that commit, outside any transaction
+ * (Agent rule 9). They are safe to overlap: hash updates check the row is still pending, and
+ * the outbox claim uses FOR UPDATE SKIP LOCKED.
+ * Push notifications and their receipts run after email.
  */
-export async function runTick(sql: Sql, deps: OutboxDeps | null): Promise<TickResult> {
-  const recovered = await sql.begin(async (tx) => {
+export async function runTick(sql: Sql, deps: TickDeps): Promise<TickResult> {
+  const steps = await sql.begin(async (tx) => {
     const [row] = await tx<
       [{ locked: boolean }]
     >`select pg_try_advisory_xact_lock(${TICK_LOCK_KEY}::bigint) as locked`;
     if (!row.locked) return null;
-    return recoverStuckOutbox(tx);
+    const recovered = await recoverStuckOutbox(tx);
+    const locked = await lockDueDeadlines(tx);
+    const reminders = await enqueueDeadlineReminders(tx);
+    return { recovered, locked, reminders };
   });
-  if (recovered === null) return { skipped: true };
+  if (steps === null) return { skipped: true };
 
-  const outbox = deps ? await processOutbox(sql, deps) : 'not_configured';
-  return { skipped: false, recovered, outbox };
+  const hashes = await capturePendingHashes(sql, deps.fetchCommit);
+  const outbox = deps.outbox ? await processOutbox(sql, deps.outbox) : 'not_configured';
+  let push: Extract<TickResult, { skipped: false }>['push'] = 'not_configured';
+  if (deps.push) {
+    const sent = await processPushOutbox(sql, deps.push);
+    const receipts = await checkPushReceipts(sql, deps.push);
+    push = { ...sent, receipts_checked: receipts.checked, tokens_removed: receipts.removed };
+  }
+  return { skipped: false, ...steps, hashes, outbox, push };
 }

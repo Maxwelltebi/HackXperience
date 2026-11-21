@@ -1,3 +1,4 @@
+import 'server-only';
 import { createHash, timingSafeEqual } from 'node:crypto';
 
 /** Header pg_cron sends with the tick secret (see migration 0004_cron). */

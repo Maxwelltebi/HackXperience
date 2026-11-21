@@ -24,21 +24,58 @@ One list for every open question. Agents add rows; a person answers in the **Ans
 | Q11 | **Changing a decision after RSVP** _(permissions)_. Once an applicant confirms or declines, organizers can no longer change their status (for example, removing someone for a code of conduct breach). Should owners be able to?                                                                | P2     | Phase 3           | Not possible                           |        |
 | Q12 | **Drafts and non-admin staff.** Judges, mentors and volunteers can't see a draft event; only owners and admins can. OK?                                                                                                                                                                         | P2     | —                 | Owners and admins only                 |        |
 | Q13 | **Profile before applying.** The application form warns when school or level of study is missing, but doesn't block. Require them?                                                                                                                                                              | P2     | —                 | Warn only                              |        |
+| Q14 | **Check-in window.** Scanning works while the event is published or live; refused once judging starts. OK?                                                                                                                                                                                      | P3     | —                 | Published or live                      |        |
+| Q15 | **Team board privacy.** The board shows each open team's member names and schools to confirmed participants (never invite codes). OK to show schools?                                                                                                                                           | P3     | —                 | Names and schools                      |        |
+| Q16 | **Play closed test timing.** The build plan starts the Android closed test in Phase 3, so its 14 days run while the web is built. Going web-first delays that clock. Start a minimal Android build early anyway, just to begin the 14 days?                                                     | P3     | Play production   | Not started                            |        |
+| Q17 | **Reopening past the event end** _(deadlines)_. The events table requires `submission_deadline <= ends_at`, so reopen refuses a new deadline after the event ends. Should reopen move `ends_at` too?                                                                                            | P4     | —                 | Refused: change the end time first     |        |
+| Q18 | **When reopen is allowed** _(deadlines)_. Only while the event is published or live, never once judging has started. OK?                                                                                                                                                                        | P4     | —                 | Published or live                      |        |
+| Q19 | **Who gets deadline reminders.** The plan says "teams with an unsubmitted draft". Teams that never saved anything get them too, since they need them most. OK?                                                                                                                                  | P4     | —                 | Every team that hasn't submitted       |        |
+| Q20 | **Private GitHub repos.** DESIGN Step 4 says GitHub links must be public; the build plan's link check is format only. Today a private repo shows up after the deadline as "Couldn't read the repository" (`sha_status = unreachable`). Also check at save time (one GitHub call per save)?      | P4     | —                 | Format check only                      |        |
+| Q21 | **Full ranking in public?** Public results show awards and their winners only. The full ranking is kept in the snapshot for organizers. Publish the whole ranking too?                                                                                                                          | P5     | —                 | Winners only                           |        |
+| Q22 | **Publishing with missing scores.** "Mark completed" works even if some judges haven't finished; the judging page shows "N of M scores in" first. Block it instead?                                                                                                                             | P5     | —                 | Allowed, progress shown                |        |
+| Q23 | **Do judges see team names?** Judges see the team name with each project (not blind judging). OK?                                                                                                                                                                                               | P5     | —                 | Team names shown                       |        |
+| Q24 | **Mentor request limits.** A team may have 3 open or claimed requests at once, and requests are taken only while the event is live. OK?                                                                                                                                                         | P6     | —                 | 3, live only                           |        |
+| Q25 | **Who gets announcement pushes.** Every confirmed participant and every staff member with the Android app. Should staff be left out?                                                                                                                                                            | P6     | —                 | Participants and staff                 |        |
+| Q26 | **How should end-to-end tests sign in?** Playwright can't click through Google or GitHub OAuth. Options: a preview-only email-and-password test account in Supabase Auth, or a signed test-login route that exists only on previews. _(auth)_                                                   | P7     | Playwright suite  | Not built (see Phase 7)                |        |
+| Q27 | **Members of a deleted team.** They stay attached, so restoring is exact; until it's restored they can't join another team. OK, or should deleting a team free its members? _(deletion)_                                                                                                        | P7     | —                 | Members stay attached                  |        |
+| Q28 | **"Accepted" in the impact report** counts everyone offered a place (accepted, confirmed or declined). OK for grant reports?                                                                                                                                                                    | P7     | —                 | Offered a place                        |        |
 | Q8  | Real CIReN event sizes, to recheck the DESIGN Step 2 estimates.                                                                                                                                                                                                                                 | Design | Phase 7 load test | 500 applicants, 300 accepted, 80 teams |        |
 
 ### Resolved
 
-| ID  | Question                                                                                       | Resolution                                                                                                                                                                                            |
-| --- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | Design doc missing                                                                             | Added 19 Nov 2026; copied to `docs/DESIGN.md`.                                                                                                                                                        |
-| R2  | Header name `server_time` vs `Server-Time`                                                     | DESIGN Step 4 says `server_time`. Kept.                                                                                                                                                               |
-| R3  | Error code names                                                                               | DESIGN only fixes the shape and the domain codes (`TEAM_FULL`, `STALE_VERSION`, …). The generic codes stay.                                                                                           |
-| R4  | Should the public profile require sign-in?                                                     | No: DESIGN Step 4 says "anyone". School is still open (Q2).                                                                                                                                           |
-| R5  | Error `details` shape                                                                          | DESIGN Step 4 shows `"details": {}`. Changed from an array to an object; validation problems are under `details.fields` as `{ "path": "message" }`.                                                   |
-| R6  | `DELETE /me/push-tokens` body vs path                                                          | DESIGN Step 4: `DELETE /me/push-tokens/{token}`. Changed.                                                                                                                                             |
-| R8  | Applying twice                                                                                 | Returns the first application (`200`) instead of an error, so a mobile retry is harmless (Agent rule 14).                                                                                             |
-| R9  | Tick lock with a transaction-mode pooler                                                       | `pg_try_advisory_xact_lock`, not the session lock the build plan names: through Supavisor in transaction mode a session lock can stick to a pooled connection forever. See `packages/db/src/tick.ts`. |
-| R7  | Retry-safe creates: body `id` (build plan rule 14) vs `Idempotency-Key` header (DESIGN Step 4) | `handler({ clientId: true })` accepts either; if both are sent they must match.                                                                                                                       |
+| ID  | Question                                                                                       | Resolution                                                                                                                                                                                                                                       |
+| --- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R1  | Design doc missing                                                                             | Added 19 Nov 2026; copied to `docs/DESIGN.md`.                                                                                                                                                                                                   |
+| R2  | Header name `server_time` vs `Server-Time`                                                     | DESIGN Step 4 says `server_time`. Kept.                                                                                                                                                                                                          |
+| R3  | Error code names                                                                               | DESIGN only fixes the shape and the domain codes (`TEAM_FULL`, `STALE_VERSION`, …). The generic codes stay.                                                                                                                                      |
+| R4  | Should the public profile require sign-in?                                                     | No: DESIGN Step 4 says "anyone". School is still open (Q2).                                                                                                                                                                                      |
+| R5  | Error `details` shape                                                                          | DESIGN Step 4 shows `"details": {}`. Changed from an array to an object; validation problems are under `details.fields` as `{ "path": "message" }`.                                                                                              |
+| R6  | `DELETE /me/push-tokens` body vs path                                                          | DESIGN Step 4: `DELETE /me/push-tokens/{token}`. Changed.                                                                                                                                                                                        |
+| R8  | Applying twice                                                                                 | Returns the first application (`200`) instead of an error, so a mobile retry is harmless (Agent rule 14).                                                                                                                                        |
+| R9  | Tick lock with a transaction-mode pooler                                                       | `pg_try_advisory_xact_lock`, not the session lock the build plan names: through Supavisor in transaction mode a session lock can stick to a pooled connection forever. See `packages/db/src/tick.ts`.                                            |
+| R10 | Rate-limit helper location                                                                     | The build plan puts it in `packages/core`, but it reads and writes `rate_limit_counters`, so it lives in `packages/db` (`hitRateLimit`). It runs outside the protected transaction, so failed attempts still count.                              |
+| R11 | Team name and board fields                                                                     | DESIGN has no endpoint to set `looking_for_members` / `looking_for`. Added `PATCH /events/{id}/teams/me` (any member), needed for the find-a-team board.                                                                                         |
+| R12 | Creating a team after the deadline                                                             | Treated as deadline-sensitive like joining (`SUBMISSION_LOCKED`).                                                                                                                                                                                |
+| R13 | Submission before the first save                                                               | No row exists until the first save: GET returns a blank draft with `id: null, version: 0`, and the first PUT sends `If-Match: 0`. Two teammates' first saves race on the team row lock; the second gets `STALE_VERSION`.                         |
+| R14 | Does Submit change the version?                                                                | No. `version` counts content edits; Submit only sets the status, so a teammate's open editor isn't made stale by it.                                                                                                                             |
+| R15 | Which commit is "locked"                                                                       | The latest commit on the default branch when the tick fetches it (within about a minute of the lock), as the build plan says. Exact capture needs a GitHub App (DESIGN, deferred).                                                               |
+| R16 | New error codes                                                                                | `STALE_VERSION` (409, `details.current` holds the saved version) and `TEAM_TOO_SMALL` (409, Submit below `team_size_min`).                                                                                                                       |
+| R17 | Judging from unlocked submissions                                                              | Starting judging runs the deadline lock in the same transaction, so judging never starts from unlocked submissions, even when the tick hasn't run (as on a laptop).                                                                              |
+| R18 | Re-running assignment                                                                          | Allowed while judging. Assignments that have scores are kept; the rest are recomputed and topped up to N. The seed is returned and audited, so a run can be replayed.                                                                            |
+| R19 | What freezes when                                                                              | The rubric is frozen once judging starts (scores depend on it). Award winners can be chosen only while judging. Awards and winners are frozen at completion (badges depend on them).                                                             |
+| R20 | Badges before publication                                                                      | Badges show only for completed events, so winners don't leak before results are out.                                                                                                                                                             |
+| R21 | Team feedback endpoint                                                                         | DESIGN says teams see anonymized judge comments but names no endpoint. Added `GET /events/{id}/teams/me/feedback`. Judges appear as "Judge 1", "Judge 2", ordered by a hash, never by name.                                                      |
+| R22 | New codes and permissions                                                                      | Codes `JUDGING_CLOSED` (423), `RESULTS_NOT_PUBLISHED` (404) and `RESULTS_PUBLISHED` (409). Permissions `judging.manage` and `submissions.read_all` (owner, admin).                                                                               |
+| R23 | Spread in the z-score                                                                          | Population standard deviation. It reproduces the design doc's example exactly.                                                                                                                                                                   |
+| R24 | Where push tickets live                                                                        | The schema has no ticket table, and adding one is a design change. Expo tickets are kept on the outbox row (`payload.tickets`, each with its token), and `payload.receipts_checked` marks rows whose receipts were read.                         |
+| R25 | Broadcast mechanism                                                                            | Supabase's `realtime.send()` inside the write's transaction. The message is a row in `realtime.messages`, so a rolled-back write sends nothing (tested).                                                                                         |
+| R26 | Hint versions                                                                                  | `version` is the database clock in milliseconds at the change. Lists return the version they were read at, and the client ignores hints that aren't newer. The teammate-saved hint carries the submission's own `version`.                       |
+| R27 | Channel helper functions                                                                       | They live in a `hx_private` schema that the Data API doesn't expose, so nobody can call them over HTTP to find out who is staff where. Only `can_receive` is executable by `authenticated`, for the policy.                                      |
+| R28 | Extra endpoints                                                                                | `GET /events/{id}/teams/me/mentor-requests` (a team sees its own requests) and `GET /events/{id}/live-stats` (the dashboard's first load and its reconnects). DESIGN names neither.                                                              |
+| R29 | Report scope                                                                                   | Demographics count checked-in participants only. Blank answers are "Not given". Completion rate is submitted projects over teams with members. Median response is from asking to a mentor claiming. Soft-deleted teams and projects never count. |
+| R30 | Org report range                                                                               | `from` and `to` are dates (inclusive, UTC) on the event start. Drafts are excluded.                                                                                                                                                              |
+| R31 | CSV safety                                                                                     | Cells that start with `=`, `+`, `-` or `@` get a leading apostrophe, because school names come from applicants (CSV injection). A UTF-8 byte-order mark makes Excel read accents correctly.                                                      |
+| R7  | Retry-safe creates: body `id` (build plan rule 14) vs `Idempotency-Key` header (DESIGN Step 4) | `handler({ clientId: true })` accepts either; if both are sent they must match.                                                                                                                                                                  |
 
 ---
 
@@ -46,26 +83,438 @@ One list for every open question. Agents add rows; a person answers in the **Ans
 
 The Android app is paused while the web app is finished (the web app covers every role on phones; DESIGN Step 8 cut line). This log is what a person or agent needs to pick it back up.
 
-| Area                                                                                                                    | State                                                              | Where                                          | Next step                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| App shell, Expo SDK 58, Expo Router                                                                                     | Done                                                               | `apps/mobile/src/app/_layout.tsx`              | —                                                                            |
-| Package `network.ciren.hackxperience`, scheme `hackxperience`                                                           | Done (the package is fixed after the first Play upload)            | `apps/mobile/app.json`                         | —                                                                            |
-| Google and GitHub sign-in (PKCE, in-app browser, deep link)                                                             | Built, **not yet tried on a device** (needs Supabase OAuth set up) | `src/lib/auth.tsx`, `src/lib/auth-redirect.ts` | Phase 1 gate: sign in on Android in development                              |
-| Session storage                                                                                                         | AsyncStorage                                                       | `src/lib/supabase.ts`                          | —                                                                            |
-| API client: bearer token, error shape, `server_time` offset                                                             | Done                                                               | `src/lib/api.ts` (`serverNow()`)               | Add calls per phase                                                          |
-| Profile screen: name, school, GitHub, time zone, email reminders                                                        | Done                                                               | `src/app/index.tsx`                            | Add bio, level, graduation year, country, gender to match the web            |
-| Design tokens (colors, raised and inset shadows, 52 px controls)                                                        | Done                                                               | `src/theme.ts`, `src/components/ui.tsx`        | —                                                                            |
-| Fonts (Inter, Inter Tight, JetBrains Mono)                                                                              | Not started; system font                                           | —                                              | Load with `expo-font` before the Phase 3 screens                             |
-| App icon, splash artwork                                                                                                | Not started                                                        | —                                              | Needed before the first Play upload                                          |
-| Unit tests                                                                                                              | 4 (redirect parsing)                                               | `src/lib/auth-redirect.test.ts`                | —                                                                            |
-| Bundle check                                                                                                            | `expo export --platform android` passes                            | —                                              | Run before each build                                                        |
-| **Phase 3:** events list, event page, ticket QR, my team, volunteer scanner; EAS build profile; first closed-test build | Not started                                                        | —                                              | Start the Play closed test early: 14 days with 12+ testers before production |
-| **Phase 5:** judge scoring screen                                                                                       | Not started                                                        | —                                              | —                                                                            |
-| **Phase 6:** push token registration, announcements feed, mentor request form, `useLiveChannel`                         | Not started (the token endpoints exist)                            | —                                              | —                                                                            |
+| Area                                                                                                                                                  | State                                                                                                                                                     | Where                                          | Next step                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| App shell, Expo SDK 58, Expo Router                                                                                                                   | Done                                                                                                                                                      | `apps/mobile/src/app/_layout.tsx`              | —                                                                                |
+| Package `network.ciren.hackxperience`, scheme `hackxperience`                                                                                         | Done (the package is fixed after the first Play upload)                                                                                                   | `apps/mobile/app.json`                         | —                                                                                |
+| Google and GitHub sign-in (PKCE, in-app browser, deep link)                                                                                           | Built, **not yet tried on a device** (needs Supabase OAuth set up)                                                                                        | `src/lib/auth.tsx`, `src/lib/auth-redirect.ts` | Phase 1 gate: sign in on Android in development                                  |
+| Session storage                                                                                                                                       | AsyncStorage                                                                                                                                              | `src/lib/supabase.ts`                          | —                                                                                |
+| API client: bearer token, error shape, `server_time` offset                                                                                           | Done                                                                                                                                                      | `src/lib/api.ts` (`serverNow()`)               | Add calls per phase                                                              |
+| Profile screen: name, school, GitHub, time zone, email reminders                                                                                      | Done                                                                                                                                                      | `src/app/index.tsx`                            | Add bio, level, graduation year, country, gender to match the web                |
+| Design tokens (colors, raised and inset shadows, 52 px controls)                                                                                      | Done                                                                                                                                                      | `src/theme.ts`, `src/components/ui.tsx`        | —                                                                                |
+| Fonts (Inter, Inter Tight, JetBrains Mono)                                                                                                            | Not started; system font                                                                                                                                  | —                                              | Load with `expo-font` before the Phase 3 screens                                 |
+| App icon, splash artwork                                                                                                                              | Not started                                                                                                                                               | —                                              | Needed before the first Play upload                                              |
+| Unit tests                                                                                                                                            | 4 (redirect parsing)                                                                                                                                      | `src/lib/auth-redirect.test.ts`                | —                                                                                |
+| Bundle check                                                                                                                                          | `expo export --platform android` passes                                                                                                                   | —                                              | Run before each build                                                            |
+| **Phase 3:** events list, event page, ticket QR, my team (create, join by code, leave), volunteer scanner; EAS build profile; first closed-test build | Not started (deferred: web first). The API is ready: `/me/ticket`, `/teams/*`, `/check-ins/*`                                                             | —                                              | The Play closed test needs 14 days with 12+ testers before production (see Q16)  |
+| **Phase 4:** countdown using the `server_time` offset (build plan item 9)                                                                             | Not started (deferred: web first). `serverNow()` in `src/lib/api.ts` already tracks the offset; the submission API is ready                               | —                                              | No submission editor on mobile is planned; the web editor works on phones        |
+| **Phase 5:** judge scoring screen                                                                                                                     | Not started (deferred: web first). The API is ready: `/judging/me`, `/submissions/{sid}`, `/submissions/{sid}/scores/me`                                  | —                                              | The web scoring page works on phones in the meantime                             |
+| **Phase 6:** push token registration (after sign-in and on change), announcements feed, mentor request form, `useLiveChannel`                         | Not started (deferred: web first). The server side is ready: the push sender, receipts, `POST /me/push-tokens`, and the shared `LiveSync` reconnect rules | —                                              | Push needs the Expo access token and FCM credentials (human task before Phase 6) |
 
 Phase 2 added nothing on mobile. `/me` now also returns `event_roles` and `org_ids`; the app parses them through the shared schema.
 
 Known gaps: the time zone field is free text (validated by the API), not a picker; the mobile profile shows fewer fields than the web.
+
+---
+
+## Phase 7: Impact reports and hardening (web; built 21 Nov 2026, gate not yet run)
+
+### Status
+
+| Check                                      | Result                                                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `pnpm lint && pnpm typecheck && pnpm test` | Passed: 419 tests                                                                                             |
+| Report numbers match a hand count          | Yes: `packages/db/src/reports.int.test.ts` builds a fixture with known answers                                |
+| Load test (k6)                             | **Script written, not run**: needs a preview deployment and 80 test accounts (`docs/RUNBOOK.md`, "Load test") |
+| Playwright end-to-end suite                | **Not built**: blocked on Q26 (how tests sign in) and a preview deployment                                    |
+| Restore drill                              | **Not done**: needs the nightly backup secrets and a local database with `psql`                               |
+
+### What was built
+
+- **Impact reports** (`packages/db/reports.ts`):
+  - `GET /events/{id}/reports/impact?format=json|csv` (owner, admin):
+    - applicants, offered a place, confirmed, checked in;
+    - demographics of checked-in participants (school, level, country, gender; blank is "Not given");
+    - teams, submissions and completion rate;
+    - mentor requests, how many were resolved, and the median minutes to a mentor.
+  - `GET /orgs/{orgId}/reports/impact?from=&to=&format=` (org members): the same per event, plus "All events" totals and returning participants (checked in at more than one event).
+  - `toCsv` in core: RFC 4180, injection-safe.
+- **Organizer screens**:
+  - **Impact report**, with **Download CSV**.
+  - **Teams**: every team with its members and project, and owners can delete or restore a team or its project.
+  - Overview: **Delete event** (owner). The Organize list shows **Deleted events** with **Restore**.
+- **Soft delete and restore** for events, teams and submissions:
+  - Owner only, audited (`*.deleted` and `*.restored`).
+  - `DELETE /events/{id}` and `POST /events/{id}/restore`.
+  - `DELETE /events/{id}/teams/{tid}` and `POST …/teams/{tid}/restore`.
+  - `DELETE /events/{id}/submissions/{sid}` and `POST …/submissions/{sid}/restore`.
+  - A deleted team's project leaves standings, judging queues, the gallery, live counts and reports.
+- **Rate limits** per person per minute: applying 5, joining a team 10 (Phase 3), new invite code 5, mentor requests 5.
+- **`docs/RUNBOOK.md`**: every failure in DESIGN Step 7 with plain dashboard steps, the 72-hour checklist, and how to run the load test.
+- **`scripts/loadtest.js`**: k6, 80 teams saving every 3 seconds for 90 seconds (the last 15 minutes compressed). The deadline lands inside the run. Thresholds: p95 under 800 ms and no unexpected answers.
+
+### Security review (21 Nov 2026)
+
+| Check                                                          | Result                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No client policies on public tables; RLS on every public table | **Pass**, and now a standing test (`packages/db/src/security.int.test.ts`). The only client policy is the one on `realtime.messages` (Phase 6)                                                                                                                                                                                            |
+| Channel helpers unreachable anonymously                        | **Pass**: `hx_private` isn't exposed by the Data API, and `anon` has no usage on it (tested)                                                                                                                                                                                                                                              |
+| Service-role key and other secrets absent from client code     | **Pass at source level**: no `'use client'` file reads anything but `NEXT_PUBLIC_*` variables. Secrets are read only in `lib/server/*` and internal routes, and every `lib/server` module now imports `server-only` (three didn't before). The plan's check of the _build output_ still needs a `next build`, which is not run on this PC |
+| Tick secret and SNS signature checks covered by tests          | **Pass**: `apps/web/tests/internal.int.test.ts` covers a wrong or missing secret, bad signatures, untrusted certificate hosts, the wrong topic, and old messages                                                                                                                                                                          |
+| No secrets or email addresses in logs                          | **Pass**: the API logs only the method, path and database error code. Outbox errors have email addresses removed (`describeError`). Push receipts log the same cleaned text                                                                                                                                                               |
+| Test sign-in can't reach production                            | **Pass**: `Bearer test:<id>` exists only in the vitest setup file, never in app code                                                                                                                                                                                                                                                      |
+
+### Left out, and why
+
+- **Playwright suite**: Q26. Once there's an answer and a preview deployment, the flow is apply → accept → join a team → submit → score → publish results.
+- **Load test run and restore drill**: need a preview deployment, test accounts and backup secrets (human tasks below).
+
+### Human tasks for the Phase 7 gate
+
+- [ ] Run `pnpm exec supabase db push --remote` (adds 0007 to 0009 if not done yet).
+- [ ] Download the impact CSV for a test event and compare it with a hand count.
+- [ ] Delete and restore a team from **Organize** → **Teams**.
+- [ ] Read `docs/RUNBOOK.md` with the Ghana-based operator.
+- [ ] Restore drill: last night's backup into a fresh local database with `scripts/restore.sh`.
+- [ ] Load test on a preview deployment.
+- [ ] Answer Q26 so the Playwright suite can be built.
+
+---
+
+## Phase 6: Live features (web; built 21 Nov 2026, gate not yet run)
+
+### Status
+
+| Check                                      | Result                                                                                                                                                                |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migrations 0008 and 0009 apply cleanly     | Passed locally. The local stub gained `auth.uid()` and a minimal `realtime` schema, so the policy tests run without Docker. CI checks them on the real Supabase image |
+| `pnpm lint && pnpm typecheck && pnpm test` | Passed: 404 tests (the mentor claim race ran 10 rounds)                                                                                                               |
+| Realtime in a browser                      | **Not checked**: needs the dev project and two signed-in browsers                                                                                                     |
+
+### What was built
+
+- **Migration `0008_live`**: `announcements` and `mentor_requests` (client-generated id), as in the canonical schema.
+- **Migration `0009_realtime_policies`**:
+  - `hx_private.is_event_staff`, `is_team_member`, `is_event_participant` and `can_receive(topic, user)`.
+  - One select policy on `realtime.messages` for `authenticated`. It admits each channel in the DESIGN table only to its subscribers.
+  - There is no insert policy, so clients can't send.
+- **Broadcasts** (`packages/db/live.ts`): `broadcast()` calls `realtime.send` inside the write's transaction. Hints go out from:
+  - announcements;
+  - mentor requests (created, claimed, resolved, cancelled), to the mentors' and the team's channels;
+  - team join, leave and remove, to the team channel;
+  - submission saves and submit (the teammate-saved notice);
+  - judge assignment, to `user:{id}`;
+  - staff counts, as numbers, after check-ins, first saves and submits, scores, assignments and mentor changes.
+- **Push** (`packages/db/push.ts`):
+  - Expo batches of 100. Tickets are kept on the outbox row, and a ticket that says DeviceNotRegistered deletes its token at once.
+  - Tick step: receipts for pushes at least 15 minutes old. DeviceNotRegistered deletes the token.
+  - The sender is `apps/web/lib/server/expo.ts`. `EXPO_ACCESS_TOKEN` is optional.
+- **Announcements**: create (owner or admin, retry-safe) queues a push per recipient with the app; the list supports `since`.
+- **Mentor queue**:
+  - Create: a team member, while the event is live, at most 3 active per team.
+  - List: mentors, admins and owners.
+  - Claim is one conditional `UPDATE … WHERE status = 'open'`; the loser gets `ALREADY_CLAIMED`.
+  - Resolve: the claimer. Cancel: the team.
+- **Shared `LiveSync`** (`packages/shared/live.ts`): subscribe, then fetch; refetch on every reconnect; ignore hints that aren't newer; poll every 30 seconds while the channel is down. Mobile will reuse it.
+- **Web hook** `useLiveChannel(topic, refetch, onHint?)` on Supabase private channels. Without Supabase configured, it polls.
+- **Screens**:
+  - The organizer sidebar gains **Live dashboard** (live counters), **Announcements** (composer and feed) and **Mentor queue** (claim and resolve).
+  - Event page: a live announcements feed for staff and confirmed participants.
+  - Team page: **Ask a mentor**, with the team's requests updating live.
+  - Submission editor: "A teammate saved a newer version", with **Load it** or **Compare** (Compare opens the conflict screen).
+
+**Tests the plan requires, all present:**
+
+- A participant can't receive `event:{id}:staff` or another team's channel. This is checked against the real RLS policy by switching to the `authenticated` role with JWT claims, and covers every channel type.
+- Two mentors claiming at the same moment: exactly one succeeds, in 10 rounds.
+- A rolled-back write sends no broadcast.
+- `LiveSync` refetches after a simulated disconnect and ignores an out-of-order older hint.
+- A DeviceNotRegistered receipt deletes that token.
+- API refusals for every role on every live endpoint.
+
+### Left out, and why
+
+- **Mobile push registration, the feed and the request form**: web first (Mobile app status table). The server is ready.
+- **Push for other notifications** (decisions, reminders, results): only announcements push in this phase, as the build plan lists. The others are ready to add as outbox templates.
+- **Web push for iPhone, chat**: out of scope in the plan.
+
+### Human tasks for the Phase 6 gate
+
+- [ ] Run `pnpm exec supabase db push --remote`, which adds 0007 to 0009.
+- [ ] Expo access token and FCM credentials (before the Android app work resumes).
+- [ ] Gate: two browsers signed in as a team member and a mentor. The request appears for the mentor without a refresh, and the claim updates the team's page. The staff dashboard count rises on a test check-in.
+
+---
+
+## Phase 5: Judging and results (web; built 21 Nov 2026, gate not yet run)
+
+### Status
+
+| Check                                          | Result                                                                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Migration 0007 applies cleanly after 0001–0006 | Passed locally; CI checks it on the real Supabase image                                                       |
+| `pnpm lint && pnpm typecheck && pnpm test`     | Passed: 386 tests                                                                                             |
+| `next build`                                   | Not run (RAM on the dev PC); Vercel runs it                                                                   |
+| Screens in a browser                           | **Not checked**: run `pnpm exec supabase db push --remote` first to add the judging tables to the dev project |
+
+### What was built
+
+- **Migration `0007_judging`**: `judge_assignments`, `scores` and `award_winners`, as in the canonical schema, plus lookup indexes.
+- **`packages/core/judging.ts`**:
+  - `assignJudges` follows the plan exactly: seeded shuffle, fewest assignments first, random ties, conflicts skipped. It also keeps scored assignments fixed and reports projects that are short of judges.
+  - `computeStandings`:
+    - weighted totals from 0 to 100;
+    - a z-score per judge;
+    - the pooled mean and spread for judges with fewer than 4 scores or no spread;
+    - the average z per project;
+    - overall and per-track ranks, with the tiebreaker criterion first and then a reported tie;
+    - progress.
+- **`packages/db/judging.ts`**:
+  - assignment;
+  - a judge's queue;
+  - the submission view for judges and organizers;
+  - scoring, with every criterion at once, each within `max_score`, under an event FOR SHARE lock, audited;
+  - standings;
+  - award winners, where a track award needs a project in that track (audited);
+  - the results snapshot;
+  - results;
+  - the gallery, with a cursor;
+  - anonymized feedback.
+- **Other database changes**:
+  - Status changes: starting judging locks submissions. Completing saves `results_snapshot` (awards, winners and the standings) in the same transaction and writes `results.published` to the audit log.
+  - Public profiles return badges for completed events.
+- **API**
+
+  | Endpoint                                                          | Who                                             |
+  | ----------------------------------------------------------------- | ----------------------------------------------- |
+  | `POST /events/{id}/judging/assign` {judges_per_submission, seed?} | owner, admin; while judging                     |
+  | `GET /events/{id}/judging/me`                                     | judge                                           |
+  | `GET /events/{id}/submissions/{sid}`                              | assigned judge (others 404), owner, admin       |
+  | `PUT /events/{id}/submissions/{sid}/scores/me`                    | assigned judge; while judging                   |
+  | `GET /events/{id}/judging/standings[?published=true]`             | owner, admin                                    |
+  | `POST /events/{id}/awards/{aid}/winners` {team_ids}               | owner, admin; while judging                     |
+  | `GET /events/{id}/results`                                        | anyone, once completed                          |
+  | `GET /events/{id}/submissions?cursor=`                            | owner and admin any time; anyone once completed |
+  | `GET /events/{id}/teams/me/feedback`                              | team member, once completed                     |
+
+- **Web UI**
+  - **Organizer sidebar → Judging**:
+    - Judges get their queue, each project marked To score or Scored, and a scoring page: the project with its write-up, links and captured commit, next to the rubric form with a comment box per criterion and a Next project link.
+    - Owners and admins get:
+      - Assign or Rebalance;
+      - per-judge progress (mean, spread, and whether that judge is normalized against their own scores or all judges' scores);
+      - the standings, raw and normalized side by side, with Overall and per-track tabs;
+      - a winner picker for each award.
+  - **Public pages**:
+    - `/events/[slug]/results`: winners with member links;
+    - `/events/[slug]/gallery` and `/gallery/[sid]`: projects with their write-up and award chips;
+    - `/users/[id]`: a public profile with badges.
+  - **Event page**: a "Results are out" card. Team members' submission page shows judge feedback.
+
+**Tests the plan requires, all present:**
+
+- **Core:**
+  - the design doc's case: a generous judge's 9 (mean 8.5, spread 0.5) ranks below a harsh judge's 6 (mean 4.5, spread 1.0);
+  - the fallback for a judge with 3 scores, and for a judge with identical scores;
+  - the tiebreaker, and an exact tie reported as a tie;
+  - assignment: exactly N judges, loads within 1, no conflicts, and the same seed giving the same result.
+- **Database (`judging.int.test.ts`):**
+  - a judge can't read an unassigned submission;
+  - a judge can't score once results are out;
+  - a direct database edit to scores after publication doesn't change the published results or standings.
+- **API (`apps/web/tests/judging.int.test.ts`):** a refusal for every role on every endpoint.
+
+### How to try it
+
+1. Run `pnpm exec supabase db push --remote`, then restart `pnpm dev`.
+2. Set up a demo event:
+   - add rubric criteria and awards under **Tracks and schedule**;
+   - add judges under **Staff** (each must have signed in once);
+   - after the deadline, use the Overview's status card: **Go live**, then **Start judging**.
+3. Open **Judging** and **Assign judges**. Each judge then scores from their own queue.
+4. Pick winners, then **Mark completed** on the Overview. The results, gallery and badges go public.
+
+### Left out, and why
+
+- **Judge scoring screen on Android**: web first (Mobile app status table).
+- **Live judging progress**: out of scope in the plan. The page shows progress when loaded.
+
+---
+
+## Phase 4: Submissions and the deadline lock (web; built 21 Nov 2026, gate not yet run)
+
+### Status
+
+| Check                                           | Result                                                                                                                           |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Migration 0006 applies cleanly after 0001–0005  | Passed locally (`pnpm db:local reset`); CI checks it on the real Supabase image                                                  |
+| `pnpm lint && pnpm typecheck && pnpm test`      | Passed: 351 tests                                                                                                                |
+| Concurrency tests (Agent rule 20)               | 50 saves around the deadline, two simultaneous locks, two teammates saving one version (10 rounds): passed in four separate runs |
+| New page compiles in the dev server             | Yes (`/events/[slug]/submission`)                                                                                                |
+| `next build`                                    | **Not run**: the dev PC is short of RAM. Vercel runs it on deploy                                                                |
+| Editor, conflict screen and reopen in a browser | **Not checked**: needs migration 0006 on the dev Supabase project (below)                                                        |
+
+### What was built
+
+- **Migration `0006_submissions`**: `submissions` and `submission_tracks` exactly as the canonical schema, plus indexes on `(event_id, status)`, pending hashes, and `submission_tracks (track_id)`.
+- **`packages/shared`**:
+  - Link checks in `links.ts`, shared so the mobile app can reuse them:
+    - GitHub links must name `github.com/{owner}/{repo}` and are stored as `https://github.com/owner/repo`, with `/tree/...` and `.git` dropped.
+    - YouTube links must be on youtube.com or youtu.be.
+    - Demo links must be https.
+  - The link checks avoid the `URL` class because React Native's is incomplete.
+  - Submission schemas (`saveSubmissionBodySchema`, `submissionSchema`, reopen).
+  - Error codes `STALE_VERSION` and `TEAM_TOO_SMALL`.
+- **`packages/core`**:
+  - `submitProblems`: Submit needs a title, a write-up and `team_size_min` members.
+  - `isAutoSubmittable`.
+  - `dueReminder`: the 24-hour reminder covers 24 to 1 hours before the deadline, and the 1-hour reminder the last hour, so a late tick never sends "24 hours left" with minutes to go.
+  - `parseIfMatch`.
+- **`packages/db`**:
+  - `saveSubmission` locks in order: event FOR SHARE with the deadline check, then the team row, then the submission. It checks the version, then checks tracks (they must belong to the event, with at most `max_tracks_per_submission`). Saving keeps the status, so a submitted project stays submitted.
+  - `submitSubmission`.
+  - `reopenSubmissions` takes the event FOR UPDATE and is audited.
+  - `lockSubmissionDeadline` is the lock transaction from DESIGN Step 6 part 1. It:
+    - recomputes `below_min_size`;
+    - auto-submits drafts with a title and write-up, with `submitted_at` set to the deadline;
+    - marks `sha_status` pending for rows with a GitHub link;
+    - sets `submissions_locked_at`;
+    - writes an audit row.
+  - `capturePendingHashes`: network calls run outside any transaction; a thrown error leaves the row pending.
+  - `enqueueDeadlineReminders`.
+  - A `submission_reminder` email, re-checked at send time: it is superseded if the team has submitted, the person left the team or turned reminders off, or the deadline passed.
+  - The tick, inside its advisory-locked transaction, recovers stuck emails, locks deadlines and queues reminders. After that commits, it captures hashes and then sends email.
+- **API**
+
+  | Endpoint                                                          | Who                        |
+  | ----------------------------------------------------------------- | -------------------------- |
+  | `GET /events/{id}/teams/me/submission`                            | member                     |
+  | `PUT /events/{id}/teams/me/submission` with `If-Match: <version>` | member, until the deadline |
+  | `POST /events/{id}/teams/me/submission/submit`                    | member, until the deadline |
+  | `POST /events/{id}/submissions/reopen` {submission_deadline}      | owner                      |
+
+- **Web UI**:
+  - `/events/[slug]/submission`, the submission editor:
+    - title, tagline;
+    - a markdown write-up with Write/Preview tabs (the preview loads only when opened);
+    - GitHub, YouTube and demo fields;
+    - a track picker;
+    - Save and Submit;
+    - the status chip, the captured commit, and a countdown.
+    - It warns before leaving with unsaved changes, and switches to read-only when the countdown ends or the API says `SUBMISSION_LOCKED`.
+  - Save-conflict screen: shows only the fields that differ, side by side, with **Use theirs** or **Keep mine**. Keep mine saves over theirs at their version.
+  - Event page: a "Your project" card with status, countdown and a link to the editor.
+  - Organizer overview: a Submissions card with submitted, draft and team counts and the deadline state. Owners also get a Reopen form, which takes the new deadline in the event's time zone.
+  - Countdowns use the server's clock. The offset comes from the page render and from every API response's `server_time` header, so a wrong laptop clock doesn't matter.
+
+**Tests the plan requires, all present** (`packages/db/src/submissions.int.test.ts`, `apps/web/tests/submissions.int.test.ts`):
+
+- 50 saves timed around the deadline while the lock runs. Each one is either in the locked data (auto-submitted) or got `SUBMISSION_LOCKED`, and none is lost. Both outcomes occur in every run.
+- The lock run twice, and by two ticks at once: only one does anything, with one audit row.
+- A tick 10 minutes late locks the event. Saves and Submit after the deadline were refused before the late lock ran.
+- Auto-submit includes complete drafts and skips empty and title-only ones; small teams are flagged.
+- Hash capture with a mocked GitHub: success, 404, and a network failure followed by success.
+- Two teammates saving the same version at once: exactly one gets 409, in 10 rounds.
+- Reopen restores saving until the new deadline and is audited. It is refused once judging starts, and refused for admin, judge, mentor, volunteer and participant.
+- Reminders: one per member, `email_reminders` honoured, deduped, and superseded once the team submits.
+
+### How to try it (dev Supabase project)
+
+1. Apply the new migration: `pnpm exec supabase db push --remote`.
+2. Restart `pnpm dev`.
+3. As in the README's "Trying every role with one account": confirm your place, make a team, then open **Your project** on the event page.
+4. **Deadline lock locally.** pg_cron on the dev project can't reach `localhost`, so run the tick by hand:
+   - put `TICK_SECRET=<any long random string>` in `apps/web/.env.local` and restart;
+   - after the deadline, run `curl -X POST http://localhost:3000/api/internal/tick -H "x-tick-secret: <same string>"`.
+
+### New dependencies
+
+| Dependency              | Where           | Why                                                                                                                       |
+| ----------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `react-markdown` 10.1.0 | web, lazy chunk | Renders write-ups safely: no raw HTML, unsafe link protocols dropped. Judges and the gallery need it too (Phases 5 and 7) |
+| `remark-gfm` 4.0.1      | web, lazy chunk | GitHub-style markdown (tables, task lists, autolinks), which is what hackers write                                        |
+
+### Human tasks for the Phase 4 gate
+
+- [ ] Run `pnpm exec supabase db push --remote` to add the submissions tables to the dev project.
+- [ ] GitHub token from a CIReN account (read access to public repositories) into Vercel as `GITHUB_TOKEN`. Without it GitHub allows 60 requests an hour, which is enough to try locally.
+- [ ] Gate: a test event with the deadline 5 minutes ahead, edited through the deadline. The save after the deadline is refused, the draft is auto-submitted, the hash appears within 2 minutes, and reopen works and shows in `audit_log`.
+
+### Left out, and why
+
+- **`GET /events/{id}/submissions`** (admin list and public gallery): not in this phase's build list. It belongs with judging and results (Phase 5).
+- **Teammate-saved notice while editing** (live updates): Phase 6. Until then a conflict shows on save.
+- **Mobile countdown**: web-first; see the Mobile app status table.
+
+---
+
+## Phase 3: Tickets, check-in, teams (web; built 20 Nov 2026, gate not yet run)
+
+Built web-first, as the user decided on 20 Nov 2026: every Android item of this phase is in the Mobile app status table instead.
+
+### Status
+
+| Check                                          | Result                                                                                                                                                     |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migration 0005 applies cleanly after 0001–0004 | Passed locally (no-Docker database); CI checks it on the real Supabase image                                                                               |
+| `pnpm lint && pnpm typecheck && pnpm test`     | Passed: 251 tests, two full runs in a row                                                                                                                  |
+| Concurrency tests (Agent rule 20)              | 20 rounds of 20 simultaneous joins for 1 slot, 10 rounds of one person joining two teams, 5 rounds of joins racing the lock: passed in three separate runs |
+| `next build`                                   | Passed; `qrcode` is server-only, `jsqr` is a separate chunk loaded only when the browser has no BarcodeDetector                                            |
+| QR round trip                                  | A ticket code encoded with our settings decodes back exactly with `jsqr` (unit test)                                                                       |
+| Scanner, ticket and team pages in a browser    | **Not checked**: they need a signed-in session. Try them on the dev Supabase project; the camera needs HTTPS or localhost                                  |
+
+### What was built
+
+- **Migration `0005_participation`**: `check_ins`, `teams`, `team_members` with the composite foreign key `(team_id, event_id) → teams (id, event_id)`.
+- **`packages/core`**: `generateInviteCode` (8 characters from `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, unbiased), `normalizeInviteCode` (accepts lower case, spaces, dashes), `formatInviteCode`, `submissionsClosed`.
+- **`packages/db`**:
+  - `lockEventForDeadline` (Agent rule 7) and `requireConfirmed`.
+  - `hitRateLimit` (fixed window in `rate_limit_counters`).
+  - Teams: create (client id; a retry returns the same team), join (event FOR SHARE → team FOR UPDATE → count → insert), leave (ownership to the earliest joiner; the last one out soft-deletes the team, audited), remove member (owner only, audited), rotate code, update, my team, open-team board.
+  - `withTeamErrors` maps the `UNIQUE (event_id, user_id)` race to `ALREADY_ON_TEAM`.
+  - Check-ins: ticket, scan (second scan → `ALREADY_CHECKED_IN` with the first time), manual (audited), stats, attendee search.
+- **Error codes**: `SUBMISSION_LOCKED` (423), `NOT_CONFIRMED`, `TEAM_FULL`, `ALREADY_ON_TEAM`, `INVALID_INVITE_CODE`, `NOT_ON_TEAM`, `ALREADY_CHECKED_IN`, `TICKET_NOT_FOUND`, `TICKET_CANCELLED`.
+
+**API**
+
+| Endpoint                                                                                      | Who                                       |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `GET /events/{id}/me/ticket`                                                                  | confirmed participant                     |
+| `POST /events/{id}/check-ins` {ticket_code}, `GET …/check-ins/stats`                          | owner, admin, volunteer                   |
+| `POST /events/{id}/check-ins/manual` {user_id}, `GET …/check-ins/search?q=`                   | owner, admin                              |
+| `POST /events/{id}/teams` {name} (client id), `POST …/teams/join` {invite_code} (10 a minute) | confirmed participant, until the deadline |
+| `GET /events/{id}/teams?open=true`                                                            | confirmed participant, owner, admin       |
+| `GET`, `PATCH /events/{id}/teams/me`; `POST …/me/leave`, `POST …/me/invite-code/rotate`       | member                                    |
+| `DELETE /events/{id}/teams/me/members/{userId}`                                               | team owner                                |
+
+**Web UI**
+
+- Event page: when confirmed, a ticket card with the QR code (drawn as SVG on the server) and a team card with the invite code.
+- `/events/[slug]/ticket`: full-screen QR, with the code in mono for typing.
+- `/events/[slug]/team`: start or join a team, the team card from screens PDF page 5 (initials, invite code well with Copy, new code), team board post, leave, and remove (owner).
+- `/organize/[id]/check-in`, screens PDF page 7:
+  - Online/Offline chip and "N of M confirmed checked in".
+  - Camera view: the built-in BarcodeDetector, or jsQR as a fallback.
+  - Result card ("Checked in", or "Already checked in at 08:42 GMT").
+  - Typed-code entry, and manual search for owners and admins.
+  - Offline, it says "You're offline. Connect to check people in." and pauses scanning.
+- The organizer sidebar gets Check-in; volunteers see "Open the scanner" on the overview.
+
+**Tests the plan requires, all present:**
+
+- 20 simultaneous joins for 1 slot, 20 rounds: exactly 1 succeeds and 19 get `TEAM_FULL`.
+- One user joining two teams at once: exactly one succeeds.
+- Joins and the event lock together: no deadlock.
+- The 11th join attempt in a minute: `RATE_LIMITED`, both in the db test and through the API.
+- A volunteer can't read applications (Phase 2), and a participant can't check people in.
+- Codes never contain look-alikes (2,000 generated).
+
+### Sign-in when Supabase can't be reached (added 20 Nov 2026)
+
+Before sending the browser to Supabase, the sign-in action checks `/auth/v1/health` (3-second timeout). If the service can't be reached, people see "Couldn't reach the sign-in service" on the sign-in page instead of a dead browser error. In a fresh local setup (`NEXT_PUBLIC_SUPABASE_ANON_KEY=local-placeholder`), the page says sign-in isn't set up and points to the README's Mode B. Tests: `apps/web/tests/availability.test.ts`.
+
+### New dependencies
+
+| Dependency                         | Where            | Why                                                                                           |
+| ---------------------------------- | ---------------- | --------------------------------------------------------------------------------------------- |
+| `qrcode` 1.5.4 (+ `@types/qrcode`) | web, server only | Draws ticket QR codes as SVG                                                                  |
+| `jsqr` 1.4.0                       | web, lazy chunk  | Decodes QR codes from the camera on browsers without BarcodeDetector (iPhone Safari, Firefox) |
+
+### Left out, and why
+
+- **Android screens, EAS build profile, first Play closed-test build**: web-first decision; see the Mobile app status table and Q16.
+- **Organizer Teams list** (sidebar "Teams" in PDF page 8): not in this phase's build list.
+- **Rate limit on invite-code rotation**: Phase 7 (rate limits on joining, rotation, mentor requests).
 
 ---
 

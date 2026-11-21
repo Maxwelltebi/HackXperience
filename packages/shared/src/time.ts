@@ -78,3 +78,14 @@ export function formatDate(iso: string, timeZone: string): string {
     year: 'numeric',
   }).format(new Date(iso));
 }
+
+/** "08:42 GMT" in `timeZone`. */
+export function formatTime(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short',
+  }).format(new Date(iso));
+}

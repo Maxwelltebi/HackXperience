@@ -1,9 +1,11 @@
-import { toEvent } from '@hx/db';
+import { countSubmissions, getSql, toEvent } from '@hx/db';
 import { can, listTimezones } from '@hx/shared';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { DeleteEventButton } from '@/components/organize/event-delete';
 import { EventForm } from '@/components/organize/event-form';
 import { StatusCard } from '@/components/organize/status-card';
+import { SubmissionsCard } from '@/components/organize/submissions-card';
 import { loadOrganizerEvent } from '@/lib/server/organize';
 
 export const metadata: Metadata = { title: 'Event overview' };
@@ -17,6 +19,10 @@ export default async function OrganizeOverviewPage({
   const { access } = await loadOrganizerEvent(id);
   const event = toEvent(access.event);
   const canEdit = can(access.roles, 'event.edit');
+  const sql = getSql();
+  const [counts, [{ now }]] = can(access.roles, 'event.view_staff')
+    ? await Promise.all([countSubmissions(sql, event.id), sql<[{ now: Date }]>`select now()`])
+    : [null, [{ now: new Date() }]];
 
   return (
     <>
@@ -30,14 +36,60 @@ export default async function OrganizeOverviewPage({
         </Link>
       </div>
       <StatusCard event={event} canEdit={canEdit} />
+      {counts && event.status !== 'draft' ? (
+        <SubmissionsCard
+          eventId={event.id}
+          counts={counts}
+          deadline={event.submission_deadline}
+          lockedAt={event.submissions_locked_at}
+          timezone={event.timezone}
+          serverNow={now.toISOString()}
+          canReopen={
+            can(access.roles, 'submissions.reopen') &&
+            (event.status === 'published' || event.status === 'live')
+          }
+        />
+      ) : null}
       {canEdit ? (
         <EventForm mode="edit" event={event} timezones={listTimezones()} />
       ) : (
         <div className="raised empty">
-          <strong>Your tools for this event arrive with later releases</strong>
-          <span>Judging, mentoring and check-in screens will appear here.</span>
+          <strong>
+            {can(access.roles, 'scores.write')
+              ? 'You are judging this event'
+              : can(access.roles, 'checkins.scan')
+                ? 'You are on the door team'
+                : 'Your tools for this event arrive with later releases'}
+          </strong>
+          {can(access.roles, 'mentor.claim') ? (
+            <Link className="btn btn-primary" href={`/organize/${event.id}/mentors`}>
+              Open the mentor queue
+            </Link>
+          ) : null}
+          {can(access.roles, 'scores.write') ? (
+            <Link className="btn btn-primary" href={`/organize/${event.id}/judging`}>
+              Open your judging queue
+            </Link>
+          ) : can(access.roles, 'checkins.scan') ? (
+            <Link className="btn btn-primary" href={`/organize/${event.id}/check-in`}>
+              Open the scanner
+            </Link>
+          ) : (
+            <span>Your tools are in the sidebar.</span>
+          )}
         </div>
       )}
+      {can(access.roles, 'records.delete') ? (
+        <section className="raised card stack-sm" aria-labelledby="danger-title">
+          <h2 id="danger-title" className="h2" style={{ fontSize: 18 }}>
+            Delete this event
+          </h2>
+          <p className="muted small" style={{ margin: 0 }}>
+            It disappears for everyone, but nothing is lost: restore it from Organize. Audited.
+          </p>
+          <DeleteEventButton eventId={event.id} name={event.name} />
+        </section>
+      ) : null}
     </>
   );
 }

@@ -1,0 +1,73 @@
+.teamName {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+}
+
+.members {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  box-shadow: var(--raised-sm);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.memberText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 24px;
+  border-radius: 999px;
+}
+
+.codeValue {
+  display: block;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+}
+
+.board {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boardItem {
+  display: grid;
+  gap: 4px;
+  padding: 14px 18px;
+  border-radius: 20px;
+}

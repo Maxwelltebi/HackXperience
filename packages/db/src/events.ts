@@ -13,7 +13,9 @@ import {
 } from '@hx/shared';
 import { audit } from './audit';
 import type { ISql } from './client';
+import { buildResultsSnapshot } from './judging';
 import { iso } from './rows';
+import { lockSubmissionDeadline } from './submissions';
 
 export interface EventRow {
   id: string;
@@ -293,9 +295,25 @@ export async function changeEventStatus(
     });
   }
 
+  // Judging starts from locked submissions, even if the tick hasn't run the lock step yet.
+  if (to === 'judging') await lockSubmissionDeadline(sql, eventId);
+
   const [row] = await sql<[EventRow]>`
     update events set status = ${to} where id = ${eventId} returning ${sql(EVENT_COLUMNS)}
   `;
+  // Publishing results freezes them, in this same transaction (build plan Phase 5 item 5).
+  if (to === 'completed') {
+    const snapshot = await buildResultsSnapshot(sql, eventId, counts.now);
+    await sql`update events set results_snapshot = ${sql.json(snapshot as never)} where id = ${eventId}`;
+    await audit(sql, {
+      eventId,
+      actorId,
+      action: 'results.published',
+      entityType: 'event',
+      entityId: eventId,
+      after: { awards: snapshot.awards.length, projects: snapshot.projects },
+    });
+  }
   await audit(sql, {
     eventId,
     actorId,

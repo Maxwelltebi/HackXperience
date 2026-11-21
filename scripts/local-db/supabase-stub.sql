@@ -33,3 +33,39 @@ create table if not exists auth.identities (
   provider_id text not null,
   identity_data jsonb not null default '{}'
 );
+
+-- auth.uid() as Supabase defines it: the JWT subject of the current request.
+create or replace function auth.uid() returns uuid language sql stable as $$
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+  )::uuid
+$$;
+
+-- Supabase Realtime's broadcast table and helpers (Phase 6), unpartitioned for simplicity.
+create schema if not exists realtime;
+create table if not exists realtime.messages (
+  id bigserial primary key,
+  topic text not null,
+  extension text not null,
+  payload jsonb,
+  event text,
+  private boolean default false,
+  inserted_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table realtime.messages enable row level security;
+grant usage on schema realtime to authenticated, anon;
+grant select on realtime.messages to authenticated;
+
+create or replace function realtime.topic() returns text language sql stable as $$
+  select nullif(current_setting('realtime.topic', true), '')::text
+$$;
+
+create or replace function realtime.send(payload jsonb, event text, topic text, private boolean default true)
+returns void language plpgsql as $$
+begin
+  insert into realtime.messages (payload, event, topic, private, extension)
+  values (payload, event, topic, private, 'broadcast');
+end
+$$;

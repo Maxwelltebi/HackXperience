@@ -13,6 +13,8 @@ const ERRORS: Record<string, string> = {
   oauth: "Couldn't reach the sign-in service. Try again.",
   callback: "Sign-in didn't finish. Try again.",
   provider: 'Choose Google or GitHub.',
+  not_configured:
+    "Sign-in isn't set up on this computer yet. The README's Mode B explains how to connect a dev Supabase project.",
 };
 
 interface Props {

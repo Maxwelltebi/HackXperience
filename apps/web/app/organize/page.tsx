@@ -1,8 +1,9 @@
-import { getSql, listStaffEvents } from '@hx/db';
+import { getSql, listDeletedEvents, listStaffEvents } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { RestoreEventButton } from '@/components/organize/event-delete';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { getViewer, headerProps } from '@/lib/server/viewer';
 import { chipClass, EVENT_STATUS } from '@/lib/ui/status';
@@ -21,7 +22,10 @@ const ROLE_LABEL = {
 export default async function OrganizePage() {
   const viewer = await getViewer();
   if (!viewer) redirect('/sign-in?next=/organize');
-  const events = await listStaffEvents(getSql(), viewer.userId);
+  const [events, deleted] = await Promise.all([
+    listStaffEvents(getSql(), viewer.userId),
+    listDeletedEvents(getSql(), viewer.userId),
+  ]);
   const canCreate = viewer.me.org_ids.length > 0;
 
   return (
@@ -84,6 +88,19 @@ export default async function OrganizePage() {
             </table>
           </div>
         )}
+        {deleted.length > 0 ? (
+          <section className="raised card stack-sm" aria-labelledby="deleted-title">
+            <h2 id="deleted-title" className="h2" style={{ fontSize: 18 }}>
+              Deleted events
+            </h2>
+            {deleted.map((e) => (
+              <div key={e.id} className="row-between">
+                <span>{e.name}</span>
+                <RestoreEventButton eventId={e.id} />
+              </div>
+            ))}
+          </section>
+        ) : null}
       </main>
       <SiteFooter />
     </>

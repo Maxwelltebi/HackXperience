@@ -1,3 +1,4 @@
+import 'server-only';
 // Fetches the PEM certificate an SNS message was signed with. Its own module so tests can
 // replace the network call; the URL is checked to be AWS's before this is ever called.
 const cache = new Map<string, string>();
