@@ -1,67 +1,156 @@
+/* Public event page (screens PDF pages 5 and 6): page type 02 Detail. */
+
+.header {
+  display: grid;
+  gap: 16px;
+  padding-top: 32px;
+  padding-bottom: 40px;
+}
+
+.crumb {
+  margin: 0;
+  color: var(--on-dark-muted);
+  font-size: 14px;
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  font-size: clamp(36px, 5vw, 56px);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 48px;
+  margin: 12px 0 0;
+}
+
+.facts dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mint);
+}
+
+.facts dd {
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
 .layout {
   display: grid;
-  gap: 24px;
+  gap: 32px;
   align-items: start;
+  padding-top: 32px;
+  padding-bottom: 72px;
 }
 
 @media (min-width: 960px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 56px;
   }
+}
+
+.main {
+  display: grid;
+  gap: 48px;
+  min-width: 0;
+}
+
+.section {
+  display: grid;
+  gap: 16px;
+  scroll-margin-top: 96px;
 }
 
 .description {
   margin: 0;
+  max-width: 44em;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .tracks {
   display: grid;
-  gap: 12px;
+  gap: 24px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@media (min-width: 720px) {
+  .tracks {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .tracks li {
   display: grid;
-  gap: 2px;
+  align-content: start;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-strong);
 }
 
-.schedule {
-  display: grid;
-  gap: 12px;
+.tracks p {
+  margin: 0;
+}
+
+.rubric {
   margin: 0;
   padding: 0;
   list-style: none;
+  border-top: 1px solid var(--line);
 }
 
-.schedule li {
+.rubric li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.aside {
   display: grid;
-  gap: 2px;
+  gap: 24px;
+  margin-right: 8px;
 }
 
-@media (min-width: 640px) {
-  .schedule li {
-    grid-template-columns: 240px 1fr;
-  }
-}
-
-/* On phones, the Apply / status card comes first: it's what most visitors came for. */
+/* On phones, the apply box comes first: it's what most visitors came for. */
 @media (max-width: 959px) {
-  .layout > aside {
+  .aside {
     order: -1;
   }
+}
+
+.code {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 20px;
+}
+
+.dates {
+  grid-template-columns: 1fr;
 }
 
 .qr {
   display: grid;
   place-items: center;
   padding: 16px;
-  border-radius: 24px;
-  box-shadow: var(--inset);
-  background: #fff;
+  background: var(--white);
 }
 
 .qr svg {

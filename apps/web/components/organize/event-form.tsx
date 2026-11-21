@@ -149,7 +149,7 @@ export function EventForm(props: Props) {
 
   return (
     <form className="stack" onSubmit={submit} noValidate>
-      <section className="raised card stack">
+      <section className="panel card stack">
         <h2 className="h2">Details</h2>
         <div className="grid-2">
           <Field label="Name" error={errors.name}>
@@ -232,7 +232,7 @@ export function EventForm(props: Props) {
         </div>
       </section>
 
-      <section className="raised card stack">
+      <section className="panel card stack">
         <div className="stack-sm">
           <h2 className="h2">Dates</h2>
           <p className="muted small" style={{ margin: 0 }}>
@@ -289,7 +289,7 @@ export function EventForm(props: Props) {
         </div>
       </section>
 
-      <section className="raised card stack">
+      <section className="panel card stack">
         <h2 className="h2">Teams and submissions</h2>
         <div className="grid-2">
           <NumberInput
@@ -405,7 +405,7 @@ export function Field({
       {children({ id, 'aria-invalid': Boolean(error), 'aria-describedby': describedBy })}
       {error ? (
         <span id={`${id}-error`} className="field-error">
-          {error}
+          <AlertIcon width={16} height={16} /> {error}
         </span>
       ) : hint ? (
         <span id={`${id}-hint`} className="hint">

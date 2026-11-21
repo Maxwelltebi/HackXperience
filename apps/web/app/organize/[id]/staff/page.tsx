@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { StaffManager } from '@/components/organize/staff-manager';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Staff' };
 
@@ -17,7 +18,7 @@ export default async function StaffPage({ params }: { params: Promise<{ id: stri
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Staff</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             Each person signs in once with Google or GitHub before you can add them.

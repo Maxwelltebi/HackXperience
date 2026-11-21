@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JudgingManager } from '@/components/organize/judging-manager';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 import { chipClass } from '@/lib/ui/status';
 
 export const metadata: Metadata = { title: 'Judging' };
@@ -38,13 +39,13 @@ export default async function JudgingPage({ params }: { params: Promise<{ id: st
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Judging</h1>
         </div>
       </div>
 
       {status !== 'judging' && !completed ? (
-        <div className="raised empty">
+        <div className="panel empty">
           <strong>Judging hasn&apos;t started</strong>
           <span>
             {manages
@@ -55,7 +56,7 @@ export default async function JudgingPage({ params }: { params: Promise<{ id: st
       ) : null}
 
       {queue ? (
-        <section className="raised card stack" aria-labelledby="queue-title">
+        <section className="panel card stack" aria-labelledby="queue-title">
           <div className="row-between">
             <h2 id="queue-title" className="h2">
               Your queue
@@ -74,8 +75,8 @@ export default async function JudgingPage({ params }: { params: Promise<{ id: st
                 <li key={item.submission_id}>
                   <Link
                     href={`/organize/${id}/judging/${item.submission_id}`}
-                    className="inset card-tight row-between"
-                    style={{ borderRadius: 20, textDecoration: 'none', color: 'inherit' }}
+                    className="well card-tight row-between"
+                    style={{ textDecoration: 'none', color: 'inherit' }}
                   >
                     <span>
                       <strong>{item.title || 'Untitled'}</strong>

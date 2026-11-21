@@ -7,6 +7,7 @@ import { EventForm } from '@/components/organize/event-form';
 import { StatusCard } from '@/components/organize/status-card';
 import { SubmissionsCard } from '@/components/organize/submissions-card';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Event overview' };
 
@@ -28,7 +29,7 @@ export default async function OrganizeOverviewPage({
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Overview</h1>
         </div>
         <Link className="btn" href={`/events/${event.slug}`}>
@@ -53,7 +54,7 @@ export default async function OrganizeOverviewPage({
       {canEdit ? (
         <EventForm mode="edit" event={event} timezones={listTimezones()} />
       ) : (
-        <div className="raised empty">
+        <div className="panel empty">
           <strong>
             {can(access.roles, 'scores.write')
               ? 'You are judging this event'
@@ -80,7 +81,7 @@ export default async function OrganizeOverviewPage({
         </div>
       )}
       {can(access.roles, 'records.delete') ? (
-        <section className="raised card stack-sm" aria-labelledby="danger-title">
+        <section className="panel card stack-sm" aria-labelledby="danger-title">
           <h2 id="danger-title" className="h2" style={{ fontSize: 18 }}>
             Delete this event
           </h2>

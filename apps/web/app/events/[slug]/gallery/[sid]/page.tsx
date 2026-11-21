@@ -56,7 +56,7 @@ export default async function ProjectPage({
             ))}
           </p>
         ) : null}
-        <section className="raised card stack">
+        <section className="panel card stack">
           <dl className="dl">
             <dt>Team</dt>
             <dd className="small">

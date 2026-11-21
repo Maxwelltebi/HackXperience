@@ -5,6 +5,7 @@ import type { MyTeam, OpenTeam } from '@hx/shared';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
+import { initials } from '@/lib/ui/initials';
 import { AlertIcon, CheckIcon } from '../icons';
 import { Field } from '../organize/event-form';
 import styles from './team-panel.module.css';
@@ -57,7 +58,7 @@ export function TeamPanel({
           onError={fail}
         />
       ) : closed ? (
-        <div className="raised empty">
+        <div className="panel empty">
           <strong>You&apos;re not on a team</strong>
           <span>Teams closed at the submission deadline.</span>
         </div>
@@ -75,13 +76,6 @@ export function TeamPanel({
       )}
     </div>
   );
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return (
-    (parts[0]?.[0] ?? '?') + (parts.length > 1 ? (parts.at(-1)?.[0] ?? '') : '')
-  ).toUpperCase();
 }
 
 function MyTeamCard({
@@ -177,10 +171,10 @@ function MyTeamCard({
 
   return (
     <>
-      <section className="raised card stack" aria-labelledby="team-name">
+      <section className="panel card stack" aria-labelledby="team-name">
         <div className="row-between">
           <div>
-            <span className="muted small">Your team</span>
+            <span className="eyebrow eyebrow-muted">Your team</span>
             <h2 id="team-name" className={styles.teamName}>
               {team.name}
             </h2>
@@ -194,7 +188,7 @@ function MyTeamCard({
         <ul className={styles.members}>
           {team.members.map((member) => (
             <li key={member.user_id} className={styles.member}>
-              <span className={styles.avatar} aria-hidden="true">
+              <span className="avatar" aria-hidden="true">
                 {initials(member.name)}
               </span>
               <span className={styles.memberText}>
@@ -223,7 +217,7 @@ function MyTeamCard({
         </ul>
 
         {!closed ? (
-          <div className={`inset ${styles.code}`}>
+          <div className={`well ${styles.code}`}>
             <span>
               <span className="muted small">Invite code</span>
               <span className={styles.codeValue}>{formatInviteCode(team.invite_code)}</span>
@@ -246,7 +240,7 @@ function MyTeamCard({
       </section>
 
       {!closed && !full ? (
-        <section className="raised card stack" aria-labelledby="board-title">
+        <section className="panel card stack" aria-labelledby="board-title">
           <div className="stack-sm" style={{ gap: 2 }}>
             <h2 id="board-title" className="h2">
               Need people?
@@ -332,7 +326,7 @@ function CreateTeam({ eventId, onDone }: { eventId: string; onDone: (team: MyTea
   }
 
   return (
-    <form className="raised card stack" onSubmit={submit} noValidate>
+    <form className="panel card stack" onSubmit={submit} noValidate>
       <h2 className="h2">Start a team</h2>
       <Field label="Team name" error={error}>
         {(p) => (
@@ -373,7 +367,7 @@ function JoinTeam({ eventId, onDone }: { eventId: string; onDone: (team: MyTeam)
   }
 
   return (
-    <form className="raised card stack" onSubmit={submit} noValidate>
+    <form className="panel card stack" onSubmit={submit} noValidate>
       <h2 className="h2">Join with a code</h2>
       <Field label="Invite code" error={error} hint="8 characters, from a teammate">
         {(p) => (
@@ -399,7 +393,7 @@ function JoinTeam({ eventId, onDone }: { eventId: string; onDone: (team: MyTeam)
 
 function Board({ teams, teamSizeMax }: { teams: OpenTeam[]; teamSizeMax: number }) {
   return (
-    <section className="raised card stack" aria-labelledby="board-list">
+    <section className="panel card stack" aria-labelledby="board-list">
       <div className="stack-sm" style={{ gap: 2 }}>
         <h2 id="board-list" className="h2">
           Team board
@@ -416,7 +410,7 @@ function Board({ teams, teamSizeMax }: { teams: OpenTeam[]; teamSizeMax: number 
       ) : (
         <ul className={styles.board}>
           {teams.map((team) => (
-            <li key={team.id} className={`inset ${styles.boardItem}`}>
+            <li key={team.id} className={`well ${styles.boardItem}`}>
               <div className="row-between">
                 <strong>{team.name}</strong>
                 <span className="muted small">

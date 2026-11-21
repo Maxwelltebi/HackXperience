@@ -40,7 +40,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
             profileComplete={Boolean(viewer.me.profile.school && viewer.me.profile.level_of_study)}
           />
         ) : (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>Applications are closed</strong>
             <Link href={`/events/${slug}`}>Back to the event</Link>
           </div>

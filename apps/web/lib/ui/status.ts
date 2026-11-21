@@ -6,15 +6,18 @@ import type {
   SubmissionStatus,
 } from '@hx/shared';
 
-/** Chip tone classes from globals.css. Status is always a dot plus a word, never color alone. */
-export type Tone = 'muted' | 'info' | 'success' | 'warning' | 'danger';
+/**
+ * Status badge tones from globals.css (screens PDF, 06 Status badges). Status is always a word,
+ * never color alone. Only `live` is a solid fill, with a dot.
+ */
+export type Tone = 'muted' | 'info' | 'success' | 'warning' | 'danger' | 'live';
 
 export const EVENT_STATUS: Record<EventStatus, { label: string; tone: Tone }> = {
   draft: { label: 'Draft', tone: 'muted' },
   published: { label: 'Published', tone: 'info' },
-  live: { label: 'Live', tone: 'success' },
+  live: { label: 'Live now', tone: 'live' },
   judging: { label: 'Judging', tone: 'warning' },
-  completed: { label: 'Completed', tone: 'muted' },
+  completed: { label: 'Ended', tone: 'muted' },
 };
 
 export const APPLICATION_STATUS: Record<ApplicationStatus, { label: string; tone: Tone }> = {

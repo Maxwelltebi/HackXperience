@@ -46,12 +46,12 @@ export default async function ResultsPage({ params }: { params: Promise<{ slug: 
         </div>
 
         {!results ? (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>Results aren&apos;t out yet</strong>
             <span>They appear here as soon as the organizers publish them.</span>
           </div>
         ) : results.awards.length === 0 ? (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>No awards were given</strong>
             <Link className="btn" href={`/events/${slug}/gallery`}>
               See every project
@@ -60,7 +60,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ slug: 
         ) : (
           <>
             {[...overall, ...byTrack].map((award) => (
-              <section key={award.award_id} className="raised card stack" aria-label={award.name}>
+              <section key={award.award_id} className="panel card stack" aria-label={award.name}>
                 <div className="row-between">
                   <h2 className="h2">{award.name}</h2>
                   <span className="chip chip-success">{award.track_name ?? 'Overall'}</span>
@@ -71,11 +71,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ slug: 
                   </p>
                 ) : (
                   award.winners.map((w) => (
-                    <div
-                      key={w.team_id}
-                      className="inset card-tight stack-sm"
-                      style={{ borderRadius: 20 }}
-                    >
+                    <div key={w.team_id} className="well card-tight stack-sm">
                       <strong>
                         {w.submission_id ? (
                           <Link href={`/events/${slug}/gallery/${w.submission_id}`}>

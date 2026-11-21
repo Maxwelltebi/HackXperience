@@ -20,7 +20,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     <>
       <SiteHeader {...headerProps(viewer)} />
       <main className="container page" style={{ maxWidth: 720 }}>
-        <section className="raised card stack">
+        <section className="panel card stack">
           <div>
             <p className="eyebrow">Hacker</p>
             <h1 className="h1">{profile.name || 'A participant'}</h1>
@@ -42,7 +42,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
             </a>
           ) : null}
         </section>
-        <section className="raised card stack" aria-labelledby="badges-title">
+        <section className="panel card stack" aria-labelledby="badges-title">
           <h2 id="badges-title" className="h2">
             Badges
           </h2>
@@ -53,11 +53,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           ) : (
             <ul className="stack-sm" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {profile.badges.map((b) => (
-                <li
-                  key={`${b.award_id}-${b.team_name}`}
-                  className="inset card-tight row-between"
-                  style={{ borderRadius: 20 }}
-                >
+                <li key={`${b.award_id}-${b.team_name}`} className="well card-tight row-between">
                   <span>
                     <strong>{b.award_name}</strong>
                     <span className="muted small" style={{ display: 'block' }}>

@@ -75,6 +75,7 @@ One list for every open question. Agents add rows; a person answers in the **Ans
 | R30 | Org report range                                                                               | `from` and `to` are dates (inclusive, UTC) on the event start. Drafts are excluded.                                                                                                                                                                                                                                                                            |
 | R31 | CSV safety                                                                                     | Cells that start with `=`, `+`, `-` or `@` get a leading apostrophe, because school names come from applicants (CSV injection). A UTF-8 byte-order mark makes Excel read accents correctly.                                                                                                                                                                    |
 | R32 | End-to-end sign-in (Q26)                                                                       | Answered 21 Nov 2026: option 1. Playwright signs in four email-and-password test accounts that exist only on the dev Supabase project. The app has no password form and no test-login route; the suite writes the same session cookie the app reads. Production keeps the Email provider **off**, and the suite stops before touching data if it finds it off. |
+| R33 | Event status badges (Q29)                                                                      | Answered 21 Nov 2026: keep the previous structure. The badge follows the event's `status`, which organizers move with Go live, Start judging and Mark completed. Only Upcoming and Applications open come from the application dates. The screens PDF's rule that status "comes from the clock" does not apply.                                                |
 | R7  | Retry-safe creates: body `id` (build plan rule 14) vs `Idempotency-Key` header (DESIGN Step 4) | `handler({ clientId: true })` accepts either; if both are sent they must match.                                                                                                                                                                                                                                                                                |
 
 ---
@@ -91,7 +92,7 @@ The Android app is paused while the web app is finished (the web app covers ever
 | Session storage                                                                                                                                       | AsyncStorage                                                                                                                                              | `src/lib/supabase.ts`                          | —                                                                                |
 | API client: bearer token, error shape, `server_time` offset                                                                                           | Done                                                                                                                                                      | `src/lib/api.ts` (`serverNow()`)               | Add calls per phase                                                              |
 | Profile screen: name, school, GitHub, time zone, email reminders                                                                                      | Done                                                                                                                                                      | `src/app/index.tsx`                            | Add bio, level, graduation year, country, gender to match the web                |
-| Design tokens (colors, raised and inset shadows, 52 px controls)                                                                                      | Done                                                                                                                                                      | `src/theme.ts`, `src/components/ui.tsx`        | —                                                                                |
+| Design tokens (colors, raised and inset shadows, 52 px controls)                                                                                      | **Outdated**: still the old soft look; the web moved to the CIReN style on 21 Nov 2026                                                                    | `src/theme.ts`, `src/components/ui.tsx`        | —                                                                                |
 | Fonts (Inter, Inter Tight, JetBrains Mono)                                                                                                            | Not started; system font                                                                                                                                  | —                                              | Load with `expo-font` before the Phase 3 screens                                 |
 | App icon, splash artwork                                                                                                                              | Not started                                                                                                                                               | —                                              | Needed before the first Play upload                                              |
 | Unit tests                                                                                                                                            | 4 (redirect parsing)                                                                                                                                      | `src/lib/auth-redirect.test.ts`                | —                                                                                |
@@ -104,6 +105,51 @@ The Android app is paused while the web app is finished (the web app covers ever
 Phase 2 added nothing on mobile. `/me` now also returns `event_roles` and `org_ids`; the app parses them through the shared schema.
 
 Known gaps: the time zone field is free text (validated by the API), not a picker; the mobile profile shows fewer fields than the web.
+
+---
+
+## UI redesign: CIReN style (web; 21 Nov 2026)
+
+The screens PDF was redrawn in CIReN's own style, replacing the soft neumorphic look. The web app now follows it.
+
+### Status
+
+| Check                                   | Result                                                                                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm lint && pnpm typecheck`           | Passed                                                                                                                                                                                                        |
+| Web unit tests                          | Passed, with 11 new ones in `apps/web/tests/ui.test.ts` (badge words, initials, countdown). The 13 database integration tests weren't run: the local Supabase database wasn't running (machine low on memory) |
+| Looked at in a browser, 390 and 1440 px | **Not yet**: review on the Vercel deployment (Foundations rule 09)                                                                                                                                            |
+| End-to-end suite                        | Not run. Its button names and labels are unchanged                                                                                                                                                            |
+
+### What was built
+
+- **Tokens and shared parts** (`apps/web/app/globals.css`): the PDF's colors (forest, CIReN green, bright green, mint, hero, section and mint tints, Night, ink, muted, line, line strong); panels, frames, dark bands, wells; buttons (primary, secondary, arrow, reject, disabled, small, on dark); inputs with labels above, focus and error states, toggle chips; square status badges; underline tabs; tables with a tinted header; stat strip, meter, avatar, bulk bar, sticky save bar. The old class names `raised` and `inset` became `panel` and `well` everywhere.
+- **Status words** follow the PDF: Upcoming, Applications open, Live now (solid, with a dot), Judging, Ended (`lib/ui/event-phase.ts`, `lib/ui/status.ts`). Which badge shows still follows the event's status, not the clock (R33).
+- **Screens rebuilt to match the PDF:**
+  - Header and footer: white header with Events, How to Participate, For organizers; Night footer with link columns.
+  - Homepage: hero band with the framed Enter-key image, the next event in the dark band with its dates, past events as framed cards, How to participate, For organizers, Get started.
+  - Sign-in: hero tint, the headline, the framed sign-in card.
+  - Event page: dark header band with dates, venue, format and team size; tabs; About, Schedule (table), Tracks, How projects are judged (rubric with weights as percentages); the framed apply box with a days, hours and minutes countdown; a dark submission countdown for confirmed participants; team with avatars and the invite code.
+  - Organizer shell: dark sidebar with the brand, event, sections and the signed-in person; a white page head with the event name and status badge on every organizer page.
+  - Applications: tabs with counts in the page head, search, the dark bulk bar, the table, the side panel. Times in the table carry the zone in the column heading.
+  - Judging: stat strip (scores in, judges still scoring, projects and ties), standings with tracks, judges, raw average, adjusted score (signed) and awards won, then how adjusted scores work and a box for each tie with its tiebreaker values.
+  - Submission editor: one column, a dark strip with the deadline and countdown, links grouped as optional, tracks as toggle chips, a sticky save bar.
+  - Check-in scanner: count with a progress bar, dark camera area with bright green corners, a framed result.
+- Every other screen picks up the new look through the shared classes.
+- **Hero image**: cropped from page 2 of the screens PDF into `apps/web/public/images/hero-enter-key.jpg` (62 KB). Confirm CIReN may use this image on the live site.
+- Favicon redrawn as the forest square with a white H and bright green X.
+
+### Left out, and why
+
+- **Export CSV** and the **School** filter on Applications: there's no export endpoint, and the list API searches by name, email and school but doesn't filter by school.
+- **"Email me when it opens"** and **"Get the Android app"** on the homepage: neither exists yet. The hero no longer says the platform works on Android.
+- **"Organized by" and "Who can apply"** panels on the event page: events have no fields for them.
+- **Policies** column in the footer (Code of conduct, Privacy): the pages don't exist yet (Q6).
+- **Past event photos**: there are no photos to show; the past-event cards show the name, date and a link to the projects.
+- **"Reassign judges" and "Publish results"** in the standings head: assigning stays in the Judges panel, and results are still published from the Overview with Mark completed (Q22).
+- **"Show times in"** on the schedule: times use the profile's time zone, with a Change link.
+- **"Public repository found"** live check under the GitHub field: links are checked for format only (Q20).
+- The phone participant home (PDF page 8) is an Android screen. On the web, the same items are in the event page's side column.
 
 ---
 

@@ -90,7 +90,7 @@ export function ScoreForm({
 
   if (criteria.length === 0) {
     return (
-      <section className="raised card">
+      <section className="panel card">
         <p className="muted" style={{ margin: 0 }}>
           The organizers haven&apos;t added a rubric yet.
         </p>
@@ -99,7 +99,7 @@ export function ScoreForm({
   }
 
   return (
-    <form className="raised card stack" onSubmit={submit} aria-label="Your scores">
+    <form className="panel card stack" onSubmit={submit} aria-label="Your scores">
       <div className="row-between">
         <h2 className="h2">Your scores</h2>
         {saved ? (

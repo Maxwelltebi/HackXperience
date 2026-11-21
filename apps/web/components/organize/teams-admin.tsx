@@ -31,7 +31,7 @@ export function TeamsAdmin({
 
   if (teams.length === 0) {
     return (
-      <div className="raised empty">
+      <div className="panel empty">
         <strong>No teams yet</strong>
         <span>Teams appear here as confirmed participants form them.</span>
       </div>
@@ -45,7 +45,7 @@ export function TeamsAdmin({
           <AlertIcon /> {error}
         </p>
       ) : null}
-      <div className="raised table-wrap">
+      <div className="panel table-wrap">
         <table className="table">
           <thead>
             <tr>

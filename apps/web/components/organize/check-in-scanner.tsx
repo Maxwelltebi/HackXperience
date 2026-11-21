@@ -201,15 +201,34 @@ export function CheckInScanner({ eventId, eventName, timezone, canManual, initia
           <h1 className="h1">Check-in</h1>
           <span className="muted small">{eventName}</span>
         </div>
-        <span className={offline ? 'chip chip-warning' : 'chip chip-success'} role="status">
+        <span
+          className={offline ? 'chip chip-warning chip-dot' : 'chip chip-success chip-dot'}
+          role="status"
+        >
           {offline ? 'Offline' : 'Online'}
         </span>
       </div>
 
-      <p className={`inset ${styles.count}`}>
-        <span className={styles.countValue}>{stats.checked_in}</span> of {stats.confirmed} confirmed
-        checked in
-      </p>
+      <div className={`panel ${styles.count}`}>
+        <p style={{ margin: 0 }}>
+          <span className={styles.countValue}>{stats.checked_in}</span> of {stats.confirmed}{' '}
+          confirmed checked in
+        </p>
+        <div
+          className="meter"
+          role="progressbar"
+          aria-label="Checked in"
+          aria-valuemin={0}
+          aria-valuemax={stats.confirmed}
+          aria-valuenow={stats.checked_in}
+        >
+          <span
+            style={{
+              width: `${stats.confirmed > 0 ? Math.min(100, (stats.checked_in / stats.confirmed) * 100) : 0}%`,
+            }}
+          />
+        </div>
+      </div>
 
       {offline ? (
         <p className="banner banner-warning" role="alert" style={{ margin: 0 }}>
@@ -219,7 +238,7 @@ export function CheckInScanner({ eventId, eventName, timezone, canManual, initia
 
       {!outcome ? (
         <>
-          <div className={`inset ${styles.cameraWell}`}>
+          <div>
             <div className={styles.camera}>
               <video
                 ref={videoRef}
@@ -282,12 +301,12 @@ function Result({
   onNext: () => void;
 }) {
   return (
-    <section className={`raised ${styles.result}`} aria-live="assertive">
+    <section className={`frame ${styles.result}`} aria-live="assertive">
       {outcome.kind === 'ok' ? (
         <>
           <div className="row-between">
             <span className={styles.status} style={{ color: 'var(--success)' }}>
-              <span className={styles.statusIcon}>
+              <span className={`${styles.statusIcon} ${styles.statusOk}`}>
                 <CheckIcon />
               </span>
               Checked in
@@ -307,7 +326,7 @@ function Result({
       ) : outcome.kind === 'already' ? (
         <>
           <span className={styles.status} style={{ color: 'var(--warning)' }}>
-            <span className={styles.statusIcon}>
+            <span className={`${styles.statusIcon} ${styles.statusWarn}`}>
               <AlertIcon />
             </span>
             Already checked in
@@ -324,7 +343,7 @@ function Result({
       ) : (
         <>
           <span className={styles.status} style={{ color: 'var(--danger)' }}>
-            <span className={styles.statusIcon}>
+            <span className={`${styles.statusIcon} ${styles.statusBad}`}>
               <AlertIcon />
             </span>
             Not checked in
@@ -381,7 +400,7 @@ function ManualCheckIn({
   }
 
   return (
-    <section className="raised card stack" aria-labelledby="manual-title">
+    <section className="panel card stack" aria-labelledby="manual-title">
       <div className="stack-sm" style={{ gap: 2 }}>
         <h2 id="manual-title" className="h2">
           Manual check-in

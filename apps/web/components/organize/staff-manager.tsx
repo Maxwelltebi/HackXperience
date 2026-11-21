@@ -72,7 +72,7 @@ export function StaffManager({
 
   return (
     <div className="stack">
-      <form className="raised card stack" onSubmit={add} noValidate>
+      <form className="panel card stack" onSubmit={add} noValidate>
         <h2 className="h2">Add someone</h2>
         <div className="grid-2">
           <Field label="Email they sign in with" error={errors.email}>
@@ -116,7 +116,7 @@ export function StaffManager({
         ) : null}
       </form>
 
-      <div className="raised table-wrap">
+      <div className="panel table-wrap">
         <table className="table">
           <thead>
             <tr>

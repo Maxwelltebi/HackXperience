@@ -1,33 +1,54 @@
-/* HackXperience design foundations (HackXperience screens.pdf, page 1).
-   A soft, neumorphic surface with CIReN green. One light source: top left. */
+/* HackXperience design system, CIReN style (HackXperience screens.pdf, page 1: Foundations).
+   Matches ciren.network. Square corners; circles only for avatars and status dots. No soft
+   shadows, gradients, glows or blur. Components use these tokens only, never raw hex values. */
 
 :root {
-  --surface: #e6ebf1;
-  --ink: #1f2a37;
-  --muted: #5b6676;
-  --green: #046e00;
-  --green-pressed: #035a00;
-  --bright: #40b830;
-  --forest: #0b2416;
+  /* 01 Color */
+  --forest: #0b2416; /* headings, dark bands */
+  --green: #046e00; /* primary, links */
+  --green-hover: #035400;
+  --bright: #40b830; /* on dark only */
+  --mint: #b8e3b0; /* labels on dark */
+  --hero-tint: #eef4ef; /* hero bands */
+  --section-tint: #f4f6f3; /* alternate sections, app background */
+  --mint-tint: #e8f3e5; /* call-to-action band, selected */
+  --night: #0b0f19; /* footer */
+  --white: #fff;
+  --black: #000;
+  --ink: #111827; /* body text */
+  --muted: #4f6654; /* secondary text, 6.2:1 on white */
+  --line: #d6dfd6; /* panels, dividers */
+  --line-strong: #aebdaf; /* inputs, outline buttons */
+  --on-dark-muted: rgba(255, 255, 255, 0.72);
+  --on-dark-line: rgba(255, 255, 255, 0.28);
+
+  /* Status badges (06): a word in a bordered box, tinted. */
+  --info: #1c46b8;
+  --info-tint: #eef2fb;
   --success: #17643e;
   --warning: #7a4f00;
+  --warning-line: #c99a3c;
+  --warning-tint: #fff4dc;
   --danger: #a11f15;
-  --info: #1c46b8;
-  --rule: rgba(163, 177, 198, 0.45);
+  --danger-line: #e3a8a3;
+  --danger-tint: #fbedec;
 
-  /* Raised: cards, buttons, tab bars. Anything you can tap or that holds content. */
-  --raised: -8px -8px 18px rgba(255, 255, 255, 0.9), 8px 8px 18px rgba(163, 177, 198, 0.65);
-  --raised-sm: -4px -4px 10px rgba(255, 255, 255, 0.9), 4px 4px 10px rgba(163, 177, 198, 0.6);
-  /* Inset: inputs, wells, pressed and selected states. Things that receive. */
-  --inset: inset 4px 4px 9px rgba(163, 177, 198, 0.6), inset -4px -4px 9px rgba(255, 255, 255, 0.9);
+  /* 03 Surfaces */
+  --frame-shadow: 8px 8px 0 var(--black);
+  --control-h: 48px;
+  --control-h-sm: 36px;
 
-  --radius-card: 28px;
-  --radius-control: 999px;
-  --control-h: 44px;
-
+  /* 02 Type */
   --font-display: var(--font-inter-tight), 'Inter Tight', system-ui, sans-serif;
   --font-body: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@media (max-width: 719px) {
+  :root {
+    --frame-shadow: 4px 4px 0 var(--black);
+    --control-h: 44px;
+  }
 }
 
 *,
@@ -43,11 +64,11 @@ html {
 
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--section-tint);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
-  line-height: 24px;
+  line-height: 26px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,36 +77,57 @@ a {
   text-underline-offset: 3px;
 }
 
+/* Keyboard focus: 2px forest outline, 2px offset (white on dark). */
 :focus-visible {
-  outline: 3px solid var(--bright);
-  outline-offset: 3px;
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
 }
 
-/* ---------- Type ---------- */
+.band-dark :focus-visible,
+.sidebar :focus-visible {
+  outline-color: var(--white);
+}
+
+/* ---------- 02 Type ---------- */
 
 .display {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(36px, 6vw, 56px);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
+  font-weight: 600;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--forest);
   margin: 0;
 }
 
+/* H2 40 / 600: page titles. */
 .h1 {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 34px;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--forest);
   margin: 0;
 }
 
+/* H3 24 / 600: section titles. */
 .h2 {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 26px;
+  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 24px);
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: var(--forest);
+  margin: 0;
+}
+
+.h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  color: var(--ink);
   margin: 0;
 }
 
@@ -99,6 +141,11 @@ a {
   margin: 0;
 }
 
+/* A neutral eyebrow for labels such as "Your team" and table-like headings. */
+.eyebrow-muted {
+  color: var(--muted);
+}
+
 /* Keeps "CIReN" spelled correctly inside uppercase text. */
 .brand-case {
   text-transform: none;
@@ -110,7 +157,7 @@ a {
 
 .small {
   font-size: 14px;
-  line-height: 20px;
+  line-height: 21px;
 }
 
 .mono {
@@ -122,28 +169,86 @@ a {
   color: var(--green);
 }
 
-/* ---------- Surfaces ---------- */
+/* ---------- 03 Surfaces ---------- */
 
-.raised {
-  background: var(--surface);
-  box-shadow: var(--raised);
-  border-radius: var(--radius-card);
+/* Panel: 1px line, white. The default for lists, forms and info. */
+.panel {
+  background: var(--white);
+  border: 1px solid var(--line);
 }
 
-.inset {
-  background: var(--surface);
-  box-shadow: var(--inset);
-  border-radius: var(--radius-card);
+/* Frame: featured things only (hero image, photo cards, sign-in card, countdown, apply box). */
+.frame {
+  background: var(--white);
+  border: 2px solid var(--forest);
+  box-shadow: var(--frame-shadow);
 }
 
-.flat {
-  background: var(--surface);
-  border: 1px dashed var(--rule);
-  border-radius: var(--radius-card);
+/* Dark band: forest fill. One per page, for the item that matters most. */
+.band-dark {
+  background: var(--forest);
+  color: var(--white);
 }
 
-/* ---------- Buttons ---------- */
+.band-dark .h1,
+.band-dark .h2,
+.band-dark .h3,
+.band-dark .display {
+  color: var(--white);
+}
 
+.band-dark .eyebrow {
+  color: var(--mint);
+}
+
+.band-dark .muted {
+  color: var(--on-dark-muted);
+}
+
+.band-dark a:not(.btn) {
+  color: var(--white);
+}
+
+/* Well: a tinted box inside a panel, for read-only facts such as an invite code. */
+.well {
+  background: var(--section-tint);
+  border: 1px solid var(--line);
+}
+
+/* Full-width page bands (07: public pages alternate white and tint, with one dark band). */
+.band {
+  padding: 72px 0;
+}
+
+.band-white {
+  background: var(--white);
+}
+
+.band-hero {
+  background: var(--hero-tint);
+}
+
+.band-tint {
+  background: var(--section-tint);
+}
+
+.band-mint {
+  background: var(--mint-tint);
+}
+
+.band:not(.band-dark) + .band:not(.band-dark) {
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 719px) {
+  .band {
+    padding: 48px 0;
+  }
+}
+
+/* ---------- 04 Buttons ---------- */
+
+/* The default button is Secondary: white with a strong line. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -151,53 +256,101 @@ a {
   gap: 10px;
   min-height: var(--control-h);
   padding: 0 22px;
-  border: 0;
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  box-shadow: var(--raised-sm);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: var(--white);
   color: var(--ink);
-  font: 600 15px/1 var(--font-body);
+  font: 600 15px/1.2 var(--font-body);
+  text-align: center;
   text-decoration: none;
   cursor: pointer;
   transition:
-    box-shadow 120ms ease,
-    transform 120ms ease;
+    background 120ms ease,
+    border-color 120ms ease;
 }
 
 .btn:hover {
-  transform: translateY(-1px);
+  background: var(--section-tint);
 }
 
-.btn:active,
 .btn[aria-pressed='true'] {
-  box-shadow: var(--inset);
-  transform: none;
-  color: var(--green);
+  border: 2px solid var(--forest);
+  background: var(--mint-tint);
+  color: var(--forest);
 }
 
-/* Only the primary button is a solid fill. */
+/* One solid green button per area. */
 .btn-primary {
+  border-color: var(--green);
   background: var(--green);
-  color: #fff;
+  color: var(--white);
 }
 
-.btn-primary:active {
-  background: var(--green-pressed);
-  color: #fff;
+.btn-primary:hover {
+  border-color: var(--green-hover);
+  background: var(--green-hover);
 }
 
+/* Reject and other destructive actions: outline with a red word. */
 .btn-danger {
+  border-color: var(--danger-line);
   color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger-tint);
+}
+
+/* Arrow button: outline, with a green square holding the arrow. */
+.btn-arrow {
+  padding-right: 0;
+  border-color: var(--forest);
+}
+
+.btn-arrow .btn-arrow-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: var(--control-h);
+  margin-left: 12px;
+  background: var(--green);
+  color: var(--white);
 }
 
 .btn:disabled,
 .btn[aria-disabled='true'] {
-  background: var(--surface);
-  box-shadow: none;
-  border: 1px solid var(--rule);
+  border: 1px dashed var(--line-strong);
+  background: var(--section-tint);
   color: var(--muted);
   cursor: not-allowed;
-  transform: none;
+}
+
+/* Buttons on a dark band: primary turns white, outlines turn light. */
+.band-dark .btn {
+  border-color: var(--on-dark-line);
+  background: transparent;
+  color: var(--white);
+}
+
+.band-dark .btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.band-dark .btn-primary {
+  border-color: var(--white);
+  background: var(--white);
+  color: var(--forest);
+}
+
+.band-dark .btn-primary:hover {
+  background: var(--mint-tint);
+}
+
+.band-dark .btn:disabled {
+  border: 1px dashed var(--on-dark-line);
+  background: transparent;
+  color: var(--on-dark-muted);
 }
 
 .btn-block {
@@ -209,17 +362,44 @@ a {
   font-size: 16px;
 }
 
-/* ---------- Inputs ---------- */
+.btn-sm {
+  min-height: var(--control-h-sm);
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.link-button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--green);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.text-link {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* ---------- 05 Inputs ---------- */
 
 .field {
   display: grid;
   gap: 8px;
 }
 
+/* Labels above inputs. */
 .label {
   font-weight: 600;
   font-size: 14px;
   line-height: 20px;
+  color: var(--forest);
 }
 
 .input,
@@ -227,72 +407,213 @@ a {
 .textarea {
   width: 100%;
   min-height: var(--control-h);
-  padding: 10px 20px;
-  border: 2px solid transparent;
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  box-shadow: var(--inset);
+  padding: 11px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: var(--white);
   color: var(--ink);
   font: 400 16px/24px var(--font-body);
   appearance: none;
 }
 
 .textarea {
-  border-radius: 22px;
-  min-height: 112px;
+  min-height: 120px;
   resize: vertical;
 }
 
 .select {
   padding-right: 44px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%235B6676' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23111827' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 18px center;
+  background-position: right 14px center;
 }
 
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--muted);
+}
+
+/* Focused: a 2px forest border, so the field doesn't shift. */
 .input:focus,
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: var(--bright);
+  border-color: var(--forest);
+  box-shadow: inset 0 0 0 1px var(--forest);
 }
 
 .input[aria-invalid='true'],
 .select[aria-invalid='true'],
 .textarea[aria-invalid='true'] {
   border-color: var(--danger);
+  box-shadow: inset 0 0 0 1px var(--danger);
 }
 
+.input:disabled,
+.select:disabled,
+.textarea:disabled,
+.input[readonly] {
+  background: var(--section-tint);
+  color: var(--muted);
+}
+
+/* Help text sits under the field. */
 .hint {
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--muted);
 }
 
 .field-error {
-  font-size: 13px;
-  line-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--danger);
 }
 
-/* ---------- Chips and status ---------- */
+.field-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--success);
+}
 
-.chip {
+/* Toggle chips: selected = 2px forest border, mint fill and a check icon. */
+.toggle-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.toggle-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
-  border-radius: var(--radius-control);
-  background: var(--surface);
-  box-shadow: var(--raised-sm);
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 16px;
-  color: var(--muted);
+  min-height: var(--control-h);
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  font: 500 15px/1.2 var(--font-body);
+  cursor: pointer;
 }
 
-/* Status is always a dot or icon plus a word, never depth or color alone. */
-.chip::before {
+.toggle-chip[aria-pressed='true'],
+.toggle-chip:has(input:checked) {
+  padding: 0 17px;
+  border: 2px solid var(--forest);
+  background: var(--mint-tint);
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.toggle-chip input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.toggle-chip:has(input:focus-visible) {
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
+}
+
+.toggle-chip:disabled,
+.toggle-chip:has(input:disabled) {
+  border-style: dashed;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.check input,
+.table input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.choice-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-list legend {
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--forest);
+}
+
+/* ---------- 06 Status badges ---------- */
+
+/* A word in a square, bordered, tinted box. Only "Live now" is a solid fill, with a dot. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid currentColor;
+  background: var(--white);
+  font: 700 11px/16px var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.chip-info {
+  color: var(--info);
+  background: var(--info-tint);
+}
+
+.chip-success {
+  color: var(--green);
+  background: var(--mint-tint);
+}
+
+.chip-warning {
+  color: var(--warning);
+  border-color: var(--warning-line);
+  background: var(--warning-tint);
+}
+
+.chip-danger {
+  color: var(--danger);
+  background: var(--danger-tint);
+}
+
+.chip-muted {
+  color: var(--muted);
+  border-color: var(--line-strong);
+  background: var(--section-tint);
+}
+
+.chip-live {
+  color: var(--white);
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.chip-live::before {
   content: '';
   width: 7px;
   height: 7px;
@@ -300,24 +621,11 @@ a {
   background: currentColor;
 }
 
-.chip-success {
-  color: var(--success);
-}
-
-.chip-info {
-  color: var(--info);
-}
-
-.chip-warning {
-  color: var(--warning);
-}
-
-.chip-danger {
-  color: var(--danger);
-}
-
-.chip-muted {
-  color: var(--muted);
+.band-dark .chip-info,
+.band-dark .chip-muted {
+  color: var(--mint);
+  border-color: var(--mint);
+  background: transparent;
 }
 
 /* ---------- Switch ---------- */
@@ -339,25 +647,28 @@ a {
 
 .switch-track {
   position: relative;
-  width: 52px;
-  height: 30px;
-  border-radius: 999px;
-  box-shadow: var(--inset);
+  width: 48px;
+  height: 26px;
+  border: 1px solid var(--line-strong);
+  background: var(--section-tint);
   flex: none;
 }
 
 .switch-thumb {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: var(--raised-sm);
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--muted);
   transition:
     transform 160ms ease,
     background 160ms ease;
+}
+
+.switch input:checked + .switch-track {
+  border-color: var(--green);
+  background: var(--mint-tint);
 }
 
 .switch input:checked + .switch-track .switch-thumb {
@@ -366,8 +677,8 @@ a {
 }
 
 .switch input:focus-visible + .switch-track {
-  outline: 3px solid var(--bright);
-  outline-offset: 3px;
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
 }
 
 /* ---------- Banners (shared states) ---------- */
@@ -377,24 +688,40 @@ a {
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-radius: 20px;
-  box-shadow: var(--raised-sm);
+  border: 1px solid var(--line);
+  background: var(--white);
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .banner-danger {
+  border-color: var(--danger-line);
+  background: var(--danger-tint);
   color: var(--danger);
 }
 
 .banner-warning {
+  border-color: var(--warning-line);
+  background: var(--warning-tint);
   color: var(--warning);
+}
+
+.banner-info {
+  border-color: var(--info);
+  background: var(--info-tint);
+  color: var(--info);
+}
+
+.banner-success {
+  border-color: var(--green);
+  background: var(--mint-tint);
+  color: var(--green);
 }
 
 .banner .btn {
   margin-left: auto;
-  min-height: 36px;
+  min-height: var(--control-h-sm);
   padding: 0 16px;
   font-size: 14px;
 }
@@ -403,7 +730,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--success);
 }
 
@@ -411,15 +738,23 @@ a {
 
 .container {
   width: 100%;
-  max-width: 1120px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px;
 }
 
 @media (min-width: 720px) {
   .container {
-    padding: 0 32px;
+    padding: 0 40px;
   }
+}
+
+.site-header-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
 }
 
 .site-header {
@@ -427,7 +762,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 24px 0;
+  min-height: 72px;
 }
 
 .brand {
@@ -438,26 +773,33 @@ a {
   text-decoration: none;
 }
 
+/* The mark: a forest square, white H, bright green X. */
 .brand-mark {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  box-shadow: var(--raised-sm);
-  font: 800 16px/1 var(--font-display);
-  letter-spacing: -0.04em;
+  width: 36px;
+  height: 36px;
+  background: var(--forest);
+  color: var(--white);
+  font: 700 15px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  flex: none;
+}
+
+.brand-mark .x {
+  color: var(--bright);
 }
 
 .brand-name {
   display: grid;
-  font: 800 18px/1.1 var(--font-display);
+  font: 700 18px/1.1 var(--font-display);
   letter-spacing: -0.02em;
+  color: var(--forest);
 }
 
 .brand-name small {
-  font: 500 11px/1.4 var(--font-body);
+  font: 500 12px/1.4 var(--font-body);
   letter-spacing: 0;
   color: var(--muted);
 }
@@ -465,7 +807,7 @@ a {
 .nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .nav-link {
@@ -477,27 +819,103 @@ a {
   text-decoration: none;
 }
 
-@media (min-width: 720px) {
+.nav-link:hover,
+.nav-link[aria-current='page'] {
+  color: var(--green);
+}
+
+.nav .btn {
+  margin-left: 12px;
+}
+
+@media (min-width: 860px) {
   .nav-link {
     display: inline-block;
   }
 }
 
+/* Footer: Night, the darkest surface. */
 .site-footer {
+  background: var(--night);
+  color: var(--on-dark-muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.site-footer a {
+  color: var(--white);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+.site-footer :focus-visible {
+  outline-color: var(--white);
+}
+
+.footer-top {
+  display: grid;
+  gap: 32px;
+  padding: 56px 0 40px;
+}
+
+@media (min-width: 860px) {
+  .footer-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+.footer-brand {
+  display: grid;
+  gap: 14px;
+  max-width: 320px;
+}
+
+.footer-brand .brand-mark {
+  background: var(--white);
+  color: var(--forest);
+}
+
+.footer-brand .brand-mark .x {
+  color: var(--green);
+}
+
+.footer-brand strong {
+  color: var(--white);
+  font: 700 18px/1 var(--font-display);
+}
+
+.footer-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px 56px;
+}
+
+.footer-columns h2 {
+  margin: 0 0 8px;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footer-columns ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-bottom {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 96px;
-  padding: 24px 0 40px;
-  border-top: 1px solid var(--rule);
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.site-footer nav {
-  display: flex;
-  gap: 20px;
+  padding: 20px 0 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 13px;
 }
 
 .visually-hidden {
@@ -523,8 +941,8 @@ a {
 .page {
   display: grid;
   gap: 24px;
-  padding-top: 8px;
-  padding-bottom: 32px;
+  padding-top: 32px;
+  padding-bottom: 56px;
 }
 
 .page-head {
@@ -537,11 +955,16 @@ a {
 
 .page-head .crumb {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  margin: 0 0 6px;
-  font-size: 13px;
+  margin: 0 0 8px;
+  font-size: 14px;
   color: var(--muted);
+}
+
+.page-head .crumb a {
+  color: var(--ink);
 }
 
 .card {
@@ -550,6 +973,12 @@ a {
 
 .card-tight {
   padding: 16px 20px;
+}
+
+@media (max-width: 719px) {
+  .card {
+    padding: 20px;
+  }
 }
 
 .stack {
@@ -592,80 +1021,166 @@ a {
   grid-column: 1 / -1;
 }
 
-.btn-sm {
-  min-height: 36px;
-  padding: 0 16px;
-  font-size: 14px;
-}
-
-.link-button {
-  border: 0;
-  background: none;
-  padding: 0;
-  color: var(--green);
-  font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
 .empty {
   display: grid;
   justify-items: center;
-  gap: 6px;
-  padding: 32px 16px;
+  gap: 8px;
+  padding: 40px 16px;
   text-align: center;
   color: var(--muted);
 }
 
 .empty strong {
-  color: var(--ink);
+  color: var(--forest);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
 }
 
-.banner-info {
-  color: var(--info);
+/* Stat strip (04 Dashboard): numbers on top, then the table that explains them. */
+.stat-strip {
+  display: grid;
+  gap: 16px;
 }
 
-.banner-success {
-  color: var(--success);
+@media (min-width: 720px) {
+  .stat-strip {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
 }
 
-/* Organizer shell: sidebar + content (screens PDF page 8). */
+.stat {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 20px 24px;
+}
+
+.stat-value {
+  font: 500 32px/1.1 var(--font-mono);
+  color: var(--forest);
+}
+
+.band-dark .stat-value {
+  color: var(--bright);
+}
+
+.stat-value small {
+  font: 500 16px/1 var(--font-body);
+  color: var(--muted);
+}
+
+.band-dark .stat-value small {
+  color: var(--on-dark-muted);
+}
+
+/* A progress bar: a square track with a solid fill. */
+.meter {
+  height: 10px;
+  border: 1px solid var(--line);
+  background: var(--section-tint);
+}
+
+.meter > span {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
+
+.band-dark .meter {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.band-dark .meter > span {
+  background: var(--bright);
+}
+
+/* An avatar: the only circle besides status dots. */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--mint-tint);
+  color: var(--forest);
+  font: 700 13px/1 var(--font-body);
+  flex: none;
+}
+
+/* ---------- Organizer shell: dark sidebar and content (screens PDF pages 11 and 12) ---------- */
+
 .app-shell {
   display: grid;
-  gap: 24px;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 16px;
+  min-height: 100vh;
 }
 
 @media (min-width: 960px) {
   .app-shell {
-    grid-template-columns: 220px minmax(0, 1fr);
-    padding: 24px 32px;
+    grid-template-columns: 232px minmax(0, 1fr);
   }
 }
 
 .sidebar {
   display: grid;
   align-content: start;
-  gap: 20px;
+  gap: 18px;
+  padding: 16px;
+  background: var(--forest);
+  color: var(--white);
+}
+
+@media (min-width: 960px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    grid-template-rows: auto auto 1fr auto;
+    padding: 20px 14px;
+    overflow-y: auto;
+  }
+}
+
+.sidebar .brand,
+.sidebar .brand-name {
+  color: var(--white);
+}
+
+.sidebar .brand-name small {
+  color: var(--mint);
+}
+
+.sidebar .brand-mark {
+  background: var(--white);
+  color: var(--forest);
+}
+
+.sidebar .brand-mark .x {
+  color: var(--green);
 }
 
 .sidebar-event {
-  padding: 14px 16px;
-  border-radius: 18px;
-  box-shadow: var(--raised-sm);
-  color: var(--ink);
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid var(--on-dark-line);
+  color: var(--white);
   text-decoration: none;
+}
+
+.sidebar-event:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-event small {
   display: block;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mint);
 }
 
 .sidebar-event strong {
@@ -676,10 +1191,9 @@ a {
 
 .sidebar-nav {
   display: flex;
-  gap: 6px;
+  align-content: start;
+  gap: 2px;
   overflow-x: auto;
-  padding: 4px;
-  margin: -4px;
 }
 
 @media (min-width: 960px) {
@@ -694,55 +1208,145 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  color: var(--muted);
+  padding: 10px 14px;
+  color: var(--white);
   font-weight: 600;
   font-size: 15px;
   text-decoration: none;
   white-space: nowrap;
 }
 
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .nav-item[aria-current='page'] {
-  box-shadow: var(--inset);
-  color: var(--green);
+  background: var(--white);
+  color: var(--forest);
 }
 
 .nav-item .count {
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--mint);
 }
 
-/* Segmented tabs: an inset track with a raised selected tab. */
+.nav-item[aria-current='page'] .count {
+  color: var(--green);
+}
+
+.sidebar-foot {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--on-dark-line);
+  font-size: 14px;
+}
+
+.sidebar-foot a {
+  color: var(--mint);
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-user .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+
+.sidebar-user strong {
+  display: block;
+  color: var(--white);
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.sidebar-user span {
+  color: var(--on-dark-muted);
+  font-size: 13px;
+}
+
+/* The content side: a white head band with the title, then the work area on the app tint. */
+.app-main {
+  display: grid;
+  align-content: start;
+  gap: 24px;
+  padding: 0 0 56px;
+  min-width: 0;
+}
+
+.app-main > * {
+  margin-inline: 16px;
+}
+
+.app-main > .page-head {
+  margin: 0;
+  padding: 24px 16px 20px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 720px) {
+  .app-main > * {
+    margin-inline: 36px;
+  }
+
+  .app-main > .page-head {
+    padding: 28px 36px 24px;
+  }
+}
+
+/* A page head that ends in tabs: the tabs sit on the head's bottom line. */
+.page-head:has(> .tabs) {
+  padding-bottom: 0;
+}
+
+.page-head > .tabs {
+  flex-basis: 100%;
+  margin-bottom: -1px;
+}
+
+/* ---------- 07 Tabs and tables ---------- */
+
+/* Underline tabs: the selected tab has a 2px green underline and a green count. */
 .tabs {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px;
-  border-radius: 999px;
-  box-shadow: var(--inset);
+  gap: 4px 24px;
+  border-bottom: 1px solid var(--line);
 }
 
 .tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 44px;
+  padding: 0 2px;
   border: 0;
-  border-radius: 999px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   background: transparent;
   color: var(--muted);
-  font: 600 14px/1 var(--font-body);
+  font: 600 15px/1 var(--font-body);
+  text-decoration: none;
   cursor: pointer;
 }
 
-.tab[aria-selected='true'] {
-  background: var(--surface);
-  box-shadow: var(--raised-sm);
+.tab:hover {
   color: var(--ink);
+}
+
+.tab[aria-selected='true'],
+.tab[aria-current='page'],
+.tab[aria-current='true'] {
+  border-bottom-color: var(--green);
+  color: var(--forest);
 }
 
 .tab .count {
@@ -750,48 +1354,51 @@ a {
   font-weight: 500;
 }
 
-.tab[aria-selected='true'] .count {
+.tab[aria-selected='true'] .count,
+.tab[aria-current='page'] .count,
+.tab[aria-current='true'] .count {
   color: var(--green);
 }
 
-/* Tables */
 .table-wrap {
   overflow-x: auto;
+  background: var(--white);
+  border: 1px solid var(--line);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 21px;
 }
 
 .table th {
-  padding: 14px 16px;
+  padding: 12px 16px;
+  background: var(--section-tint);
+  border-bottom: 1px solid var(--line);
   text-align: left;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
-  border-bottom: 1px solid var(--rule);
   white-space: nowrap;
 }
 
 .table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--rule);
-  vertical-align: top;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
 }
 
 .table tr:last-child td {
   border-bottom: 0;
 }
 
-.table tbody tr[data-selected='true'] {
-  background: rgba(4, 110, 0, 0.06);
-}
-
+.table tbody tr[data-selected='true'],
 .table tbody tr[data-active='true'] {
-  background: rgba(28, 70, 184, 0.06);
+  background: var(--mint-tint);
 }
 
 .table .sub {
@@ -800,56 +1407,136 @@ a {
   font-size: 13px;
 }
 
-.table input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--green);
+.table .num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 
 .dl {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 16px;
+  gap: 14px 16px;
   margin: 0;
   padding: 16px;
-  border-radius: 20px;
-  box-shadow: var(--inset);
+  background: var(--section-tint);
+  border: 1px solid var(--line);
 }
 
 .dl dt {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
 .dl dd {
-  margin: 0;
+  margin: 2px 0 0;
   font-size: 15px;
+  line-height: 21px;
 }
 
-.check {
-  display: inline-flex;
+/* A dark action bar for bulk decisions (03 List and table). */
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 12px 16px;
+  padding: 12px 16px;
+}
+
+.bulk-bar .count {
+  font-weight: 700;
+}
+
+.bulk-bar .count b {
+  color: var(--bright);
+  font-family: var(--font-mono);
   font-weight: 500;
-  cursor: pointer;
 }
 
-.check input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--green);
+/* A sticky save bar at the bottom of a form (05 Form). */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--white);
+  border-top: 1px solid var(--line);
 }
 
-.choice-list {
+/* Large countdown digits for framed action boxes. */
+.countdown-blocks {
+  display: flex;
+  gap: 20px;
+}
+
+.countdown-blocks span {
   display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  border: 0;
+  gap: 2px;
 }
 
-.choice-list legend {
-  margin-bottom: 8px;
-  font-weight: 600;
-  font-size: 14px;
+.countdown-blocks b {
+  font-size: 36px;
+  line-height: 1;
+  color: var(--forest);
+}
+
+.countdown-blocks small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.band-dark .countdown-blocks b {
+  color: var(--bright);
+}
+
+.band-dark .countdown-blocks small {
+  color: var(--on-dark-muted);
+}
+
+/* A chosen option that can't be chosen again keeps its selected look. */
+.btn[aria-pressed='true']:disabled {
+  border: 2px solid var(--forest);
+  background: var(--mint-tint);
+  color: var(--forest);
+  cursor: default;
+}
+
+/* The lead stat is wider: Scores in, Waiting on, Projects. */
+@media (min-width: 960px) {
+  .stat-strip-lead {
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* A boxed note next to a table, such as a tie that needs a decision. */
+.callout {
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+
+.callout-warning {
+  border-color: var(--warning-line);
+  background: var(--warning-tint);
+}
+
+.callout-warning strong {
+  color: var(--warning);
+}
+
+/* A status badge with a dot, for connection states such as Online and Offline. */
+.chip-dot::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }

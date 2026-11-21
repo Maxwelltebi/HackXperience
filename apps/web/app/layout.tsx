@@ -6,7 +6,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const interTight = Inter_Tight({
   subsets: ['latin'],
-  weight: ['700', '800'],
+  weight: ['600', '700'],
   variable: '--font-inter-tight',
   display: 'swap',
 });
@@ -20,12 +20,12 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: { default: 'HackXperience by CIReN', template: '%s · HackXperience' },
   description:
-    'Apply to CIReN hackathons, find your team, submit your project and get your results in one place.',
+    "Apply to CIReN hackathons and submit your project here. HackXperience is CIReN's hackathon platform.",
   metadataBase: new URL('https://hack.ciren.network'),
 };
 
 export const viewport: Viewport = {
-  themeColor: '#E6EBF1',
+  themeColor: '#FFFFFF',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

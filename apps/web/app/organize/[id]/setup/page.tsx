@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { SetupEditor } from '@/components/organize/setup-editor';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Tracks and schedule' };
 
@@ -17,7 +18,7 @@ export default async function SetupPage({ params }: { params: Promise<{ id: stri
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Tracks and schedule</h1>
         </div>
       </div>

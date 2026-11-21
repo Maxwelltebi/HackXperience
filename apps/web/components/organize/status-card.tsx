@@ -58,7 +58,7 @@ export function StatusCard({ event, canEdit }: { event: Event; canEdit: boolean 
   }
 
   return (
-    <section className="raised card stack" aria-labelledby="status-title">
+    <section className="panel card stack" aria-labelledby="status-title">
       <div className="row-between">
         <h2 id="status-title" className="h2">
           Status

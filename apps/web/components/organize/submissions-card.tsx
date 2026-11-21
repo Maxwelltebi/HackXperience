@@ -68,7 +68,7 @@ export function SubmissionsCard(props: Props) {
   }
 
   return (
-    <section className="raised card stack" aria-labelledby="submissions-title">
+    <section className="panel card stack" aria-labelledby="submissions-title">
       <div className="row-between">
         <h2 id="submissions-title" className="h2">
           Submissions

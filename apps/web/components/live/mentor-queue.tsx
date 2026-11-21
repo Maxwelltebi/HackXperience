@@ -82,7 +82,7 @@ export function MentorQueue({
           <AlertIcon /> {error}
         </p>
       ) : null}
-      <section className="raised card stack" aria-labelledby="queue-title">
+      <section className="panel card stack" aria-labelledby="queue-title">
         <div className="row-between">
           <h2 id="queue-title" className="h2">
             Waiting for help
@@ -95,7 +95,7 @@ export function MentorQueue({
           </p>
         ) : (
           active.map((r) => (
-            <article key={r.id} className="inset card-tight stack-sm" style={{ borderRadius: 20 }}>
+            <article key={r.id} className="well card-tight stack-sm">
               <div className="row-between" style={{ gap: 12 }}>
                 <strong>{r.topic}</strong>
                 <span className={`chip chip-${STATUS_TONE[r.status]}`}>
@@ -135,7 +135,7 @@ export function MentorQueue({
         )}
       </section>
       {done.length > 0 ? (
-        <section className="raised card stack-sm" aria-label="Recently closed">
+        <section className="panel card stack-sm" aria-label="Recently closed">
           <h2 className="h2" style={{ fontSize: 18 }}>
             Recently closed
           </h2>
@@ -207,7 +207,7 @@ export function TeamMentorPanel({
   }
 
   return (
-    <section className="raised card stack" aria-labelledby="mentor-title">
+    <section className="panel card stack" aria-labelledby="mentor-title">
       <h2 id="mentor-title" className="h2">
         Ask a mentor
       </h2>
@@ -248,11 +248,7 @@ export function TeamMentorPanel({
         </p>
       )}
       {items.map((r) => (
-        <div
-          key={r.id}
-          className="inset card-tight row-between"
-          style={{ borderRadius: 20, gap: 12 }}
-        >
+        <div key={r.id} className="well card-tight row-between" style={{ gap: 12 }}>
           <span>
             <strong>{r.topic}</strong>
             <span className="muted small" style={{ display: 'block' }}>

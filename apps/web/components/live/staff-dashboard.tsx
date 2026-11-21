@@ -41,7 +41,7 @@ export function StaffDashboard({ eventId, initial }: { eventId: string; initial:
   return (
     <div className="grid-2">
       {tiles.map((t) => (
-        <section key={t.label} className="raised card stack-sm" aria-label={t.label}>
+        <section key={t.label} className="panel card stack-sm" aria-label={t.label}>
           <span className="muted small">{t.label}</span>
           <strong className="mono" style={{ fontSize: 40, lineHeight: 1 }}>
             {t.value}

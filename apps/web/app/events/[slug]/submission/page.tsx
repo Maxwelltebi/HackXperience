@@ -42,7 +42,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
   return (
     <>
       <SiteHeader {...headerProps(viewer)} />
-      <main className="container page" style={{ maxWidth: 960 }}>
+      <main className="container page" style={{ maxWidth: 840 }}>
         <div>
           <p className="crumb">
             <Link href={`/events/${slug}`}>{event.name}</Link>
@@ -54,7 +54,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
           </p>
         </div>
         {feedback ? (
-          <section className="raised card stack" aria-labelledby="feedback-title">
+          <section className="panel card stack" aria-labelledby="feedback-title">
             <h2 id="feedback-title" className="h2">
               Judge feedback
             </h2>
@@ -64,7 +64,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
               </p>
             ) : (
               feedback.items.map((item, i) => (
-                <div key={i} className="inset card-tight stack-sm" style={{ borderRadius: 20 }}>
+                <div key={i} className="well card-tight stack-sm">
                   <span className="muted small">
                     {item.judge} · {item.criterion_name}
                   </span>
@@ -85,6 +85,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
           teamSizeMin={event.team_size_min}
           deadline={deadline}
           serverNow={now.toISOString()}
+          timezone={viewer.timezone}
           closed={submissionsClosed(event, now)}
         />
       </main>

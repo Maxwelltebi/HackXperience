@@ -56,12 +56,12 @@ export default async function GalleryPage({
         </div>
 
         {!page ? (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>The gallery opens with the results</strong>
             <span>Every submitted project appears here once results are published.</span>
           </div>
         ) : page.items.length === 0 ? (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>No projects</strong>
           </div>
         ) : (
@@ -70,7 +70,7 @@ export default async function GalleryPage({
               <Link
                 key={item.submission_id}
                 href={`/events/${slug}/gallery/${item.submission_id}`}
-                className="raised card stack-sm"
+                className="panel card stack-sm"
                 style={{ textDecoration: 'none', color: 'inherit' }}
               >
                 <div className="row-between" style={{ alignItems: 'start', gap: 12 }}>

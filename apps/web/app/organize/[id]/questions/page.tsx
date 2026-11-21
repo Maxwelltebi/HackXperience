@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { QuestionsEditor } from '@/components/organize/questions-editor';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Application form' };
 
@@ -17,7 +18,7 @@ export default async function QuestionsPage({ params }: { params: Promise<{ id: 
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Application form</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             Name, email, school and level come from each applicant&apos;s profile. Ask only what

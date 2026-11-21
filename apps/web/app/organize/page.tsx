@@ -45,7 +45,7 @@ export default async function OrganizePage() {
         </div>
 
         {events.length === 0 ? (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>No events yet</strong>
             <span>
               {canCreate
@@ -54,7 +54,7 @@ export default async function OrganizePage() {
             </span>
           </div>
         ) : (
-          <div className="raised table-wrap">
+          <div className="panel table-wrap">
             <table className="table">
               <thead>
                 <tr>
@@ -89,7 +89,7 @@ export default async function OrganizePage() {
           </div>
         )}
         {deleted.length > 0 ? (
-          <section className="raised card stack-sm" aria-labelledby="deleted-title">
+          <section className="panel card stack-sm" aria-labelledby="deleted-title">
             <h2 id="deleted-title" className="h2" style={{ fontSize: 18 }}>
               Deleted events
             </h2>

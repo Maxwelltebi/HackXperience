@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  formatDateTime,
   IF_MATCH_HEADER,
   liveTopics,
   SUBMISSION_LIMITS,
@@ -34,6 +35,8 @@ interface Props {
   teamSizeMin: number;
   deadline: string;
   serverNow: string;
+  /** The viewer's display zone, for the deadline. */
+  timezone: string;
   /** Past the deadline or locked when the page was rendered. */
   closed: boolean;
 }
@@ -216,8 +219,29 @@ export function SubmissionEditor(props: Props) {
   const status = SUBMISSION_STATUS[saved.status];
 
   return (
-    <div className={styles.layout}>
-      <div className="stack">
+    <div className={`panel ${styles.form}`}>
+      <div className={`band-dark ${styles.strip}`}>
+        <span className="small">
+          {closed ? 'Closed at ' : 'Editable until '}
+          <span className="mono">{formatDateTime(props.deadline, props.timezone)}</span>
+        </span>
+        <span className={styles.stripRight}>
+          <span className={chipClass(status.tone)}>
+            {saved.auto_submitted ? 'Auto-submitted' : status.label}
+          </span>
+          {closed ? null : (
+            <span className={`mono ${styles.clock}`}>
+              <Countdown
+                deadline={props.deadline}
+                serverNow={props.serverNow}
+                onExpire={onExpire}
+              />
+            </span>
+          )}
+        </span>
+      </div>
+
+      <div className={styles.body}>
         {notice ? (
           <p className={`banner banner-${notice.tone}`} role="status" style={{ margin: 0 }}>
             {notice.tone === 'success' ? <CheckIcon /> : <AlertIcon />} {notice.text}
@@ -231,10 +255,21 @@ export function SubmissionEditor(props: Props) {
             </button>
           </p>
         ) : null}
+        {saved.github_url && saved.sha_status !== 'none' ? (
+          <p className="small row" style={{ margin: 0, gap: 10 }}>
+            <span className={chipClass(SHA_STATUS[saved.sha_status].tone)}>
+              {SHA_STATUS[saved.sha_status].label}
+            </span>
+            {saved.locked_commit_sha ? (
+              <span className="mono">{saved.locked_commit_sha.slice(0, 12)}</span>
+            ) : null}
+          </p>
+        ) : null}
+
         {closed ? (
           <ReadOnly submission={saved} tracks={tracks} />
         ) : (
-          <section className="raised card stack" aria-label="Project details">
+          <>
             <Field label="Project title" error={fields.title}>
               {(p) => (
                 <input
@@ -246,7 +281,11 @@ export function SubmissionEditor(props: Props) {
                 />
               )}
             </Field>
-            <Field label="Tagline" error={fields.tagline} hint="One line that says what it does.">
+            <Field
+              label="Tagline"
+              error={fields.tagline}
+              hint="One line. Shown under your title in the gallery."
+            >
               {(p) => (
                 <input
                   {...p}
@@ -262,8 +301,15 @@ export function SubmissionEditor(props: Props) {
               error={fields.write_up}
               onChange={(v) => set('write_up', v)}
             />
-            <div className={styles.links}>
-              <Field label="GitHub repository" error={fields.github_url} hint="Optional. Public.">
+            <fieldset className={styles.group}>
+              <legend className="label">
+                Links <span className="muted">· each one optional</span>
+              </legend>
+              <Field
+                label="GitHub repository"
+                error={fields.github_url}
+                hint="The repository must be public. Its last commit is recorded at the deadline."
+              >
                 {(p) => (
                   <input
                     {...p}
@@ -275,7 +321,7 @@ export function SubmissionEditor(props: Props) {
                   />
                 )}
               </Field>
-              <Field label="YouTube video" error={fields.youtube_url} hint="Optional.">
+              <Field label="YouTube video" error={fields.youtube_url}>
                 {(p) => (
                   <input
                     {...p}
@@ -287,7 +333,7 @@ export function SubmissionEditor(props: Props) {
                   />
                 )}
               </Field>
-              <Field label="Demo link" error={fields.demo_url} hint="Optional. https only.">
+              <Field label="Live demo" error={fields.demo_url} hint="Starts with https://">
                 {(p) => (
                   <input
                     {...p}
@@ -299,7 +345,7 @@ export function SubmissionEditor(props: Props) {
                   />
                 )}
               </Field>
-            </div>
+            </fieldset>
             {tracks.length > 0 ? (
               <TrackPicker
                 tracks={tracks}
@@ -309,81 +355,53 @@ export function SubmissionEditor(props: Props) {
                 onChange={(ids) => set('track_ids', ids)}
               />
             ) : null}
-          </section>
+            <p className="well small muted" style={{ margin: 0, padding: '14px 16px' }}>
+              You can keep editing after you submit, until the deadline. Drafts with a title and
+              write-up are submitted for you at the deadline.
+            </p>
+            {tooSmall ? (
+              <p className="banner banner-warning" style={{ margin: 0 }}>
+                <AlertIcon /> Teams need at least {teamSizeMin} people to submit. Yours has{' '}
+                {memberCount}.
+              </p>
+            ) : null}
+          </>
         )}
       </div>
 
-      <aside className={styles.side}>
-        <section className="raised card stack" aria-label="Status">
-          <div className="row-between">
-            <span className="muted small">Status</span>
-            <span className={chipClass(status.tone)}>
-              {saved.auto_submitted ? 'Auto-submitted' : status.label}
-            </span>
-          </div>
-          {closed ? (
-            <p className="small" style={{ margin: 0 }}>
-              Submissions are closed.
+      {closed ? null : (
+        <div className="save-bar">
+          {saved.status === 'submitted' ? (
+            <p className="saved" style={{ margin: 0 }}>
+              <CheckIcon /> Submitted. Edits you save are included.
             </p>
           ) : (
-            <p className="small" style={{ margin: 0 }}>
-              Closes in{' '}
-              <Countdown
-                deadline={props.deadline}
-                serverNow={props.serverNow}
-                onExpire={onExpire}
-              />
-            </p>
+            <span className="muted small">
+              {dirty ? 'You have unsaved changes.' : 'Saved as a draft.'}
+            </span>
           )}
-          {saved.github_url && saved.sha_status !== 'none' ? (
-            <p className="small" style={{ margin: 0 }}>
-              <span className={chipClass(SHA_STATUS[saved.sha_status].tone)}>
-                {SHA_STATUS[saved.sha_status].label}
-              </span>
-              {saved.locked_commit_sha ? (
-                <span className="mono" style={{ display: 'block', marginTop: 8 }}>
-                  {saved.locked_commit_sha.slice(0, 12)}
-                </span>
-              ) : null}
-            </p>
-          ) : null}
-          {!closed ? (
-            <>
-              {tooSmall ? (
-                <p className="banner banner-warning" style={{ margin: 0 }}>
-                  <AlertIcon /> Teams need at least {teamSizeMin} people to submit. Yours has{' '}
-                  {memberCount}.
-                </p>
-              ) : null}
+          <span className="row">
+            <button
+              className="btn"
+              type="button"
+              disabled={busy !== null || !dirty}
+              onClick={onSave}
+            >
+              {busy === 'save' ? 'Saving…' : dirty ? 'Save draft' : 'All changes saved'}
+            </button>
+            {saved.status === 'submitted' ? null : (
               <button
-                className="btn btn-block"
+                className="btn btn-primary"
                 type="button"
-                disabled={busy !== null || !dirty}
-                onClick={onSave}
+                disabled={busy !== null || tooSmall}
+                onClick={onSubmit}
               >
-                {busy === 'save' ? 'Saving…' : dirty ? 'Save draft' : 'All changes saved'}
+                {busy === 'submit' ? 'Submitting…' : 'Submit project'}
               </button>
-              {saved.status === 'submitted' ? (
-                <p className="saved" style={{ margin: 0 }}>
-                  <CheckIcon /> Submitted. Edits you save are included.
-                </p>
-              ) : (
-                <button
-                  className="btn btn-primary btn-block btn-lg"
-                  type="button"
-                  disabled={busy !== null || tooSmall}
-                  onClick={onSubmit}
-                >
-                  {busy === 'submit' ? 'Submitting…' : 'Submit project'}
-                </button>
-              )}
-              <p className="muted small" style={{ margin: 0 }}>
-                At the deadline, a draft with a title and a write-up is submitted for you.
-              </p>
-            </>
-          ) : null}
-        </section>
-      </aside>
+            )}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -400,7 +418,7 @@ function WriteUp({
   const [tab, setTab] = useState<'write' | 'preview'>('write');
   return (
     <div className="field">
-      <div className="row-between">
+      <div className={styles.writeHead}>
         <span className="label" id="writeup-label">
           Write-up
         </span>
@@ -430,14 +448,14 @@ function WriteUp({
           className="textarea"
           aria-labelledby="writeup-label"
           aria-invalid={Boolean(error)}
-          rows={14}
+          rows={12}
           maxLength={SUBMISSION_LIMITS.writeUp}
           placeholder="What problem does it solve, how does it work, what did you build it with? Markdown works."
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
       ) : (
-        <div className={`inset ${styles.preview}`}>
+        <div className={`well ${styles.preview}`}>
           {value.trim() ? (
             <Markdown text={value} />
           ) : (
@@ -446,13 +464,13 @@ function WriteUp({
         </div>
       )}
       {error ? (
-        <span className="field-error">{error}</span>
+        <span className="field-error">
+          <AlertIcon width={16} height={16} /> {error}
+        </span>
       ) : (
         <span className="hint">
-          Markdown: **bold**, # headings, - lists, [links](https://…).{' '}
-          <span className="mono">
-            {value.length.toLocaleString()} / {SUBMISSION_LIMITS.writeUp.toLocaleString()}
-          </span>
+          Markdown supported · {value.length.toLocaleString()} of{' '}
+          {SUBMISSION_LIMITS.writeUp.toLocaleString()} characters
         </span>
       )}
     </div>
@@ -479,27 +497,34 @@ function TrackPicker({
   };
   return (
     <fieldset className={styles.tracks}>
-      <legend className="label">{max === 1 ? 'Track' : `Tracks (up to ${max})`}</legend>
-      <div className={styles.trackList}>
+      <legend className="label">
+        {max === 1 ? 'Track' : 'Tracks'}{' '}
+        <span className="muted">· {max === 1 ? 'pick one' : `up to ${max}`}</span>
+      </legend>
+      <div className="toggle-chips">
         {tracks.map((track) => {
           const on = selected.includes(track.id);
           return (
             <button
               key={track.id}
               type="button"
-              className="btn btn-sm"
+              className="toggle-chip"
               aria-pressed={on}
               disabled={!on && max > 1 && selected.length >= max}
               title={track.description || undefined}
               onClick={() => toggle(track.id)}
             >
-              {on ? <CheckIcon /> : null}
+              {on ? <CheckIcon width={16} height={16} /> : null}
               {track.name}
             </button>
           );
         })}
       </div>
-      {error ? <span className="field-error">{error}</span> : null}
+      {error ? (
+        <span className="field-error">
+          <AlertIcon width={16} height={16} /> {error}
+        </span>
+      ) : null}
     </fieldset>
   );
 }
@@ -507,7 +532,7 @@ function TrackPicker({
 function ReadOnly({ submission, tracks }: { submission: Submission; tracks: Track[] }) {
   const names = tracks.filter((t) => submission.track_ids.includes(t.id)).map((t) => t.name);
   return (
-    <section className="raised card stack" aria-label="Your submission">
+    <section className="stack" aria-label="Your submission">
       <div>
         <h2 className="h2">{submission.title || 'Untitled'}</h2>
         {submission.tagline ? (
@@ -589,7 +614,7 @@ function ConflictView({
   ].filter((r) => r.mine !== r.theirs);
 
   return (
-    <section className="raised card stack" aria-labelledby="conflict-title">
+    <section className="panel card stack" aria-labelledby="conflict-title">
       <div>
         <h2 id="conflict-title" className="h2">
           A teammate saved first
@@ -609,8 +634,8 @@ function ConflictView({
           {rows.map((row) => (
             <div key={row.label} className={styles.compareRow}>
               <strong className="small">{row.label}</strong>
-              <div className={`inset ${styles.cell}`}>{row.mine || '(empty)'}</div>
-              <div className={`inset ${styles.cell}`}>{row.theirs || '(empty)'}</div>
+              <div className={`well ${styles.cell}`}>{row.mine || '(empty)'}</div>
+              <div className={`well ${styles.cell}`}>{row.theirs || '(empty)'}</div>
             </div>
           ))}
         </div>

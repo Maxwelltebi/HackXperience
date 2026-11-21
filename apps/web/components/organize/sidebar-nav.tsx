@@ -9,7 +9,7 @@ export interface NavItem {
   count?: number;
 }
 
-/** The organizer sidebar links; the current page is marked inset and green. */
+/** The organizer sidebar links; the current page is filled white. */
 export function SidebarNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (

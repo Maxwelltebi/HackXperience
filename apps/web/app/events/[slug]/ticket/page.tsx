@@ -30,7 +30,7 @@ export default async function TicketPage({ params }: { params: Promise<{ slug: s
 
   return (
     <main className={styles.page}>
-      <div className={`raised ${styles.card}`}>
+      <div className={`panel ${styles.card}`}>
         <p className="eyebrow">{ticket.event_name}</p>
         <h1 className="h1">{ticket.name}</h1>
         {ticket.checked_in_at ? (

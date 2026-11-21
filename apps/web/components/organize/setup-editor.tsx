@@ -395,7 +395,7 @@ function Section<T extends Item>(props: SectionProps<T>) {
   }
 
   const form = (
-    <form className="inset card stack" onSubmit={save} noValidate style={{ borderRadius: 24 }}>
+    <form className="well card stack" onSubmit={save} noValidate>
       <div className="grid-2">
         {props.fields(values, (key, value) => setValues((v) => ({ ...v, [key]: value })), errors)}
       </div>
@@ -411,7 +411,7 @@ function Section<T extends Item>(props: SectionProps<T>) {
   );
 
   return (
-    <section className="raised card stack" aria-labelledby={`${kind}-title`}>
+    <section className="panel card stack" aria-labelledby={`${kind}-title`}>
       <div className="row-between">
         <div className="stack-sm" style={{ gap: 2 }}>
           <h2 id={`${kind}-title`} className="h2">

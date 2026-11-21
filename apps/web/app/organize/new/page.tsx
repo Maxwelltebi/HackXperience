@@ -35,7 +35,7 @@ export default async function NewEventPage() {
             defaultTimezone={viewer.timezone}
           />
         ) : (
-          <div className="raised empty">
+          <div className="panel empty">
             <strong>Only organization members can create events</strong>
             <span>Ask a CIReN admin to add you.</span>
           </div>

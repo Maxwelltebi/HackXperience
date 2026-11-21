@@ -1,101 +1,81 @@
+/* Sign-in (screens PDF page 7): hero tint, the headline, and the framed sign-in card. */
+
 .page {
-  display: grid;
-  place-items: center;
   min-height: 100dvh;
-  padding: 32px 16px;
+  padding: 24px 0 32px;
+  background: var(--hero-tint);
 }
 
-.stack {
+.layout {
   display: grid;
-  gap: 28px;
-  width: 100%;
-  max-width: 400px;
+  gap: 32px;
+  align-content: start;
+}
+
+.copy {
+  display: grid;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.headline {
+  font-size: clamp(36px, 5vw, 64px);
 }
 
 .card {
   display: grid;
   gap: 18px;
-  justify-items: center;
-  padding: 40px 24px 24px;
-  text-align: center;
-}
-
-.mark {
-  display: grid;
-  place-items: center;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  box-shadow: var(--raised);
-  text-decoration: none;
-}
-
-.markInner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  box-shadow: var(--inset);
-  color: var(--ink);
-  font: 800 30px/1 var(--font-display);
-  letter-spacing: -0.04em;
-}
-
-.wordmark {
-  display: grid;
-  gap: 2px;
-}
-
-.wordmark strong {
-  font: 800 32px/1.1 var(--font-display);
-  letter-spacing: -0.04em;
-}
-
-.wordmark > span {
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-}
-
-.intro {
-  margin: 0;
-  color: var(--muted);
-  font-size: 17px;
-  line-height: 26px;
+  width: 100%;
+  max-width: 460px;
+  margin-right: 8px;
+  padding: 32px 28px;
 }
 
 .buttons {
   display: grid;
-  gap: 16px;
-  width: 100%;
-  margin-top: 4px;
+  gap: 14px;
 }
 
-.well {
+.note {
   display: flex;
-  gap: 12px;
   align-items: flex-start;
-  width: 100%;
-  padding: 14px 18px;
-  border-radius: 22px;
-  text-align: left;
-  font-size: 14px;
-  line-height: 20px;
+  gap: 12px;
+  margin: 0;
+  padding: 14px 16px;
   color: var(--muted);
+  font-size: 15px;
+  line-height: 22px;
 }
 
-.well svg {
+.note svg {
   flex: none;
-  margin-top: 1px;
-  color: var(--green);
+  margin-top: 2px;
 }
 
 .terms {
   margin: 0;
-  text-align: center;
-  font-size: 14px;
   color: var(--muted);
+  font-size: 14px;
+}
+
+@media (min-width: 960px) {
+  .page {
+    display: grid;
+    align-items: center;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 460px;
+    gap: 32px 64px;
+    align-items: center;
+  }
+
+  .brandRow,
+  .terms {
+    grid-column: 1 / -1;
+  }
+
+  .copy {
+    margin-top: 0;
+  }
 }

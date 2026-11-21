@@ -3,6 +3,7 @@ import { API_PREFIX, can, type ImpactFigures } from '@hx/shared';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Impact report' };
 
@@ -34,7 +35,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Impact report</h1>
           <p className="muted small" style={{ margin: '6px 0 0' }}>
             Demographics count checked-in participants only. Deleted teams and projects never count.
@@ -47,7 +48,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           Download CSV
         </a>
       </div>
-      <section className="raised card" aria-label="Overview">
+      <section className="panel card" aria-label="Overview">
         <dl className="dl">
           {overview.map(([label, value]) => (
             <div key={label} style={{ display: 'contents' }}>
@@ -66,7 +67,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             ['Gender', 'gender'],
           ] as [string, keyof ImpactFigures['demographics']][]
         ).map(([label, key]) => (
-          <section key={key} className="raised card stack-sm" aria-label={label}>
+          <section key={key} className="panel card stack-sm" aria-label={label}>
             <h2 className="h2" style={{ fontSize: 18 }}>
               {label}
             </h2>

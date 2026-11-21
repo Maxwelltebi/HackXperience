@@ -54,7 +54,7 @@ export default async function ScoreProjectPage({
         </div>
       </div>
       <div className="grid-2" style={{ alignItems: 'start' }}>
-        <section className="raised card stack" aria-label="Project">
+        <section className="panel card stack" aria-label="Project">
           {submission.tagline ? <p style={{ margin: 0 }}>{submission.tagline}</p> : null}
           <dl className="dl">
             {submission.github_url ? (
@@ -130,7 +130,7 @@ export default async function ScoreProjectPage({
             nextLabel={next ? 'Next project' : 'Back to your queue'}
           />
         ) : (
-          <section className="raised card">
+          <section className="panel card">
             <p className="muted" style={{ margin: 0 }}>
               You&apos;re viewing this as an organizer. Only assigned judges score it.
             </p>

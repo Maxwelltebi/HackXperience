@@ -119,7 +119,7 @@ export function ProfileForm({ initial, timezones }: { initial: MeResponse; timez
 
   return (
     <form className={styles.form} onSubmit={onSubmit} noValidate>
-      <section className={`raised ${styles.card}`} aria-labelledby="about-title">
+      <section className={`panel ${styles.card}`} aria-labelledby="about-title">
         <div className={styles.cardHead}>
           <h2 id="about-title" className="h2">
             About you
@@ -240,7 +240,7 @@ export function ProfileForm({ initial, timezones }: { initial: MeResponse; timez
         </div>
       </section>
 
-      <section className={`raised ${styles.card}`} aria-labelledby="settings-title">
+      <section className={`panel ${styles.card}`} aria-labelledby="settings-title">
         <div className={styles.cardHead}>
           <h2 id="settings-title" className="h2">
             Settings

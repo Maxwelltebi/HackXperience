@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { AnnouncementFeed } from '@/components/live/announcements';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Announcements' };
 
@@ -16,7 +17,7 @@ export default async function AnnouncementsPage({ params }: { params: Promise<{ 
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Announcements</h1>
         </div>
       </div>

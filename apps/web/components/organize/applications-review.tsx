@@ -10,11 +10,12 @@ import {
   type DecisionStatus,
   type DecisionsResponse,
 } from '@hx/shared';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/client/api';
-import { APPLICATION_STATUS, chipClass } from '@/lib/ui/status';
-import { AlertIcon, CheckIcon } from '../icons';
+import { APPLICATION_STATUS, chipClass, type Tone } from '@/lib/ui/status';
+import { AlertIcon, CheckIcon, SearchIcon } from '../icons';
 import styles from './applications-review.module.css';
 
 type Filter = ApplicationStatus | 'all';
@@ -43,13 +44,28 @@ const DECIDED_WORD: Record<DecisionStatus, string> = {
 
 interface Props {
   eventId: string;
+  eventName: string;
+  eventBadge: { label: string; tone: Tone };
+  /** The application form editor, for organizers who can edit the event. */
+  questionsHref: string | null;
   questions: ApplicationQuestion[];
   timezone: string;
   initial: ApplicationListResponse;
 }
 
-/** The organizer review table (screens PDF page 8). Server data refetches after each decision. */
-export function ApplicationsReview({ eventId, questions, timezone, initial }: Props) {
+/**
+ * The organizer review screen (screens PDF page 11, page type 03 List and table): tabs, search,
+ * a dark bulk bar, the table and a side panel. Server data refetches after each decision.
+ */
+export function ApplicationsReview({
+  eventId,
+  eventName,
+  eventBadge,
+  questionsHref,
+  questions,
+  timezone,
+  initial,
+}: Props) {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>('submitted');
   const [search, setSearch] = useState('');
@@ -128,8 +144,19 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
     });
 
   return (
-    <div className="stack">
-      <div className={styles.toolbar}>
+    <>
+      <div className="page-head">
+        <div>
+          <p className="crumb">
+            {eventName} <span className={chipClass(eventBadge.tone)}>{eventBadge.label}</span>
+          </p>
+          <h1 className="h1">Applications</h1>
+        </div>
+        {questionsHref ? (
+          <Link className="btn" href={questionsHref}>
+            Edit questions
+          </Link>
+        ) : null}
         <div className="tabs" role="tablist" aria-label="Filter by status">
           {TABS.map((tab) => (
             <button
@@ -147,20 +174,24 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
             </button>
           ))}
         </div>
+      </div>
+
+      <label className={styles.search}>
+        <SearchIcon className={styles.searchIcon} />
+        <span className="visually-hidden">Search name, email or school</span>
         <input
           className="input"
           type="search"
-          aria-label="Search name, email or school"
           placeholder="Search name, email or school"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-      </div>
+      </label>
 
-      <div className={`raised ${styles.bulkBar}`}>
-        <strong className="small">
-          <span className="mono x">{selected.size}</span> selected
-        </strong>
+      <div className="band-dark bulk-bar">
+        <span className="count small">
+          <b>{selected.size}</b> selected
+        </span>
         {DECISIONS.map((d) => (
           <button
             key={d.status}
@@ -172,7 +203,7 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
             {d.label}
           </button>
         ))}
-        <span className="muted small">
+        <span className={`small ${styles.bulkNote}`}>
           Emails go out {DECISION_EMAIL_DELAY_MINUTES} minutes after a decision. Change it before
           then and only the final one is sent.
         </span>
@@ -185,14 +216,14 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
       ) : null}
 
       <div className={styles.layout}>
-        <div className="raised" style={{ overflow: 'hidden' }}>
+        <div className="panel">
           {items.length === 0 ? (
             <div className="empty">
               <strong>{loading ? 'Loading…' : 'No applications here'}</strong>
               {!loading && search ? <span>Try a different search.</span> : null}
             </div>
           ) : (
-            <div className="table-wrap">
+            <div className={`table-wrap ${styles.tableWrap}`}>
               <table className="table">
                 <thead>
                   <tr>
@@ -209,7 +240,7 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
                     <th>Applicant</th>
                     <th>School</th>
                     <th>Level</th>
-                    <th>Applied</th>
+                    <th>Applied ({shortZone(timezone)})</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -229,7 +260,7 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
               </table>
             </div>
           )}
-          <div className="row-between" style={{ padding: '14px 20px' }}>
+          <div className="row-between" style={{ padding: '12px 16px' }}>
             <span className="muted small">
               Showing {items.length} of {filter === 'all' ? data.counts.all : data.counts[filter]}
             </span>
@@ -256,8 +287,30 @@ export function ApplicationsReview({ eventId, questions, timezone, initial }: Pr
           />
         ) : null}
       </div>
-    </div>
+    </>
   );
+}
+
+/** The zone's short name for a table heading, such as "GMT". */
+function shortZone(timezone: string): string {
+  const part = new Intl.DateTimeFormat('en-GB', { timeZone: timezone, timeZoneName: 'short' })
+    .formatToParts(new Date())
+    .find((p) => p.type === 'timeZoneName');
+  return part?.value ?? timezone;
+}
+
+/** "16 Nov 09:14": the column heading carries the zone. */
+function formatShort(iso: string, timezone: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: timezone,
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  })
+    .format(new Date(iso))
+    .replace(',', '');
 }
 
 function Row({
@@ -294,7 +347,9 @@ function Row({
       </td>
       <td>{item.school ?? <span className="muted">—</span>}</td>
       <td>{item.level_of_study ?? <span className="muted">—</span>}</td>
-      <td className="mono small">{formatDateTime(item.created_at, timezone)}</td>
+      <td className="mono small" style={{ whiteSpace: 'nowrap' }}>
+        {formatShort(item.created_at, timezone)}
+      </td>
       <td>
         <span className={chipClass(status.tone)}>{status.label}</span>
       </td>
@@ -319,7 +374,7 @@ function Detail({
   const decided = item.status === 'confirmed' || item.status === 'declined';
   return (
     <aside
-      className={`raised card stack ${styles.detail}`}
+      className={`panel card stack ${styles.detail}`}
       aria-label={`Application from ${item.name}`}
     >
       <div className="row-between" style={{ alignItems: 'flex-start' }}>
@@ -331,14 +386,22 @@ function Detail({
       </div>
 
       <dl className="dl">
-        <dt>School</dt>
-        <dd>{item.school ?? '—'}</dd>
-        <dt>Level</dt>
-        <dd>{item.level_of_study ?? '—'}</dd>
-        <dt>Country</dt>
-        <dd>{item.country ?? '—'}</dd>
-        <dt>Applied</dt>
-        <dd className="mono small">{formatDateTime(item.created_at, timezone)}</dd>
+        <div>
+          <dt>School</dt>
+          <dd>{item.school ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Level</dt>
+          <dd>{item.level_of_study ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Country</dt>
+          <dd>{item.country ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Applied</dt>
+          <dd className="mono small">{formatDateTime(item.created_at, timezone)}</dd>
+        </div>
       </dl>
 
       {questions.map((question) => {
@@ -388,7 +451,7 @@ function Detail({
               <button
                 key={d.status}
                 type="button"
-                className={d.status === 'accepted' ? 'btn btn-primary btn-sm' : d.className}
+                className={d.className}
                 aria-pressed={item.status === d.status}
                 disabled={busy || item.status === d.status}
                 onClick={() => onDecide(d.status)}

@@ -1,261 +1,183 @@
-.hero {
+/* Homepage (screens PDF pages 2 and 3): alternating full-width bands, one dark band. */
+
+.heroGrid {
   display: grid;
   gap: 48px;
   align-items: center;
-  padding: 48px 0 72px;
 }
 
-@media (min-width: 900px) {
-  .hero {
-    grid-template-columns: 1.1fr 0.9fr;
-    padding: 72px 0 112px;
+@media (min-width: 960px) {
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    gap: 64px;
   }
 }
 
 .heroCopy {
   display: grid;
   gap: 20px;
-  justify-items: start;
 }
 
 .lede {
-  max-width: 30rem;
+  max-width: 34em;
   margin: 0;
-  font-size: 18px;
-  line-height: 28px;
   color: var(--muted);
+  font-size: 18px;
+  line-height: 29px;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   margin-top: 8px;
 }
 
 .note {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  margin: 0;
   color: var(--muted);
+  font-size: 14px;
 }
 
-.note svg {
-  color: var(--green);
+.heroImage {
+  margin-right: 8px;
+  overflow: hidden;
+  line-height: 0;
 }
 
-/* A single raised Enter key: the product's one gesture. */
-.keyWell {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 5 / 4;
-  border-radius: 48px;
-  box-shadow: var(--inset);
+.heroImage img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.key {
+.sectionHead {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  width: 58%;
-  aspect-ratio: 1 / 1;
-  padding: 26px 28px;
-  border-radius: 36px;
-  background: linear-gradient(145deg, #eef2f6, #dde3ea);
-  box-shadow:
-    -14px -14px 30px rgba(255, 255, 255, 0.95),
-    14px 14px 30px rgba(163, 177, 198, 0.75);
-  color: var(--ink);
-  font: 700 22px/1 var(--font-display);
-  transition:
-    box-shadow 180ms ease,
-    transform 180ms ease;
+  gap: 16px;
 }
 
-.keyWell:hover .key {
-  transform: translate(3px, 3px);
-  box-shadow:
-    -6px -6px 14px rgba(255, 255, 255, 0.9),
-    6px 6px 14px rgba(163, 177, 198, 0.7);
-}
-
-.keyArrow {
-  align-self: flex-end;
-  color: var(--green);
-}
-
-.section {
+/* The next event: name and action on the left, dates on the right. */
+.nextGrid {
   display: grid;
-  gap: 28px;
-  padding: 40px 0;
-  scroll-margin-top: 24px;
+  gap: 40px;
+  align-items: center;
 }
 
-.sectionTitle {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(28px, 4vw, 36px);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  margin: 6px 0 0;
+@media (min-width: 960px) {
+  .nextGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
 }
 
-.steps {
-  display: grid;
-  gap: 24px;
+.timeline {
   margin: 0;
   padding: 0;
   list-style: none;
+  border-top: 1px solid var(--on-dark-line);
 }
 
-@media (min-width: 640px) {
-  .steps {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1000px) {
-  .steps {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.step {
+.timeline li {
   display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 24px;
-}
-
-.stepNumber {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  box-shadow: var(--inset);
-  color: var(--green);
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 14px;
-  margin-bottom: 6px;
-}
-
-.step p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 22px;
-}
-
-.organizers {
-  display: grid;
-  gap: 32px;
-  padding: 32px;
-}
-
-@media (min-width: 900px) {
-  .organizers {
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    padding: 40px;
-  }
-}
-
-.organizerCopy {
-  display: grid;
-  gap: 14px;
-  justify-items: start;
-}
-
-.organizerCopy p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.features {
-  display: grid;
-  gap: 18px;
-}
-
-@media (min-width: 560px) {
-  .features {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.feature {
-  padding: 18px 20px;
-  border-radius: 20px;
-}
-
-.feature strong {
-  display: block;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--on-dark-line);
   font-size: 15px;
 }
 
-.feature span {
-  display: block;
-  color: var(--muted);
+.timeline li > :last-child {
+  text-align: right;
   font-size: 14px;
-  line-height: 20px;
 }
 
-.events {
-  display: grid;
-  gap: 24px;
-}
-
-@media (min-width: 900px) {
-  .events {
-    grid-template-columns: 1.9fr 1fr;
-  }
-}
-
-.nextEvent {
-  display: grid;
-  align-content: start;
-  gap: 14px;
-  padding: 28px;
-}
-
-.eventName {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 26px;
-  line-height: 32px;
-  letter-spacing: -0.02em;
+.timelineNumber {
+  color: var(--bright);
+  font-size: 14px;
 }
 
 .pastEvents {
   display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 24px;
-}
-
-.pastEvents ul {
-  display: grid;
-  gap: 10px;
-  margin: 0;
+  gap: 32px 24px;
+  margin: 8px 8px 8px 0;
   padding: 0;
   list-style: none;
 }
 
-.pastEvents li {
+@media (min-width: 720px) {
+  .pastEvents {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.pastCard {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 20px;
+}
+
+/* Four (or two) items, each under a thin rule, with a mono number. */
+.ruled {
+  display: grid;
+  gap: 32px 24px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .ruled {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.ruled li {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.ruled p {
+  margin: 0;
+}
+
+.organizers {
+  display: grid;
+  gap: 40px;
+}
+
+@media (min-width: 960px) {
+  .organizers {
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
+}
+
+@media (min-width: 720px) {
+  .features {
+    grid-template-columns: 1fr 1fr;
+    margin: 0;
+  }
+}
+
+.getStarted {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 14px;
+  gap: 24px;
 }
 
-.pastEvents a {
-  color: var(--ink);
-  text-decoration: none;
-}
-
-.pastEvents a:hover {
-  text-decoration: underline;
+.getStarted h2 {
+  max-width: 16em;
 }

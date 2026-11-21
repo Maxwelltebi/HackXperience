@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { TeamsAdmin } from '@/components/organize/teams-admin';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Teams' };
 
@@ -17,7 +18,7 @@ export default async function TeamsPage({ params }: { params: Promise<{ id: stri
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Teams</h1>
         </div>
         <span className="mono">{teams.filter((t) => !t.deleted_at).length} teams</span>

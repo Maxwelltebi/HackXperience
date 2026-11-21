@@ -52,7 +52,7 @@ export function ApplicationForm({ eventId, slug, questions, profileComplete }: P
         </p>
       ) : null}
 
-      <section className="raised card stack">
+      <section className="panel card stack">
         {questions.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
             No questions for this event. Submit to apply with your profile.

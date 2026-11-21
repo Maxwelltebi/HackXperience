@@ -19,7 +19,7 @@ export default async function EventsPage() {
 
   return (
     <>
-      <SiteHeader {...headerProps(viewer)} />
+      <SiteHeader {...headerProps(viewer)} current="events" />
       <main className="container page">
         <div>
           <p className="eyebrow">Events</p>
@@ -31,7 +31,7 @@ export default async function EventsPage() {
             Upcoming
           </h2>
           {upcoming.length === 0 ? (
-            <div className="raised empty">
+            <div className="panel empty">
               <strong>No upcoming events yet</strong>
               <span>The next CIReN hackathon appears here as soon as organizers publish it.</span>
             </div>
@@ -39,10 +39,10 @@ export default async function EventsPage() {
             upcoming.map((event) => {
               const phase = eventPhase(event, now);
               return (
-                <article key={event.id} className="raised card stack-sm">
+                <article key={event.id} className="panel card stack-sm">
                   <div className="row-between">
                     <span className={chipClass(phase.tone)}>{phase.label}</span>
-                    <span className="muted small">
+                    <span className="mono small muted">
                       {formatDateTime(event.starts_at, viewer?.timezone ?? event.timezone)}
                     </span>
                   </div>
@@ -66,7 +66,7 @@ export default async function EventsPage() {
             <h2 id="past" className="h2">
               Past events
             </h2>
-            <ul className="raised card stack-sm" style={{ listStyle: 'none', margin: 0 }}>
+            <ul className="panel card stack-sm" style={{ listStyle: 'none', margin: 0 }}>
               {past.map((event) => (
                 <li key={event.id} className="row-between">
                   <Link href={`/events/${event.slug}`}>{event.name}</Link>

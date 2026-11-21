@@ -16,6 +16,8 @@
 .markdown h2,
 .markdown h3 {
   font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--forest);
   line-height: 1.25;
   margin: 1.2em 0 0.5em;
 }
@@ -58,15 +60,14 @@
 
 .markdown pre {
   padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--surface);
-  box-shadow: var(--inset);
+  background: var(--section-tint);
+  border: 1px solid var(--line);
   overflow-x: auto;
 }
 
 .markdown blockquote {
   padding-left: 12px;
-  border-left: 3px solid var(--rule);
+  border-left: 3px solid var(--line-strong);
   color: var(--muted);
 }
 
@@ -79,6 +80,6 @@
 .markdown th,
 .markdown td {
   padding: 6px 10px;
-  border: 1px solid var(--rule);
+  border: 1px solid var(--line);
   text-align: left;
 }

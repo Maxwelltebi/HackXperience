@@ -29,7 +29,7 @@ export function AnnouncementFeed({ eventId, initial, timezone, canPost = false }
   return (
     <div className="stack">
       {canPost ? <Composer eventId={eventId} onPosted={() => void refetch()} /> : null}
-      <section className="raised card stack" aria-labelledby="announcements-title">
+      <section className="panel card stack" aria-labelledby="announcements-title">
         <h2 id="announcements-title" className="h2">
           Announcements
         </h2>
@@ -39,7 +39,7 @@ export function AnnouncementFeed({ eventId, initial, timezone, canPost = false }
           </p>
         ) : (
           items.map((a) => (
-            <article key={a.id} className="inset card-tight stack-sm" style={{ borderRadius: 20 }}>
+            <article key={a.id} className="well card-tight stack-sm">
               <div className="row-between" style={{ gap: 12 }}>
                 <strong>{a.title}</strong>
                 <time className="mono small muted" dateTime={a.created_at}>
@@ -81,7 +81,7 @@ function Composer({ eventId, onPosted }: { eventId: string; onPosted: () => void
   }
 
   return (
-    <form className="raised card stack" onSubmit={post} aria-label="New announcement">
+    <form className="panel card stack" onSubmit={post} aria-label="New announcement">
       <h2 className="h2">New announcement</h2>
       {notice ? (
         <p className={`banner banner-${notice.tone}`} role="status" style={{ margin: 0 }}>

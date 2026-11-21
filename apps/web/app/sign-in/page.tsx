@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AlertIcon, CodeIcon, LockIcon, MailIcon } from '@/components/icons';
 import { safeNext } from '@/lib/safe-next';
 import { getSessionUserId } from '@/lib/supabase/server';
+import { Brand } from '@/components/site-chrome';
 import { signInWithProvider } from './actions';
 import styles from './page.module.css';
 
@@ -29,23 +29,26 @@ export default async function SignInPage({ searchParams }: Props) {
 
   return (
     <main className={styles.page}>
-      <div className={styles.stack}>
-        <div className={`raised ${styles.card}`}>
-          <Link href="/" className={styles.mark} aria-label="HackXperience home">
-            <span className={styles.markInner}>
-              H<span className="x">X</span>
-            </span>
-          </Link>
-          <h1 className={styles.wordmark}>
-            <strong>
-              Hack<span className="x">X</span>perience
-            </strong>
-            <span>BY CIReN</span>
-          </h1>
-          <p className={styles.intro}>Sign in to apply, join your team and submit your project.</p>
+      <div className={`container ${styles.layout}`}>
+        <div className={styles.brandRow}>
+          <Brand />
+        </div>
+        <div className={styles.copy}>
+          <p className="eyebrow">
+            Hackathons by <span className="brand-case">CIReN</span>
+          </p>
+          <p className={`display ${styles.headline}`}>
+            Apply to CIReN hackathons and submit your project.
+          </p>
+        </div>
+        <div className={`frame ${styles.card}`}>
+          <h1 className="h1">Sign in</h1>
+          <p className="muted" style={{ margin: 0 }}>
+            Use your Google or GitHub account.
+          </p>
 
           {message ? (
-            <p className="banner banner-danger" role="alert" style={{ width: '100%', margin: 0 }}>
+            <p className="banner banner-danger" role="alert" style={{ margin: 0 }}>
               <AlertIcon /> {message}
             </p>
           ) : null}
@@ -60,8 +63,8 @@ export default async function SignInPage({ searchParams }: Props) {
             </button>
           </form>
 
-          <p className={`inset ${styles.well}`}>
-            <LockIcon />
+          <p className={`well ${styles.note}`}>
+            <LockIcon className="x" />
             No password to create. New here? Signing in sets up your account.
           </p>
         </div>

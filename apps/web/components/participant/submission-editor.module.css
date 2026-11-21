@@ -1,36 +1,69 @@
-.layout {
+/* Submission editor (screens PDF page 9, page type 05 Form): one column, labels above, a dark
+   deadline strip on top and a sticky save bar. */
+
+.form {
+  max-width: 760px;
+}
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 20px;
+}
+
+.stripRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.clock {
+  color: var(--bright);
+  font-size: 18px;
+}
+
+.body {
   display: grid;
   gap: 24px;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+  padding: 24px 20px 28px;
 }
 
-@media (min-width: 860px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
-
-  .side {
-    position: sticky;
-    top: 24px;
+@media (min-width: 720px) {
+  .body {
+    padding: 28px 32px 32px;
   }
 }
 
-.links {
+.group {
   display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.writeHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.writeHead :global(.tabs) {
+  border-bottom: 0;
   gap: 16px;
 }
 
-@media (min-width: 640px) {
-  .links {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.writeHead :global(.tab) {
+  min-height: 32px;
 }
 
 .preview {
-  min-height: 320px;
+  min-height: 280px;
   padding: 16px 18px;
-  border-radius: 20px;
 }
 
 .tracks {
@@ -39,12 +72,6 @@
   margin: 0;
   padding: 0;
   border: 0;
-}
-
-.trackList {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .compare {
@@ -63,7 +90,6 @@
 
 .cell {
   padding: 10px 14px;
-  border-radius: 16px;
   font-size: 14px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;

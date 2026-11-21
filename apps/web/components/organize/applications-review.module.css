@@ -1,32 +1,26 @@
-.toolbar {
-  display: grid;
-  gap: 16px;
-  align-items: center;
+/* Application review (screens PDF page 11). */
+
+.search {
+  position: relative;
+  display: block;
 }
 
-@media (min-width: 1200px) {
-  .toolbar {
-    grid-template-columns: auto minmax(240px, 1fr);
-  }
+.search .searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  color: var(--muted);
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
-.bulkBar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  border-radius: 999px;
+.search input {
+  padding-left: 42px;
 }
 
-@media (max-width: 720px) {
-  .bulkBar {
-    border-radius: 24px;
-  }
-}
-
-.bulkBar > span:last-child {
+.bulkNote {
   flex: 1 1 260px;
+  color: var(--on-dark-muted);
   text-align: right;
 }
 
@@ -38,8 +32,14 @@
 
 @media (min-width: 1200px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 320px;
   }
+}
+
+/* The table sits inside the panel, which draws the outer line. */
+.tableWrap {
+  border: 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .detail {

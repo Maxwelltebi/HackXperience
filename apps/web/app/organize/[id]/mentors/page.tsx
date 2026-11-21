@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { MentorQueue } from '@/components/live/mentor-queue';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Mentor queue' };
 
@@ -16,7 +17,7 @@ export default async function MentorsPage({ params }: { params: Promise<{ id: st
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Mentor queue</h1>
         </div>
       </div>

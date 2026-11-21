@@ -1,4 +1,4 @@
-/* Screens PDF page 7. */
+/* Check-in scanner (screens PDF page 10). */
 .wrap {
   display: grid;
   gap: 20px;
@@ -7,10 +7,9 @@
 }
 
 .count {
-  margin: 0;
-  padding: 14px 24px;
-  border-radius: 999px;
-  text-align: center;
+  display: grid;
+  gap: 12px;
+  padding: 16px 20px;
   color: var(--muted);
   font-size: 17px;
 }
@@ -18,24 +17,19 @@
 .countValue {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: 30px;
-  color: var(--green);
+  font-size: 32px;
+  color: var(--forest);
   vertical-align: -3px;
   margin-right: 6px;
 }
 
-.cameraWell {
-  padding: 18px;
-  border-radius: 40px;
-}
-
+/* The camera: a dark square with bright green corners (bright green is for dark surfaces). */
 .camera {
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 6 / 5;
   overflow: hidden;
-  border-radius: 28px;
   background: var(--forest);
 }
 
@@ -47,7 +41,6 @@
   object-fit: cover;
 }
 
-/* Bright green corner brackets: bright green is for accents on dark surfaces. */
 .corners {
   position: absolute;
   inset: 9%;
@@ -61,23 +54,21 @@
     linear-gradient(var(--bright), var(--bright)) bottom right / 22% 5px,
     linear-gradient(var(--bright), var(--bright)) bottom right / 5px 22%;
   background-repeat: no-repeat;
-  border-radius: 12px;
 }
 
 .hint {
   position: relative;
   padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(11, 36, 22, 0.6);
-  color: #b9e8b1;
+  background: var(--forest);
+  color: var(--mint);
   font-size: 16px;
 }
 
 .result {
   display: grid;
   gap: 12px;
-  padding: 28px 24px;
-  border-radius: 32px;
+  margin-right: 8px;
+  padding: 24px;
 }
 
 .status {
@@ -88,20 +79,33 @@
   font-size: 18px;
 }
 
+/* A solid square with a white icon: the word next to it says what happened. */
 .statusIcon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  box-shadow: var(--raised-sm);
+  width: 36px;
+  height: 36px;
+  color: var(--white);
+}
+
+.statusOk {
+  background: var(--success);
+}
+
+.statusWarn {
+  background: var(--warning);
+}
+
+.statusBad {
+  background: var(--danger);
 }
 
 .name {
   margin: 4px 0 0;
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 600;
   font-size: 34px;
   line-height: 1.1;
   letter-spacing: -0.03em;
+  color: var(--forest);
 }

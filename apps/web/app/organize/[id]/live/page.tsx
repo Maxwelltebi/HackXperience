@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { StaffDashboard } from '@/components/live/staff-dashboard';
 import { loadOrganizerEvent } from '@/lib/server/organize';
+import { EventCrumb } from '@/components/organize/event-crumb';
 
 export const metadata: Metadata = { title: 'Live dashboard' };
 
@@ -16,7 +17,7 @@ export default async function LivePage({ params }: { params: Promise<{ id: strin
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">{access.event.name}</p>
+          <EventCrumb event={access.event} />
           <h1 className="h1">Live dashboard</h1>
           <p className="muted small" style={{ margin: '6px 0 0' }}>
             Updates as check-ins, submissions, scores and mentor requests happen.

@@ -144,7 +144,7 @@ export function QuestionsEditor({
   return (
     <div className="stack">
       {drafts.length === 0 ? (
-        <div className="raised empty">
+        <div className="panel empty">
           <strong>No custom questions</strong>
           <span>Applicants apply with their profile alone.</span>
         </div>
@@ -154,7 +154,7 @@ export function QuestionsEditor({
           return (
             <section
               key={draft.key}
-              className="raised card stack"
+              className="panel card stack"
               aria-label={`Question ${index + 1}`}
             >
               <div className="row-between">
