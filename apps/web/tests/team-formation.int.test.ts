@@ -236,7 +236,7 @@ describe('team forming', () => {
         params: params(),
         body: { team_size: 3, version: 0 },
       }),
-      409,
+      423,
       'SUBMISSION_LOCKED',
     );
   });
