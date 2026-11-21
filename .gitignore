@@ -35,3 +35,8 @@ backup-*/
 
 .DS_Store
 .vercel
+
+# Playwright (apps/web/e2e): saved sign-ins, reports, traces
+apps/web/e2e/.auth/
+apps/web/e2e/report/
+apps/web/e2e/results/

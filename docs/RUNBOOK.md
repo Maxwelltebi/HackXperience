@@ -27,8 +27,9 @@ Do these three days before. Tick each one in the event's WhatsApp staff group.
    2. When it finishes, download the artifact and keep it somewhere safe.
 3. **Email is healthy.** In AWS, open **SES** → **Account dashboard**. It should show _Production access_ and a healthy sending status.
 4. **Volunteers have mobile data.** Check-in runs over the internet, so the venue Wi-Fi isn't enough on its own.
-5. **Deploy freeze announced.** Nobody deploys from 24 hours before the event until results are published.
-6. **Operator ready.** The Ghana-based operator has this runbook and every login above.
+5. **Password sign-in is off.** In Supabase, open **Authentication** → **Sign In / Providers**. **Email** must be off on the live project, and only Google and GitHub on. The test accounts for automated checks live on the dev project only.
+6. **Deploy freeze announced.** Nobody deploys from 24 hours before the event until results are published.
+7. **Operator ready.** The Ghana-based operator has this runbook and every login above.
 
 ---
 

@@ -40,7 +40,7 @@ sign-in (profile, applying, teams, organizer screens) needs Mode B.
 One-time setup, about 20 minutes:
 
 1. **Create the project.** At [supabase.com](https://supabase.com), create a new project
-   `hackxperience-dev` in a European region. Save the database password. 
+   `hackxperience-dev` in a European region. Save the database password.
 2. **GitHub sign-in.** At github.com → Settings → Developer settings → OAuth Apps, create an app.
    - Homepage URL: `http://localhost:3000`
    - Callback URL: `https://<project-ref>.supabase.co/auth/v1/callback`
@@ -75,6 +75,40 @@ again.
 it yourself, accept yourself under Applications, confirm on the event page, and you have a ticket
 and a team. As the owner you can also open Check-in and scan that ticket. The laptop webcam works,
 because the camera is allowed on `localhost`.
+
+## End-to-end tests
+
+A browser test walks one hackathon from start to finish with four people: apply, accept, confirm,
+go live, team up, submit, judge, award and publish results. It runs against the **dev** Supabase
+project only, never production.
+
+One-time setup:
+
+1. In `apps/web/.env.local`, add a password of your choice for the test accounts. Use a
+   long random one; it isn't anyone's real password:
+   ```
+   E2E_PASSWORD=<at least 12 characters>
+   ```
+2. In Supabase (dev project) → Authentication → Sign In / Providers, check that **Email** is on. It
+   is by default on new projects.
+3. Create the four test accounts in Authentication → Users → **Add user** → **Create new user**.
+   Tick **Auto Confirm User** and use the `E2E_PASSWORD` password for each:
+   `hx-e2e-organizer@example.com`, `hx-e2e-judge@example.com`, `hx-e2e-alice@example.com`,
+   `hx-e2e-bob@example.com`.
+   (Or put `SUPABASE_SERVICE_ROLE_KEY` in `apps/web/.env.local`, and the setup creates them.)
+
+Then, with or without `pnpm dev` already running:
+
+```bash
+pnpm e2e
+```
+
+It takes a few minutes the first time, while `next dev` compiles each page. It creates its own event
+and deletes it afterwards (set `E2E_KEEP_DATA=1` to keep it and look around). On a failure, the
+report with screenshots and a trace is at `apps/web/e2e/report/index.html`.
+
+**Production keeps Email sign-in off.** The setup checks this and stops before touching anything if
+it's off, so the suite can't run against production by mistake.
 
 ## Layout
 
