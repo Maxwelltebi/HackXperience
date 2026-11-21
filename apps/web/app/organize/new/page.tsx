@@ -1,6 +1,6 @@
 import { listTimezones } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { EventForm } from '@/components/organize/event-form';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';

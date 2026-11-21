@@ -1,7 +1,7 @@
 'use client';
 
 import type { Answers, ApplicationQuestion, MyApplication } from '@hx/shared';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { useId, useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon } from './icons';

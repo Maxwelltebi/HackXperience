@@ -8,7 +8,7 @@ import {
 } from '@hx/db';
 import { can } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { notFound } from 'next/navigation';
 import { JudgingManager } from '@/components/organize/judging-manager';
 import { loadOrganizerEvent } from '@/lib/server/organize';

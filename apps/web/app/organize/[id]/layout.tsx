@@ -1,6 +1,6 @@
 import { countApplications, getSql } from '@hx/db';
 import { can } from '@hx/shared';
-import Link from 'next/link';
+import Link from '@/components/link';
 import type { ReactNode } from 'react';
 import { SidebarNav, type NavItem } from '@/components/organize/sidebar-nav';
 import { Brand } from '@/components/site-chrome';

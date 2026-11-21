@@ -1,7 +1,7 @@
 import { getEventSetup, getSql, listGallery } from '@hx/db';
 import { can, uuidSchema } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { notFound } from 'next/navigation';
 import Markdown from '@/components/markdown';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';

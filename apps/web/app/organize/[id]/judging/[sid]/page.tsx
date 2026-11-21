@@ -1,7 +1,7 @@
 import { getEventSetup, getJudgeQueue, getSql, getSubmissionForJudging } from '@hx/db';
 import { ApiError, can, uuidSchema } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { notFound } from 'next/navigation';
 import Markdown from '@/components/markdown';
 import { ScoreForm } from '@/components/organize/score-form';

@@ -10,7 +10,7 @@ import {
 } from '@hx/db';
 import { can, formatDateTime, formatTime, type Event, type MyApplication } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { CountdownBlocks } from '@/components/countdown';
 import { AnnouncementFeed } from '@/components/live/announcements';
 import { RsvpButtons } from '@/components/rsvp-buttons';

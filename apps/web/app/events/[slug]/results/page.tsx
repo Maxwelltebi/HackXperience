@@ -1,7 +1,7 @@
 import { getResults, getSql } from '@hx/db';
 import { ApiError, formatDate } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';

@@ -1,7 +1,7 @@
 import { getPublicProfile, getSql } from '@hx/db';
 import { uuidSchema } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { notFound } from 'next/navigation';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { getViewer, headerProps } from '@/lib/server/viewer';

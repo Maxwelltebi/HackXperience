@@ -1,7 +1,7 @@
 import { countSubmissions, getSql, toEvent } from '@hx/db';
 import { can, listTimezones } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { DeleteEventButton } from '@/components/organize/event-delete';
 import { EventForm } from '@/components/organize/event-form';
 import { StatusCard } from '@/components/organize/status-card';

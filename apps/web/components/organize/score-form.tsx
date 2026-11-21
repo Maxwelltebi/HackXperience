@@ -1,7 +1,7 @@
 'use client';
 
 import type { JudgingSubmission, MyScore, RubricCriterion } from '@hx/shared';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon, CheckIcon } from '../icons';

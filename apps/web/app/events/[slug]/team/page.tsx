@@ -2,7 +2,7 @@ import { submissionsClosed } from '@hx/core';
 import { getMyApplication, getMyTeam, getSql, listOpenTeams, listTeamMentorRequests } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { TeamMentorPanel } from '@/components/live/mentor-queue';
 import { TeamPanel } from '@/components/participant/team-panel';

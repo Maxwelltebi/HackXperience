@@ -1,7 +1,7 @@
 import { getSql, listDeletedEvents, listStaffEvents } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { RestoreEventButton } from '@/components/organize/event-delete';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';

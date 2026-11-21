@@ -10,14 +10,14 @@ import {
   type DecisionStatus,
   type DecisionsResponse,
 } from '@hx/shared';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/client/api';
 import { APPLICATION_STATUS, chipClass, type Tone } from '@/lib/ui/status';
 import { AlertIcon, CheckIcon, SearchIcon } from '../icons';
 import styles from './applications-review.module.css';
-import { Busy, LoadingState } from '@/components/loading-state';
+import { Busy, PixelGrid } from '@/components/loading-state';
 
 type Filter = ApplicationStatus | 'all';
 
@@ -74,6 +74,8 @@ export function ApplicationsReview({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(initial.items[0]?.id ?? null);
   const [loading, setLoading] = useState(false);
+  /** What started the current load, so the loader shows on that control. */
+  const [trigger, setTrigger] = useState<'tab' | 'search' | 'more'>('tab');
   const [deciding, setDeciding] = useState<DecisionStatus | null>(null);
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const firstRender = useRef(true);
@@ -167,8 +169,13 @@ export function ApplicationsReview({
               role="tab"
               className="tab"
               aria-selected={filter === tab.key}
-              onClick={() => setFilter(tab.key)}
+              aria-busy={loading && trigger === 'tab' && filter === tab.key}
+              onClick={() => {
+                setTrigger('tab');
+                setFilter(tab.key);
+              }}
             >
+              {loading && trigger === 'tab' && filter === tab.key ? <PixelGrid /> : null}
               {tab.label}{' '}
               <span className="count">
                 {tab.key === 'all' ? data.counts.all : data.counts[tab.key]}
@@ -186,8 +193,16 @@ export function ApplicationsReview({
           type="search"
           placeholder="Search name, email or school"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setTrigger('search');
+            setSearch(e.target.value);
+          }}
         />
+        {loading && trigger === 'search' ? (
+          <span className={styles.searchBusy}>
+            <PixelGrid />
+          </span>
+        ) : null}
       </label>
 
       <div className="band-dark bulk-bar">
@@ -221,9 +236,7 @@ export function ApplicationsReview({
         <div className="panel">
           {items.length === 0 ? (
             loading ? (
-              <div className="loading-region loading-region-sm">
-                <LoadingState label="Loading applications" />
-              </div>
+              <div className="empty" aria-busy="true" />
             ) : (
               <div className="empty">
                 <strong>No applications here</strong>
@@ -232,7 +245,7 @@ export function ApplicationsReview({
             )
           ) : (
             <div
-              className={`table-wrap ${styles.tableWrap}${loading ? ' is-refreshing' : ''}`}
+              className={`table-wrap ${styles.tableWrap}${loading && trigger !== 'more' ? ' is-refreshing' : ''}`}
               aria-busy={loading}
             >
               <table className="table">
@@ -272,21 +285,20 @@ export function ApplicationsReview({
             </div>
           )}
           <div className="row-between" style={{ padding: '12px 16px' }}>
-            {loading && items.length > 0 ? (
-              <LoadingState label="Loading applications" />
-            ) : (
-              <span className="muted small">
-                Showing {items.length} of {filter === 'all' ? data.counts.all : data.counts[filter]}
-              </span>
-            )}
+            <span className="muted small">
+              Showing {items.length} of {filter === 'all' ? data.counts.all : data.counts[filter]}
+            </span>
             {data.next_cursor ? (
               <button
                 type="button"
                 className="btn btn-sm"
                 disabled={loading}
-                onClick={() => void load(filter, search, data.next_cursor ?? undefined)}
+                onClick={() => {
+                  setTrigger('more');
+                  void load(filter, search, data.next_cursor ?? undefined);
+                }}
               >
-                {loading ? <Busy>Loading…</Busy> : 'Load more'}
+                {loading && trigger === 'more' ? <Busy>Loading…</Busy> : 'Load more'}
               </button>
             ) : null}
           </div>

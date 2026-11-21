@@ -18,6 +18,17 @@
   padding-left: 42px;
 }
 
+/* The loader inside the search box while results load. */
+.searchBusy {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  display: flex;
+  color: var(--forest);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
 .bulkNote {
   flex: 1 1 260px;
   color: var(--on-dark-muted);

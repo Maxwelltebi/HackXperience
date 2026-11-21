@@ -1,7 +1,7 @@
 import { getSql, getTicket } from '@hx/db';
 import { ApiError, formatTime } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { qrSvg } from '@/lib/server/qr';

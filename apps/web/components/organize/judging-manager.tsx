@@ -12,7 +12,6 @@ import { useState, type FormEvent } from 'react';
 import { api } from '@/lib/client/api';
 import { AlertIcon, AwardIcon, CheckIcon } from '../icons';
 import { Busy } from '@/components/loading-state';
-import { LoadingState } from '@/components/loading-state';
 import { useRouterTransition } from '@/lib/client/use-router-transition';
 
 interface Props {
@@ -33,7 +32,6 @@ const fmt = (n: number | null, digits = 1) => (n === null ? '–' : n.toFixed(di
  * standings table that explains it, then judges and award winners.
  */
 export function JudgingManager({ eventId, status, standings, awards, tracks, rubricCount }: Props) {
-  const navigate = useRouterTransition();
   const [notice, setNotice] = useState<Notice>(null);
   const judging = status === 'judging';
   const completed = status === 'completed';
@@ -47,10 +45,7 @@ export function JudgingManager({ eventId, status, standings, awards, tracks, rub
       awardsByTeam.set(winner.team_id, [...(awardsByTeam.get(winner.team_id) ?? []), award.name]);
     }
   }
-  const onDone = (text: string, tone: 'success' | 'danger') => {
-    setNotice({ tone, text });
-    navigate.refresh();
-  };
+  const onDone = (text: string, tone: 'success' | 'danger') => setNotice({ tone, text });
 
   return (
     <>
@@ -59,17 +54,13 @@ export function JudgingManager({ eventId, status, standings, awards, tracks, rub
           {notice.tone === 'success' ? <CheckIcon /> : <AlertIcon />} {notice.text}
         </p>
       ) : null}
-      {navigate.pending ? <LoadingState label="Updating the standings" /> : null}
       {rubricCount === 0 ? (
         <p className="banner banner-warning" style={{ margin: 0 }}>
           <AlertIcon /> Add rubric criteria before judging starts.
         </p>
       ) : null}
 
-      <div
-        className={`stat-strip stat-strip-lead${navigate.pending ? ' is-refreshing' : ''}`}
-        aria-busy={navigate.pending}
-      >
+      <div className="stat-strip stat-strip-lead">
         <section className="band-dark stat" aria-labelledby="scores-in">
           <h2 id="scores-in" className="eyebrow">
             Scores in
@@ -250,6 +241,7 @@ function AssignForm({
 }) {
   const [perSubmission, setPerSubmission] = useState(3);
   const [busy, setBusy] = useState(false);
+  const navigate = useRouterTransition();
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -258,8 +250,10 @@ function AssignForm({
       method: 'POST',
       body: { judges_per_submission: perSubmission },
     });
-    setBusy(false);
-    if (!result.ok) return onDone(result.message, 'danger');
+    if (!result.ok) {
+      setBusy(false);
+      return onDone(result.message, 'danger');
+    }
     const { judges, submissions, short } = result.data;
     const shortText =
       short.length > 0
@@ -269,6 +263,7 @@ function AssignForm({
       `Assigned ${judges} judge${judges === 1 ? '' : 's'} across ${submissions} project${submissions === 1 ? '' : 's'}.${shortText}`,
       short.length > 0 ? 'danger' : 'success',
     );
+    navigate.refresh(() => setBusy(false));
   }
 
   return (
@@ -496,6 +491,7 @@ function AwardRow({
 }) {
   const [selected, setSelected] = useState(award.winners.map((w) => w.team_id));
   const [busy, setBusy] = useState(false);
+  const navigate = useRouterTransition();
   const changed =
     [...selected].sort().join() !==
     award.winners
@@ -509,9 +505,12 @@ function AwardRow({
       method: 'POST',
       body: { team_ids: selected },
     });
-    setBusy(false);
-    if (!result.ok) return onDone(result.message, 'danger');
+    if (!result.ok) {
+      setBusy(false);
+      return onDone(result.message, 'danger');
+    }
     onDone(`Saved winners for ${award.name}.`, 'success');
+    navigate.refresh(() => setBusy(false));
   }
 
   return (

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { ArrowRightIcon, LockIcon } from '@/components/icons';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { getSql, listPublicEvents, toEventSummary } from '@hx/db';

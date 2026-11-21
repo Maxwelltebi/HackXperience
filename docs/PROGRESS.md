@@ -110,14 +110,18 @@ Known gaps: the time zone field is free text (validated by the API), not a picke
 
 ## Loading states (web; 21 Nov 2026)
 
-Every request now shows that it's running.
+Every request shows that it's running, on the control that started it. The page itself never changes to a loading screen (product owner's call): the current page stays until the next one is ready.
 
-- **The loader** (`apps/web/components/loading-state.tsx`): a 3 × 3 pixel grid with a chevron wave, one word at a time in a shuffled order ("Fetching…", "Gathering…"), and an elapsed timer in mono. This design was chosen by the product owner. It has a text shimmer (a gradient) and playful words, which the screens PDF's rules otherwise rule out. Screen readers hear a plain label such as "Loading the event" instead of the moving word. With reduced motion, the grid and shimmer stop and the word and timer still change. No Tailwind or shadcn: it's plain CSS on the existing tokens.
-- **Page loads**: a `loading.tsx` for every route group shows the header (or the organizer sidebar) with the loader, so a click always gets an answer.
-- **Buttons**: every busy label ("Saving…", "Deleting…") has the grid in front. Actions that had no busy state now do: deleting and restoring events, teams and projects; removing staff; deleting setup items; mentor resolve and cancel; team actions; manual check-in search; loading a teammate's newer draft; each decision on Applications; the sign-in buttons while the redirect starts.
+- **The loader** (`apps/web/components/loading-state.tsx`): a 3 × 3 pixel grid with a chevron wave, chosen by the product owner. Buttons and links show the grid in front of their text. The full version (one shuffled word at a time and a timer) is used only inside the write-up preview while it loads. It has a text shimmer (a gradient), which the screens PDF's rules otherwise rule out. With reduced motion the grid stops moving.
+- **Links**: every link uses `apps/web/components/link.tsx`, which wraps `next/link` and shows the grid inside the clicked link until its page has loaded (`useLinkStatus`). There are no `loading.tsx` files.
+- **Buttons**: every busy label ("Saving…", "Deleting…") has the grid in front. This covers creating, deleting and restoring events, teams and projects; staff; setup items; mentor requests; team actions; check-in (scan, search, manual); each decision on Applications; judging (assign, scores, winners); and the sign-in buttons while the redirect starts.
 - **After a change**: `useRouterTransition` (`apps/web/lib/client/use-router-transition.ts`) keeps a button busy until the refreshed page has arrived, so it never flips back to its old label while old data still shows.
-- **Data being replaced** (Applications tabs, standings after a change) dims and shows the loader instead of going blank.
+- **Applications**: the grid shows on the tab or in the search box that started the load, and the table dims until the new rows arrive.
 - Live updates (announcements, mentor queue, live dashboard, check-in count) still refresh quietly: their data is already on screen.
+
+### Speed (21 Nov 2026)
+
+The deployed app ran in Vercel's `iad1` (Washington, D.C.) while the database is in Supabase `eu-central-2` (Zurich): every query crossed the Atlantic, about 100 ms each, and a signed-in page runs several in a row. `apps/web/vercel.json` now pins the functions to `fra1` (Frankfurt), about 10 ms from the database. Removing the `loading.tsx` files also stops link prefetches from rendering the organizer layout (with its database queries) for every sidebar link in view.
 
 ---
 

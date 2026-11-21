@@ -1,7 +1,7 @@
 import { applicationsOpen } from '@hx/core';
 import { getMyApplication, getSql, toEvent } from '@hx/db';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { ApplicationForm } from '@/components/application-form';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';

@@ -1,7 +1,7 @@
 import { getSql, listPublicEvents, toEventSummary } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/link';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { getViewer, headerProps } from '@/lib/server/viewer';
 import { eventPhase } from '@/lib/ui/event-phase';

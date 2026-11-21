@@ -1206,7 +1206,6 @@ a {
 .nav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   padding: 10px 14px;
   color: var(--white);
@@ -1226,6 +1225,7 @@ a {
 }
 
 .nav-item .count {
+  margin-left: auto;
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 500;
@@ -1639,21 +1639,32 @@ a {
   color: var(--on-dark-muted);
 }
 
-/* Where a page or a panel waits for its data: the loader in the middle. */
-.loading-region {
-  display: grid;
-  place-items: center;
-  min-height: 50vh;
-  padding: 48px 16px;
+/* The loader inside a link or button while its request runs (components/link.tsx, Busy).
+   In running text it sits before the words with a small gap; in flex controls the gap is theirs. */
+a > .pixel-grid,
+button > .pixel-grid {
+  margin-right: 6px;
+  vertical-align: -1px;
 }
 
-.loading-region-full {
-  min-height: 100dvh;
+.btn > .pixel-grid,
+.tab > .pixel-grid,
+.nav-item > .pixel-grid,
+.brand > .pixel-grid,
+.sidebar-user > .pixel-grid {
+  margin-right: 0;
 }
 
-.loading-region-sm {
-  min-height: 0;
-  padding: 32px 16px;
+/* A link laid out as a row (a queue item): the loader sits in its left padding. */
+a.row-between {
+  position: relative;
+}
+
+a.row-between > .pixel-grid:first-child {
+  position: absolute;
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
 }
 
 /* A region whose data is being replaced: still readable, not clickable. */
