@@ -16,7 +16,9 @@
     "SES_FROM",
     "SES_REPLY_TO",
     "SNS_TOPIC_ARN",
-    "DATABASE_POOL_MAX"
+    "DATABASE_POOL_MAX",
+    "GITHUB_TOKEN",
+    "ENABLE_EXPERIMENTAL_COREPACK"
   ],
   "tasks": {
     "build": {

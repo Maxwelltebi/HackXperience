@@ -123,6 +123,8 @@ Every request shows that it's running, on the control that started it. The page 
 
 The deployed app ran in Vercel's `iad1` (Washington, D.C.) while the database is in Supabase `eu-central-2` (Zurich): every query crossed the Atlantic, about 100 ms each, and a signed-in page runs several in a row. `apps/web/vercel.json` now pins the functions to `fra1` (Frankfurt), about 10 ms from the database. Removing the `loading.tsx` files also stops link prefetches from rendering the organizer layout (with its database queries) for every sidebar link in view.
 
+**Pages that never loaded, then the whole app hanging** (fixed 21 Nov 2026): the Supabase pooler in transaction mode (port 6543) hangs when postgres.js pipelines several queries on one connection, which it does when a request runs more queries at once than the pool has connections (`getStandings` runs six; a layout and its page run several together). The database then waits forever for the rest of the query, and that connection never returns to the pool; once the pool is used up, every request waits. Seen in the dev database (a standings query stuck for 295 s waiting on the client) and reproduced from a laptop: 12 parallel queries over 5 connections hung on port 6543 at once, and ran 20 rounds cleanly on port 5432 or with pipelining off. `packages/db/src/client.ts` now sets `max_pipeline: 1`, which keeps transaction mode (right for serverless) and needs no change to `DATABASE_URL`.
+
 ---
 
 ## UI redesign: CIReN style (web; 21 Nov 2026)

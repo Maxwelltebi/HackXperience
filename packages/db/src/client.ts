@@ -7,8 +7,13 @@ let client: Sql | undefined;
 
 /**
  * The shared postgres.js client on DATABASE_URL, created on first use.
- * Production uses the Supabase pooler in transaction mode, which cannot keep
- * named prepared statements, so `prepare` is off.
+ * Production uses the Supabase pooler (Supavisor) in transaction mode, which:
+ * - cannot keep named prepared statements, so `prepare` is off;
+ * - hangs when several queries are pipelined on one connection: the database waits for the
+ *   rest of a query that never comes, and that pooled connection is lost. With more parallel
+ *   queries than connections (getStandings runs six at once), pages loaded forever and the
+ *   whole app stopped answering (21 Nov 2026). `max_pipeline: 1` sends one query per
+ *   connection at a time; extra queries wait for a free connection instead.
  */
 export function getSql(): Sql {
   if (client) return client;
@@ -18,6 +23,7 @@ export function getSql(): Sql {
   }
   client = postgres(url, {
     prepare: false,
+    max_pipeline: 1,
     max: Number(process.env.DATABASE_POOL_MAX ?? 5),
     idle_timeout: 20,
     connect_timeout: 10,
