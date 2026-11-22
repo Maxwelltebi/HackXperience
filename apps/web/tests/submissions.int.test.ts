@@ -195,27 +195,28 @@ describe('public GitHub repositories (R37)', () => {
       headers: { 'if-match': version },
     });
   const submitNow = () => call(submit, { method: 'POST', as: member, params: { id } });
+  // A save replaces the whole draft, so every save sends the title and write-up too.
+  const project = (repo: string) => ({
+    title: 'Repo project',
+    write_up: 'A project.',
+    github_url: `https://github.com/ciren/${repo}`,
+  });
 
   it('saves a draft with a private repository, but refuses to submit it', async () => {
-    const draft = {
-      title: 'Hidden',
-      write_up: 'A project.',
-      github_url: 'https://github.com/ciren/private-app',
-    };
-    expect((await save(draft, '0')).status).toBe(200);
+    expect((await save(project('private-app'), '0')).status).toBe(200);
     const body = await expectError(await submitNow(), 400, 'VALIDATION_FAILED');
     expect(body.error.details?.fields).toHaveProperty('github_url');
   });
 
   it('submits once the repository is public', async () => {
-    await save({ github_url: 'https://github.com/ciren/open-app' }, '1');
+    expect((await save(project('open-app'), '1')).status).toBe(200);
     const response = await submitNow();
     expect(submissionSchema.parse(await response.json()).status).toBe('submitted');
   });
 
   it('after submitting, refuses switching to a private repository', async () => {
     const body = await expectError(
-      await save({ github_url: 'https://github.com/ciren/private-other' }, '2'),
+      await save(project('private-other'), '2'),
       400,
       'VALIDATION_FAILED',
     );
@@ -223,9 +224,7 @@ describe('public GitHub repositories (R37)', () => {
   });
 
   it('lets a save through when GitHub cannot be asked', async () => {
-    expect((await save({ github_url: 'https://github.com/ciren/unknown-app' }, '2')).status).toBe(
-      200,
-    );
+    expect((await save(project('unknown-app'), '2')).status).toBe(200);
   });
 
   it('answers the editor live check, and refuses someone signed out', async () => {
