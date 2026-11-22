@@ -39,6 +39,7 @@ export interface EventRow {
   application_questions: ApplicationQuestion[];
   status: EventStatus;
   submissions_locked_at: Date | null;
+  gallery_published_at: Date | null;
   deleted_at: Date | null;
 }
 
@@ -62,6 +63,7 @@ const EVENT_COLUMNS = [
   'application_questions',
   'status',
   'submissions_locked_at',
+  'gallery_published_at',
   'deleted_at',
 ] as const;
 
@@ -86,7 +88,42 @@ export function toEvent(row: EventRow): Event {
     application_questions: row.application_questions,
     status: row.status,
     submissions_locked_at: iso(row.submissions_locked_at),
+    gallery_published_at: iso(row.gallery_published_at),
   };
+}
+
+/**
+ * POST /events/{id}/gallery {published}: owners open the project gallery at any time, or hide
+ * it again (R40). A completed event's gallery stays public either way. Audited. Run inside tx().
+ */
+export async function setGalleryPublished(
+  sql: ISql,
+  eventId: string,
+  actorId: string,
+  published: boolean,
+): Promise<Event> {
+  const [current] = await sql<[{ gallery_published_at: Date | null }?]>`
+    select gallery_published_at from events where id = ${eventId} and deleted_at is null for update
+  `;
+  if (!current) throw new ApiError('NOT_FOUND', 'No such event.');
+  if (published !== (current.gallery_published_at !== null)) {
+    await sql`
+      update events set gallery_published_at = ${published ? sql`now()` : null}
+      where id = ${eventId}
+    `;
+    await audit(sql, {
+      eventId,
+      actorId,
+      action: published ? 'event.gallery_published' : 'event.gallery_hidden',
+      entityType: 'event',
+      entityId: eventId,
+      before: { gallery_published_at: iso(current.gallery_published_at) },
+    });
+  }
+  const [row] = await sql<[EventRow]>`
+    select ${sql(EVENT_COLUMNS)} from events where id = ${eventId}
+  `;
+  return toEvent(row);
 }
 
 export function toEventSummary(row: EventRow): EventSummary {

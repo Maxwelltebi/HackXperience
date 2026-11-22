@@ -1,5 +1,5 @@
 import { getEventSetup, getSql, listGallery } from '@hx/db';
-import { can, uuidSchema } from '@hx/shared';
+import { can, galleryOpen, uuidSchema } from '@hx/shared';
 import type { Metadata } from 'next';
 import Link from '@/components/link';
 import { notFound } from 'next/navigation';
@@ -7,6 +7,8 @@ import Markdown from '@/components/markdown';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
+import { ProjectShowcase } from '@/components/project-showcase';
 
 export const metadata: Metadata = { title: 'Project' };
 export const dynamic = 'force-dynamic';
@@ -22,7 +24,7 @@ export default async function ProjectPage({
   const viewer = await getViewer();
   const access = await loadEventForPage(slug, viewer?.userId ?? null);
   const { event } = access;
-  if (event.status !== 'completed' && !can(access.roles, 'submissions.read_all')) notFound();
+  if (!galleryOpen(event) && !can(access.roles, 'submissions.read_all')) notFound();
   const sql = getSql();
   const [page, setup] = await Promise.all([
     listGallery(sql, event.id, { limit: 1, submissionId: sid }),
@@ -37,9 +39,7 @@ export default async function ProjectPage({
       <SiteHeader {...headerProps(viewer)} />
       <main className="container page" style={{ maxWidth: 880 }}>
         <div>
-          <p className="crumb">
-            <Link href={`/events/${slug}/gallery`}>{event.name} projects</Link>
-          </p>
+          <BackLink href={`/events/${slug}/gallery`}>All projects</BackLink>
           <h1 className="h1">{item.title || 'Untitled'}</h1>
           {item.tagline ? (
             <p className="muted" style={{ margin: '6px 0 0' }}>
@@ -56,6 +56,7 @@ export default async function ProjectPage({
             ))}
           </p>
         ) : null}
+        <ProjectShowcase images={item.images} title={item.title} />
         <section className="panel card stack">
           <dl className="dl">
             <dt>Team</dt>

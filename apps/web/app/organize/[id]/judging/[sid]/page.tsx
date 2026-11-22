@@ -1,12 +1,13 @@
 import { getEventSetup, getJudgeQueue, getSql, getSubmissionForJudging } from '@hx/db';
 import { ApiError, can, uuidSchema } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from '@/components/link';
 import { notFound } from 'next/navigation';
 import Markdown from '@/components/markdown';
 import { ScoreForm } from '@/components/organize/score-form';
 import { loadOrganizerEvent } from '@/lib/server/organize';
 import { chipClass, SHA_STATUS } from '@/lib/ui/status';
+import { BackLink } from '@/components/back-link';
+import { ProjectShowcase } from '@/components/project-showcase';
 
 export const metadata: Metadata = { title: 'Score a project' };
 
@@ -42,9 +43,7 @@ export default async function ScoreProjectPage({
     <>
       <div className="page-head">
         <div>
-          <p className="crumb">
-            <Link href={`/organize/${id}/judging`}>Judging</Link>
-          </p>
+          <BackLink href={`/organize/${id}/judging`}>Back to judging</BackLink>
           <h1 className="h1">{submission.title || 'Untitled'}</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             {submission.team_name}
@@ -56,6 +55,7 @@ export default async function ScoreProjectPage({
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <section className="panel card stack" aria-label="Project">
           {submission.tagline ? <p style={{ margin: 0 }}>{submission.tagline}</p> : null}
+          <ProjectShowcase images={submission.images} title={submission.title} />
           <dl className="dl">
             {submission.github_url ? (
               <>

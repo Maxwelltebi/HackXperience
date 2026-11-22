@@ -8,6 +8,7 @@ import { qrSvg } from '@/lib/server/qr';
 import { getViewer } from '@/lib/server/viewer';
 import { chipClass } from '@/lib/ui/status';
 import styles from './page.module.css';
+import { BackLink } from '@/components/back-link';
 
 export const metadata: Metadata = { title: 'Your ticket' };
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,7 @@ export default async function TicketPage({ params }: { params: Promise<{ slug: s
 
   return (
     <main className={styles.page}>
+      <BackLink href={`/events/${slug}`}>Back to the event</BackLink>
       <div className={`panel ${styles.card}`}>
         <p className="eyebrow">{ticket.event_name}</p>
         <h1 className="h1">{ticket.name}</h1>

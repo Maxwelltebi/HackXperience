@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { SHA_STATES } from '../constants';
 import { isoDateTimeSchema, uuidSchema } from './base';
 import { rubricCriterionSchema } from './events';
+import { projectImageSchema } from './submissions';
 
 // ---------- Assignment ----------
 
@@ -72,6 +73,7 @@ export const judgingSubmissionSchema = z.object({
   below_min_size: z.boolean(),
   locked_commit_sha: z.string().nullable(),
   sha_status: z.enum(SHA_STATES),
+  images: z.array(projectImageSchema),
   criteria: z.array(rubricCriterionSchema),
   /** The caller's own scores; empty for organizers who are not judging it. */
   my_scores: z.array(myScoreSchema),
@@ -208,6 +210,8 @@ export const galleryItemSchema = z.object({
   track_ids: z.array(uuidSchema),
   members: z.array(z.object({ user_id: uuidSchema, name: z.string() })),
   awards: z.array(z.string()),
+  /** In order: the first is the cover (R41). */
+  images: z.array(projectImageSchema),
 });
 export type GalleryItem = z.infer<typeof galleryItemSchema>;
 

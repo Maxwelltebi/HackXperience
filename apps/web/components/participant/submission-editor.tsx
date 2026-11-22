@@ -5,6 +5,7 @@ import {
   IF_MATCH_HEADER,
   liveTopics,
   SUBMISSION_LIMITS,
+  type ProjectImage,
   type Submission,
   type Track,
 } from '@hx/shared';
@@ -21,6 +22,8 @@ import { GithubField } from './github-field';
 import styles from './submission-editor.module.css';
 import { Busy } from '@/components/loading-state';
 import { LoadingState } from '@/components/loading-state';
+import { ProjectShowcase } from '../project-showcase';
+import { ProjectImagesEditor } from './project-images-editor';
 
 // The markdown renderer loads only when someone opens a preview.
 const Markdown = dynamic(() => import('../markdown'), {
@@ -40,6 +43,8 @@ interface Props {
   serverNow: string;
   /** The viewer's display zone, for the deadline. */
   timezone: string;
+  /** The team's project images (R41), saved separately from the draft. */
+  images: ProjectImage[];
   /** Past the deadline or locked when the page was rendered. */
   closed: boolean;
 }
@@ -278,7 +283,7 @@ export function SubmissionEditor(props: Props) {
         ) : null}
 
         {closed ? (
-          <ReadOnly submission={saved} tracks={tracks} />
+          <ReadOnly submission={saved} tracks={tracks} images={props.images} />
         ) : (
           <>
             <Field label="Project title" error={fields.title}>
@@ -312,10 +317,9 @@ export function SubmissionEditor(props: Props) {
               error={fields.write_up}
               onChange={(v) => set('write_up', v)}
             />
+            <ProjectImagesEditor eventId={eventId} initial={props.images} />
             <fieldset className={styles.group}>
-              <legend className="label">
-                Links <span className="muted">· each one optional</span>
-              </legend>
+              <legend className="label">Links</legend>
               <GithubField
                 value={draft.github_url}
                 error={fields.github_url}
@@ -529,7 +533,15 @@ function TrackPicker({
   );
 }
 
-function ReadOnly({ submission, tracks }: { submission: Submission; tracks: Track[] }) {
+function ReadOnly({
+  submission,
+  tracks,
+  images,
+}: {
+  submission: Submission;
+  tracks: Track[];
+  images: ProjectImage[];
+}) {
   const names = tracks.filter((t) => submission.track_ids.includes(t.id)).map((t) => t.name);
   return (
     <section className="stack" aria-label="Your submission">
@@ -541,6 +553,7 @@ function ReadOnly({ submission, tracks }: { submission: Submission; tracks: Trac
           </p>
         ) : null}
       </div>
+      <ProjectShowcase images={images} title={submission.title} />
       {submission.write_up.trim() ? (
         <Markdown text={submission.write_up} />
       ) : (

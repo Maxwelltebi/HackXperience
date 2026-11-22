@@ -29,3 +29,11 @@ vi.mock('@/lib/server/github', async (importOriginal) => {
       ),
   };
 });
+
+// Storage is not part of the tests (R41): upload links are fake, an upload has "arrived" unless
+// its path contains "missing", and removing a file does nothing.
+vi.mock('@/lib/server/storage', () => ({
+  createUploadLink: (path: string) => Promise.resolve({ path, token: 'test-token' }),
+  fileExists: (path: string) => Promise.resolve(!path.includes('missing')),
+  removeFile: () => Promise.resolve(),
+}));

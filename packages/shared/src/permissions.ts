@@ -12,6 +12,8 @@ export const PERMISSIONS = {
   /** See the event while it is a draft, and its staff-only data. */
   'event.view_staff': ['owner', 'admin'],
   'staff.manage': ['owner'],
+  /** Open or hide the event's project gallery before results are published (R40). */
+  'gallery.publish': ['owner'],
   'audit.read': ['owner'],
   'submissions.reopen': ['owner'],
   /**

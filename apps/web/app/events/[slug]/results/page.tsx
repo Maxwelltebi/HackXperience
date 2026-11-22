@@ -5,6 +5,7 @@ import Link from '@/components/link';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
 
 export const metadata: Metadata = { title: 'Results' };
 export const dynamic = 'force-dynamic';
@@ -27,9 +28,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ slug: 
       <main className="container page" style={{ maxWidth: 960 }}>
         <div className="page-head">
           <div>
-            <p className="crumb">
-              <Link href={`/events/${slug}`}>{event.name}</Link>
-            </p>
+            <BackLink href={`/events/${slug}`}>Back to the event</BackLink>
             <h1 className="h1">Results</h1>
             {results ? (
               <p className="muted" style={{ margin: '6px 0 0' }}>

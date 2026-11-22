@@ -96,8 +96,21 @@ export const eventSchema = z.object({
   application_questions: z.array(applicationQuestionSchema),
   status: eventStatusSchema,
   submissions_locked_at: isoDateTimeSchema.nullable(),
+  /** Set while an owner has opened the gallery before results (R40). */
+  gallery_published_at: isoDateTimeSchema.nullable(),
 });
 export type Event = z.infer<typeof eventSchema>;
+
+/** The project gallery is public once results are published, or once an owner opens it (R40). */
+export function galleryOpen(event: {
+  status: string;
+  gallery_published_at: string | Date | null;
+}): boolean {
+  return event.status === 'completed' || event.gallery_published_at !== null;
+}
+
+/** POST /events/{id}/gallery {published} */
+export const galleryPublishBodySchema = z.object({ published: z.boolean() }).strict();
 
 export const eventSummarySchema = eventSchema.pick({
   id: true,

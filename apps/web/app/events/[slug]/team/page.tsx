@@ -2,7 +2,6 @@ import { submissionsClosed } from '@hx/core';
 import { getMyApplication, getMyTeam, getSql, listOpenTeams, listTeamMentorRequests } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { TeamMentorPanel } from '@/components/live/mentor-queue';
 import { SkillsPanel } from '@/components/participant/skills-panel';
@@ -10,6 +9,7 @@ import { TeamPanel } from '@/components/participant/team-panel';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
 
 export const metadata: Metadata = { title: 'Your team' };
 export const dynamic = 'force-dynamic';
@@ -34,9 +34,7 @@ export default async function TeamPage({ params }: { params: Promise<{ slug: str
       <SiteHeader {...headerProps(viewer)} />
       <main className="container page" style={{ maxWidth: 880 }}>
         <div>
-          <p className="crumb">
-            <Link href={`/events/${slug}`}>{event.name}</Link>
-          </p>
+          <BackLink href={`/events/${slug}`}>Back to the event</BackLink>
           <h1 className="h1">Your team</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             Teams of{' '}

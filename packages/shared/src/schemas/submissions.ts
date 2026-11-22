@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SHA_STATES, SUBMISSION_LIMITS, SUBMISSION_STATUSES } from '../constants';
+import { PROJECT_IMAGES, SHA_STATES, SUBMISSION_LIMITS, SUBMISSION_STATUSES } from '../constants';
 import { parseDemoLink, parseGithubLink, parseYoutubeLink, type LinkResult } from '../links';
 import { isoDateTimeSchema, uuidSchema } from './base';
 
@@ -95,3 +95,62 @@ export const repoCheckSchema = z.object({
   visibility: z.enum(['public', 'private', 'unknown', 'invalid']),
 });
 export type RepoCheck = z.infer<typeof repoCheckSchema>;
+
+// ---------- Project images (R41) ----------
+
+/** One image on a team's project. Its URL is built from `path` (projectImageUrl). */
+export const projectImageSchema = z.object({
+  id: uuidSchema,
+  path: z.string(),
+  caption: z.string(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+});
+export type ProjectImage = z.infer<typeof projectImageSchema>;
+
+export const projectImageListSchema = z.object({ items: z.array(projectImageSchema) });
+export type ProjectImageList = z.infer<typeof projectImageListSchema>;
+
+/** POST /events/{id}/teams/me/images/upload: asks for a one-time upload link. */
+export const imageUploadBodySchema = z
+  .object({
+    content_type: z.enum(PROJECT_IMAGES.types, { error: 'Use a PNG, JPEG or WebP image.' }),
+    size: z.number().int().min(1).max(PROJECT_IMAGES.maxBytes, 'Images can be up to 5 MB.'),
+  })
+  .strict();
+
+export const imageUploadSchema = z.object({
+  path: z.string(),
+  token: z.string(),
+});
+export type ImageUpload = z.infer<typeof imageUploadSchema>;
+
+const dimension = z.number().int().min(1).max(20_000).nullable();
+
+/** POST /events/{id}/teams/me/images: registers an uploaded image. */
+export const addImageBodySchema = z
+  .object({
+    path: z.string().min(1).max(300),
+    caption: z.string().trim().max(PROJECT_IMAGES.captionMax).default(''),
+    width: dimension,
+    height: dimension,
+  })
+  .strict();
+
+/** PUT /events/{id}/teams/me/images: the order (first is the cover) and the captions. */
+export const arrangeImagesBodySchema = z
+  .object({
+    images: z
+      .array(
+        z
+          .object({
+            id: uuidSchema,
+            caption: z.string().trim().max(PROJECT_IMAGES.captionMax),
+          })
+          .strict(),
+      )
+      .max(PROJECT_IMAGES.max),
+  })
+  .strict();
+
+export const imageParamsSchema = z.object({ id: uuidSchema, imageId: uuidSchema });

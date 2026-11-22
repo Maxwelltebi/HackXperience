@@ -1,15 +1,22 @@
 import { getEventSetup, getSql, listGallery } from '@hx/db';
-import { can } from '@hx/shared';
+import { can, galleryOpen } from '@hx/shared';
 import type { Metadata } from 'next';
 import Link from '@/components/link';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
+import Image from 'next/image';
+import { GalleryToggle } from '@/components/organize/gallery-toggle';
+import { projectImageUrl } from '@/lib/project-images';
 
 export const metadata: Metadata = { title: 'Projects' };
 export const dynamic = 'force-dynamic';
 
-/** The public project gallery, once results are published (organizers can preview it). */
+/**
+ * The project gallery: public once an owner opens it or results are published (R40). Owners and
+ * admins can preview it before then.
+ */
 export default async function GalleryPage({
   params,
   searchParams,
@@ -22,7 +29,9 @@ export default async function GalleryPage({
   const viewer = await getViewer();
   const access = await loadEventForPage(slug, viewer?.userId ?? null);
   const { event } = access;
-  const open = event.status === 'completed' || can(access.roles, 'submissions.read_all');
+  const isPublic = galleryOpen(event);
+  const open = isPublic || can(access.roles, 'submissions.read_all');
+  const canPublish = can(access.roles, 'gallery.publish');
   const sql = getSql();
   const [page, setup] = open
     ? await Promise.all([
@@ -38,17 +47,22 @@ export default async function GalleryPage({
       <main className="container page">
         <div className="page-head">
           <div>
-            <p className="crumb">
-              <Link href={`/events/${slug}`}>{event.name}</Link>
-            </p>
+            <BackLink href={`/events/${slug}`}>Back to the event</BackLink>
             <h1 className="h1">Projects</h1>
-            {event.status !== 'completed' && open ? (
+            {!isPublic && open ? (
               <p className="muted small" style={{ margin: '6px 0 0' }}>
-                Organizer preview: the gallery goes public when results are published.
+                Organizer preview: only owners and admins can see this until the gallery is
+                published.
               </p>
             ) : null}
           </div>
-          {event.status === 'completed' ? (
+          {canPublish ? (
+            <GalleryToggle
+              eventId={event.id}
+              published={event.gallery_published_at !== null}
+              completed={event.status === 'completed'}
+            />
+          ) : event.status === 'completed' ? (
             <Link className="btn" href={`/events/${slug}/results`}>
               Results
             </Link>
@@ -57,8 +71,10 @@ export default async function GalleryPage({
 
         {!page ? (
           <div className="panel empty">
-            <strong>The gallery opens with the results</strong>
-            <span>Every submitted project appears here once results are published.</span>
+            <strong>The gallery isn&apos;t open yet</strong>
+            <span>
+              Every submitted project appears here once the organizers publish the gallery.
+            </span>
           </div>
         ) : page.items.length === 0 ? (
           <div className="panel empty">
@@ -70,9 +86,20 @@ export default async function GalleryPage({
               <Link
                 key={item.submission_id}
                 href={`/events/${slug}/gallery/${item.submission_id}`}
-                className="panel card stack-sm"
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                className={`${item.images[0] ? 'frame' : 'panel'} card gallery-card`}
               >
+                {item.images[0] ? (
+                  <div className="gallery-cover">
+                    <Image
+                      src={projectImageUrl(item.images[0].path)}
+                      alt=""
+                      width={item.images[0].width ?? 800}
+                      height={item.images[0].height ?? 500}
+                      sizes="(min-width: 720px) 560px, 100vw"
+                      unoptimized
+                    />
+                  </div>
+                ) : null}
                 <div className="row-between" style={{ alignItems: 'start', gap: 12 }}>
                   <h2 className="h2" style={{ fontSize: 20 }}>
                     {item.title || 'Untitled'}

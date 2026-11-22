@@ -1803,3 +1803,173 @@ a.row-between > .pixel-grid:first-child {
   padding: 6px 10px;
   font-weight: 600;
 }
+
+/* A back arrow above a page title. */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--green);
+}
+
+.back-link:hover svg {
+  transform: translateX(-2px);
+}
+
+.back-link svg {
+  transition: transform 120ms ease;
+}
+
+.band-dark .back-link {
+  color: var(--white);
+}
+
+/* Project images (R41): a framed main image, a caption, and thumbnails. */
+.showcase {
+  display: grid;
+  gap: 10px;
+  margin: 0 8px 0 0;
+}
+
+.showcase-main {
+  overflow: hidden;
+  line-height: 0;
+  background: var(--section-tint);
+}
+
+.showcase-main img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+}
+
+.showcase-caption {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.showcase-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.showcase-thumb {
+  width: 96px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--section-tint);
+  cursor: pointer;
+}
+
+.showcase-thumb[aria-pressed='true'] {
+  border: 2px solid var(--forest);
+}
+
+.showcase-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The cover image on a gallery card. */
+.gallery-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  margin-right: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gallery-cover {
+  margin: -24px -24px 8px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-bottom: 2px solid var(--forest);
+  background: var(--section-tint);
+}
+
+.gallery-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 719px) {
+  .gallery-cover {
+    margin: -20px -20px 8px;
+  }
+}
+
+/* The image editor on the submission form. */
+.image-editor {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.image-editor-grid {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 560px) {
+  .image-editor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .image-editor-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.image-editor-item {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+}
+
+.image-editor-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--section-tint);
+}
+
+.image-editor-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-editor-cover {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}
+
+.image-editor-item .input {
+  min-height: 38px;
+  padding: 6px 10px;
+  font-size: 14px;
+}

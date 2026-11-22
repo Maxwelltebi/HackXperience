@@ -78,3 +78,13 @@ export const SKILL_LABELS: Record<Skill, string> = {
 export const SKILL_SCALE = { min: 1, max: 5, low: 'New to it', high: 'Expert' } as const;
 /** Teams in one organizer draft, at most. */
 export const MAX_DRAFT_TEAMS = 200;
+
+/** Project images (R41): the storage bucket and its limits (also set on the bucket itself). */
+export const PROJECT_IMAGES = {
+  bucket: 'project-images',
+  max: 6,
+  maxBytes: 5 * 1024 * 1024,
+  types: ['image/png', 'image/jpeg', 'image/webp'],
+  captionMax: 140,
+} as const;
+export type ProjectImageType = (typeof PROJECT_IMAGES.types)[number];

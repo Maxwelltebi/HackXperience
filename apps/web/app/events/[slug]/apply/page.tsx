@@ -7,6 +7,7 @@ import { ApplicationForm } from '@/components/application-form';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
 
 export const metadata: Metadata = { title: 'Apply' };
 export const dynamic = 'force-dynamic';
@@ -27,9 +28,7 @@ export default async function ApplyPage({ params }: { params: Promise<{ slug: st
       <SiteHeader {...headerProps(viewer)} />
       <main className="container page" style={{ maxWidth: 760 }}>
         <div>
-          <p className="crumb">
-            <Link href={`/events/${slug}`}>{event.name}</Link>
-          </p>
+          <BackLink href={`/events/${slug}`}>Back to the event</BackLink>
           <h1 className="h1">Apply</h1>
         </div>
         {open ? (

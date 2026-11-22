@@ -37,6 +37,7 @@ export const ERROR_STATUS = {
    * details.current holds the saved submission, so the client can show both versions.
    */
   STALE_VERSION: 409,
+  STORAGE_NOT_CONFIGURED: 503,
   /** Submit pressed by a team smaller than the event's team_size_min. */
   TEAM_TOO_SMALL: 409,
   /** Scores can only be entered or changed while the event status is judging. */

@@ -2,6 +2,7 @@ import { submissionsClosed } from '@hx/core';
 import {
   getEventSetup,
   getMyApplication,
+  getMyImages,
   getMySubmission,
   getMyTeam,
   getSql,
@@ -9,12 +10,12 @@ import {
 } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { SubmissionEditor } from '@/components/participant/submission-editor';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { loadEventForPage } from '@/lib/server/event-page';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
 
 export const metadata: Metadata = { title: 'Your submission' };
 export const dynamic = 'force-dynamic';
@@ -30,10 +31,11 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
   const team = await getMyTeam(sql, event.id, viewer.userId);
   if (!team) redirect(`/events/${slug}/team`);
 
-  const [submission, setup, [{ now }]] = await Promise.all([
+  const [submission, setup, [{ now }], images] = await Promise.all([
     getMySubmission(sql, event.id, viewer.userId),
     getEventSetup(sql, event.id),
     sql<[{ now: Date }]>`select now()`,
+    getMyImages(sql, event.id, viewer.userId),
   ]);
   const deadline = event.submission_deadline.toISOString();
   const feedback =
@@ -44,9 +46,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
       <SiteHeader {...headerProps(viewer)} />
       <main className="container page" style={{ maxWidth: 840 }}>
         <div>
-          <p className="crumb">
-            <Link href={`/events/${slug}`}>{event.name}</Link>
-          </p>
+          <BackLink href={`/events/${slug}`}>Back to the event</BackLink>
           <h1 className="h1">Your submission</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             {team.name}. Anyone on the team can edit it until{' '}
@@ -86,6 +86,7 @@ export default async function SubmissionPage({ params }: { params: Promise<{ slu
           deadline={deadline}
           serverNow={now.toISOString()}
           timezone={viewer.timezone}
+          images={images.items}
           closed={submissionsClosed(event, now)}
         />
       </main>

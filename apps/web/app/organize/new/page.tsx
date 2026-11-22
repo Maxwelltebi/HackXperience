@@ -1,10 +1,10 @@
 import { listTimezones } from '@hx/shared';
 import type { Metadata } from 'next';
-import Link from '@/components/link';
 import { redirect } from 'next/navigation';
 import { EventForm } from '@/components/organize/event-form';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { getViewer, headerProps } from '@/lib/server/viewer';
+import { BackLink } from '@/components/back-link';
 
 export const metadata: Metadata = { title: 'New event' };
 export const dynamic = 'force-dynamic';
@@ -19,9 +19,7 @@ export default async function NewEventPage() {
       <SiteHeader {...headerProps(viewer)} />
       <main className="container page" style={{ maxWidth: 960 }}>
         <div>
-          <p className="crumb">
-            <Link href="/organize">Your events</Link>
-          </p>
+          <BackLink href={'/organize'}>Your events</BackLink>
           <h1 className="h1">New event</h1>
           <p className="muted" style={{ margin: '6px 0 0' }}>
             It starts as a private draft. Add tracks, questions and staff, then publish it.

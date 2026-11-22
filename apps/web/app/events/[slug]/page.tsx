@@ -8,7 +8,14 @@ import {
   listAnnouncements,
   toEvent,
 } from '@hx/db';
-import { can, formatDateTime, formatTime, type Event, type MyApplication } from '@hx/shared';
+import {
+  can,
+  formatDateTime,
+  formatTime,
+  galleryOpen,
+  type Event,
+  type MyApplication,
+} from '@hx/shared';
 import type { Metadata } from 'next';
 import Link from '@/components/link';
 import { CountdownBlocks } from '@/components/countdown';
@@ -273,6 +280,19 @@ export default async function EventPage({ params }: Props) {
                   >
                     See the results
                   </Link>
+                  <Link className="btn btn-block" href={`/events/${event.slug}/gallery`}>
+                    Browse projects
+                  </Link>
+                </section>
+              ) : null}
+              {event.status !== 'completed' && galleryOpen(event) ? (
+                <section className="panel card stack-sm" aria-labelledby="projects-title">
+                  <h2 id="projects-title" className="h2">
+                    Projects
+                  </h2>
+                  <p className="muted small" style={{ margin: 0 }}>
+                    See what the teams are building.
+                  </p>
                   <Link className="btn btn-block" href={`/events/${event.slug}/gallery`}>
                     Browse projects
                   </Link>

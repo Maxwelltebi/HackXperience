@@ -1,5 +1,5 @@
 import { countSubmissions, getSql, toEvent } from '@hx/db';
-import { can, listTimezones } from '@hx/shared';
+import { can, galleryOpen, listTimezones } from '@hx/shared';
 import type { Metadata } from 'next';
 import Link from '@/components/link';
 import { DeleteEventButton } from '@/components/organize/event-delete';
@@ -8,6 +8,7 @@ import { StatusCard } from '@/components/organize/status-card';
 import { SubmissionsCard } from '@/components/organize/submissions-card';
 import { loadOrganizerEvent } from '@/lib/server/organize';
 import { EventCrumb } from '@/components/organize/event-crumb';
+import { GalleryToggle } from '@/components/organize/gallery-toggle';
 
 export const metadata: Metadata = { title: 'Event overview' };
 
@@ -50,6 +51,29 @@ export default async function OrganizeOverviewPage({
             (event.status === 'published' || event.status === 'live')
           }
         />
+      ) : null}
+      {can(access.roles, 'gallery.publish') ? (
+        <section className="panel card stack-sm" aria-labelledby="gallery-title">
+          <div className="row-between">
+            <h2 id="gallery-title" className="h2">
+              Project gallery
+            </h2>
+            <span className={galleryOpen(event) ? 'chip chip-success' : 'chip chip-muted'}>
+              {galleryOpen(event) ? 'Public' : 'Hidden'}
+            </span>
+          </div>
+          <p className="muted small" style={{ margin: 0 }}>
+            {galleryOpen(event)
+              ? 'Everyone can browse the submitted projects.'
+              : 'Only owners and admins can see the submitted projects. Publish the gallery to show them to everyone, at any time.'}{' '}
+            <Link href={`/events/${event.slug}/gallery`}>Open the gallery</Link>
+          </p>
+          <GalleryToggle
+            eventId={event.id}
+            published={event.gallery_published_at !== null}
+            completed={event.status === 'completed'}
+          />
+        </section>
       ) : null}
       {canEdit ? (
         <EventForm mode="edit" event={event} timezones={listTimezones()} />

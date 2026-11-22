@@ -22,6 +22,7 @@ import type { ISql } from './client';
 import { lockEvent } from './events';
 import { broadcast, broadcastStaffCounts, liveVersion } from './live';
 import { liveTopics } from '@hx/shared';
+import { projectImagesJson } from './project-images';
 
 // ---------- Shared reads ----------
 
@@ -236,7 +237,8 @@ export async function getSubmissionForJudging(
            s.github_url, s.youtube_url, s.demo_url, s.status, s.auto_submitted, s.below_min_size,
            s.locked_commit_sha, s.sha_status,
            coalesce((select array_agg(track_id order by track_id) from submission_tracks
-                     where submission_id = s.id), '{}') as track_ids
+                     where submission_id = s.id), '{}') as track_ids,
+           ${projectImagesJson(sql)} as images
     from submissions s
     join teams t on t.id = s.team_id and t.deleted_at is null
     where s.id = ${submissionId} and s.event_id = ${eventId} and s.deleted_at is null
@@ -586,7 +588,8 @@ export async function listGallery(
                      where m.team_id = t.id), '[]') as members,
            coalesce((select array_agg(a.name order by a.rank nulls last, a.name)
                      from award_winners w join awards a on a.id = w.award_id
-                     where w.team_id = t.id and a.event_id = ${eventId}), '{}') as awards
+                     where w.team_id = t.id and a.event_id = ${eventId}), '{}') as awards,
+           ${projectImagesJson(sql)} as images
     from submissions s
     join teams t on t.id = s.team_id and t.deleted_at is null
     where s.event_id = ${eventId} and s.status = 'submitted' and s.deleted_at is null
