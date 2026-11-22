@@ -41,6 +41,7 @@ export async function createTestUser(
 export async function deleteTestUser(sql: ISql, id: string): Promise<void> {
   await sql`delete from notification_outbox where user_id = ${id}`;
   await sql`delete from team_drafts where updated_by = ${id}`;
+  await sql`delete from staff_invites where invited_by = ${id}`;
   await sql`update applications set decided_by = null where decided_by = ${id}`;
   await sql`delete from check_ins where user_id = ${id} or checked_in_by = ${id}`;
   await sql`delete from team_members where user_id = ${id}`;

@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { api } from '@/lib/client/api';
-import { AlertIcon, CheckIcon } from '../icons';
+import { AlertIcon, CameraIcon, CameraOffIcon, CheckIcon } from '../icons';
 import styles from './check-in-scanner.module.css';
 import { Busy } from '@/components/loading-state';
 
@@ -48,6 +48,40 @@ function subscribeOnline(onChange: () => void) {
   };
 }
 
+const CAMERA_KEY = 'hx.checkin.camera';
+const CAMERA_EVENT = 'hx-camera-preference';
+/** Used when the browser refuses storage (some private windows): the choice lasts this visit. */
+let cameraInMemory = true;
+
+/** Whether this browser last left the camera on. On by default. */
+function readCameraPreference(): boolean {
+  try {
+    const stored = window.localStorage.getItem(CAMERA_KEY);
+    return stored === null ? cameraInMemory : stored !== 'off';
+  } catch {
+    return cameraInMemory;
+  }
+}
+
+function saveCameraPreference(on: boolean): void {
+  cameraInMemory = on;
+  try {
+    window.localStorage.setItem(CAMERA_KEY, on ? 'on' : 'off');
+  } catch {
+    // Storage refused: the in-memory value above still applies.
+  }
+  window.dispatchEvent(new Event(CAMERA_EVENT));
+}
+
+function subscribeCamera(onChange: () => void) {
+  window.addEventListener(CAMERA_EVENT, onChange);
+  window.addEventListener('storage', onChange);
+  return () => {
+    window.removeEventListener(CAMERA_EVENT, onChange);
+    window.removeEventListener('storage', onChange);
+  };
+}
+
 /** Online only (DESIGN Step 1): offline, the scanner says so and does not scan. */
 function useOnline(): boolean {
   return useSyncExternalStore(
@@ -65,6 +99,8 @@ export function CheckInScanner({ eventId, crumb, timezone, canManual, initialSta
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [busy, setBusy] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  // The server renders with the camera on; the browser then applies the saved choice.
+  const cameraOn = useSyncExternalStore(subscribeCamera, readCameraPreference, () => true);
   const [typed, setTyped] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const scanning = useRef(true);
@@ -121,9 +157,10 @@ export function CheckInScanner({ eventId, crumb, timezone, canManual, initialSta
     [eventId, submit],
   );
 
-  // Camera and decode loop. Only runs while online; pauses while a result is on screen.
+  // Camera and decode loop. Only runs while online and the camera is on; pauses while a result
+  // is on screen. Turning the camera off stops the stream, so the camera light goes out.
   useEffect(() => {
-    if (offline) return;
+    if (offline || !cameraOn) return;
     let stream: MediaStream | null = null;
     let timer: number | undefined;
     let stopped = false;
@@ -178,7 +215,13 @@ export function CheckInScanner({ eventId, crumb, timezone, canManual, initialSta
       window.clearInterval(timer);
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [offline, checkInCode]);
+  }, [offline, cameraOn, checkInCode]);
+
+  function toggleCamera() {
+    const next = !cameraOn;
+    saveCameraPreference(next);
+    if (!next) setCameraError(null);
+  }
 
   // Keep the count fresh while other volunteers scan at other doors.
   useEffect(() => {
@@ -249,26 +292,55 @@ export function CheckInScanner({ eventId, crumb, timezone, canManual, initialSta
         <div className={`stack ${styles.scan}`}>
           {!outcome ? (
             <>
-              <div className={styles.camera}>
-                <video
-                  ref={videoRef}
-                  className={styles.video}
-                  muted
-                  playsInline
-                  aria-label="Camera view"
-                />
-                <span className={styles.corners} aria-hidden="true" />
-                <span className={styles.hint}>
-                  {offline
-                    ? 'Scanning paused'
-                    : busy
-                      ? 'Checking…'
-                      : 'Point the camera at a ticket'}
-                </span>
+              <div className="row-between">
+                <span className="label">{cameraOn ? 'Scan a ticket' : 'Camera off'}</span>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  aria-pressed={!cameraOn}
+                  onClick={toggleCamera}
+                >
+                  {cameraOn ? (
+                    <>
+                      <CameraOffIcon width={16} height={16} /> Turn camera off
+                    </>
+                  ) : (
+                    <>
+                      <CameraIcon width={16} height={16} /> Turn camera on
+                    </>
+                  )}
+                </button>
               </div>
+              {cameraOn ? (
+                <div className={styles.camera}>
+                  <video
+                    ref={videoRef}
+                    className={styles.video}
+                    muted
+                    playsInline
+                    aria-label="Camera view"
+                  />
+                  <span className={styles.corners} aria-hidden="true" />
+                  <span className={styles.hint}>
+                    {offline
+                      ? 'Scanning paused'
+                      : busy
+                        ? 'Checking…'
+                        : 'Point the camera at a ticket'}
+                  </span>
+                </div>
+              ) : (
+                <div className={`band-dark ${styles.cameraOff}`}>
+                  <CameraOffIcon width={28} height={28} />
+                  <p style={{ margin: 0 }}>The camera is off. Type a ticket code below.</p>
+                  <button type="button" className="btn btn-primary" onClick={toggleCamera}>
+                    <CameraIcon width={16} height={16} /> Turn camera on
+                  </button>
+                </div>
+              )}
               <form className="row" onSubmit={submitTyped}>
                 <input
-                  className="input mono"
+                  className="input code"
                   style={{ flex: '1 1 220px' }}
                   aria-label="Ticket code"
                   placeholder="Or type the ticket code"

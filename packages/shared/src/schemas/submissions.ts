@@ -87,3 +87,11 @@ export const submissionCountsSchema = z.object({
   submitted: z.number().int(),
 });
 export type SubmissionCounts = z.infer<typeof submissionCountsSchema>;
+
+/** GET /github/repo?url=: whether a GitHub link's repository is public (R37). */
+export const repoCheckQuerySchema = z.object({ url: z.string().trim().min(1).max(500) });
+export const repoCheckSchema = z.object({
+  /** unknown: GitHub couldn't be asked. invalid: not a link to a repository. */
+  visibility: z.enum(['public', 'private', 'unknown', 'invalid']),
+});
+export type RepoCheck = z.infer<typeof repoCheckSchema>;

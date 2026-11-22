@@ -62,6 +62,7 @@ export const RATE_LIMITS_PER_MINUTE = {
   apply: 5,
   inviteRotate: 5,
   mentorRequest: 5,
+  repoCheck: 20,
 } as const;
 
 /** The built-in skills every applicant rates, 1 to 5, for organizer team forming (R36). */

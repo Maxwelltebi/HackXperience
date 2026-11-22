@@ -1,4 +1,4 @@
-import { getSql, listStaff } from '@hx/db';
+import { getSql, listStaffAndInvites } from '@hx/db';
 import { can } from '@hx/shared';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -12,7 +12,7 @@ export default async function StaffPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const { viewer, access } = await loadOrganizerEvent(id);
   if (!can(access.roles, 'staff.manage')) notFound();
-  const staff = await listStaff(getSql(), id);
+  const staff = await listStaffAndInvites(getSql(), id);
 
   return (
     <>

@@ -1,6 +1,7 @@
 // Phase 2: events, status, staff, setup, and the permission matrix.
 import { getSql } from '@hx/db';
-import { CIREN_ORG_ID, eventSchema, fieldErrorsOf } from '@hx/shared';
+import { createTestUser } from '@hx/db/testing';
+import { CIREN_ORG_ID, eventSchema, fieldErrorsOf, staffListSchema } from '@hx/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { POST as createTrack } from '@/app/api/v1/events/[id]/tracks/route';
 import { DELETE as deleteTrack } from '@/app/api/v1/events/[id]/tracks/[itemId]/route';
@@ -14,6 +15,7 @@ import {
   GET as listStaff,
   POST as addStaff,
 } from '@/app/api/v1/events/[id]/staff/route';
+import { DELETE as withdrawInvite } from '@/app/api/v1/events/[id]/staff/invites/[inviteId]/route';
 import { POST as setStatus } from '@/app/api/v1/events/[id]/status/route';
 import { GET as listEvents } from '@/app/api/v1/events/route';
 import { POST as createEvent } from '@/app/api/v1/orgs/[orgId]/events/route';
@@ -216,24 +218,86 @@ describe('staff', () => {
       body: { email: people.participant.email.toUpperCase(), role: 'judge' },
     });
     expect(response.status).toBe(200);
-    const { items } = (await response.json()) as { items: { user_id: string; role: string }[] };
+    const { items } = staffListSchema.parse(await response.json());
     expect(items).toContainEqual(
       expect.objectContaining({ user_id: people.participant.id, role: 'judge' }),
     );
+    // R39: they get an email about the role.
+    const emails = await sql`
+      select 1 from notification_outbox
+      where template = 'staff_added' and user_id = ${people.participant.id}
+        and payload->>'event_id' = ${eventId}
+    `;
+    expect(emails).toHaveLength(1);
   });
 
-  it('returns USER_NOT_FOUND for someone who never signed in', async () => {
-    const error = await expectError(
-      await call(addStaff, {
-        method: 'POST',
-        as: people.owner.id,
-        params: { id: eventId },
-        body: { email: 'nobody-here@example.test', role: 'mentor' },
-      }),
-      404,
-      'USER_NOT_FOUND',
+  it('invites someone with no account, and their first sign-in gives them the role', async () => {
+    const email = `invitee-${crypto.randomUUID()}@example.test`;
+    const response = await call(addStaff, {
+      method: 'POST',
+      as: people.owner.id,
+      params: { id: eventId },
+      body: { email: email.toUpperCase(), role: 'mentor' },
+    });
+    expect(response.status).toBe(200);
+    const list = staffListSchema.parse(await response.json());
+    const invite = list.invites.find((i) => i.email === email);
+    expect(invite).toMatchObject({ role: 'mentor' });
+    const queued = await sql`
+      select 1 from notification_outbox
+      where template = 'staff_invite' and user_id is null and payload->>'invite_id' = ${invite?.id ?? ''}
+    `;
+    expect(queued).toHaveLength(1);
+
+    // Signing in creates the users row; the trigger turns the invite into the role.
+    const user = await createTestUser(sql, { email, name: 'New Mentor' });
+    try {
+      const roles = await sql`
+        select 1 from event_staff where event_id = ${eventId} and user_id = ${user.id} and role = 'mentor'
+      `;
+      expect(roles).toHaveLength(1);
+      expect(await sql`select 1 from staff_invites where email = ${email}`).toHaveLength(0);
+      const audits = await sql`
+        select 1 from audit_log where event_id = ${eventId} and action = 'staff.invite_accepted'
+          and actor_id = ${user.id}
+      `;
+      expect(audits).toHaveLength(1);
+    } finally {
+      await sql`delete from event_staff where user_id = ${user.id}`;
+      await sql`delete from audit_log where actor_id = ${user.id}`;
+      await sql`delete from auth.users where id = ${user.id}`;
+    }
+  });
+
+  it('lets the owner withdraw an invitation, and refuses an admin', async () => {
+    const email = `withdrawn-${crypto.randomUUID()}@example.test`;
+    const list = staffListSchema.parse(
+      await (
+        await call(addStaff, {
+          method: 'POST',
+          as: people.owner.id,
+          params: { id: eventId },
+          body: { email, role: 'volunteer' },
+        })
+      ).json(),
     );
-    expect(error.error.message).toMatch(/sign in/i);
+    const invite = list.invites.find((i) => i.email === email);
+    if (!invite) throw new Error('invite missing');
+    const params = { id: eventId, inviteId: invite.id };
+    await expectError(
+      await call(withdrawInvite, { method: 'DELETE', as: people.admin.id, params }),
+      403,
+      'FORBIDDEN',
+    );
+    const after = staffListSchema.parse(
+      await (await call(withdrawInvite, { method: 'DELETE', as: people.owner.id, params })).json(),
+    );
+    expect(after.invites.some((i) => i.id === invite.id)).toBe(false);
+    await expectError(
+      await call(withdrawInvite, { method: 'DELETE', as: people.owner.id, params }),
+      404,
+      'NOT_FOUND',
+    );
   });
 
   it('refuses an admin (staff is owner-only)', async () => {

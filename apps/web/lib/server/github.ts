@@ -39,3 +39,44 @@ export function createCommitFetcher(
 export function commitFetcher(): CommitFetcher {
   return createCommitFetcher(process.env.GITHUB_TOKEN || undefined);
 }
+
+/** Whether anyone can see a repository. `unknown`: GitHub couldn't be asked (rate limit, outage). */
+export type RepoVisibility = 'public' | 'private' | 'unknown';
+
+/**
+ * Asks GitHub whether a repository is public (`GET /repos/{owner}/{repo}`). A 404 means private
+ * or missing: either way judges can't open it. Errors and rate limits give `unknown`, so a
+ * GitHub outage never blocks a team from submitting (R37).
+ */
+export function createVisibilityChecker(
+  token: string | undefined,
+  fetchImpl: typeof fetch = fetch,
+): (repo: { owner: string; repo: string }) => Promise<RepoVisibility> {
+  return async ({ owner, repo }) => {
+    const headers: Record<string, string> = {
+      accept: 'application/vnd.github+json',
+      'x-github-api-version': '2022-11-28',
+      'user-agent': 'HackXperience',
+    };
+    if (token) headers.authorization = `Bearer ${token}`;
+    try {
+      const response = await fetchImpl(
+        `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+        { headers, signal: AbortSignal.timeout(8_000), cache: 'no-store' },
+      );
+      if (response.status === 404 || response.status === 451) return 'private';
+      if (!response.ok) return 'unknown';
+      const body = (await response.json()) as { private?: unknown; visibility?: unknown };
+      const hidden =
+        body.private === true || body.visibility === 'private' || body.visibility === 'internal';
+      return hidden ? 'private' : 'public';
+    } catch {
+      return 'unknown';
+    }
+  };
+}
+
+/** The checker with the server's GITHUB_TOKEN (optional; without it GitHub allows 60 an hour). */
+export function repoVisibility(repo: { owner: string; repo: string }): Promise<RepoVisibility> {
+  return createVisibilityChecker(process.env.GITHUB_TOKEN || undefined)(repo);
+}

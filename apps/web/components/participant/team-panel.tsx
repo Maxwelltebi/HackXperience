@@ -380,7 +380,7 @@ function JoinTeam({ eventId, onDone }: { eventId: string; onDone: (team: MyTeam)
         {(p) => (
           <input
             {...p}
-            className="input mono"
+            className="input code"
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}

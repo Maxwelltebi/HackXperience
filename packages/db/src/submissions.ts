@@ -276,6 +276,7 @@ export async function submitSubmission(
   sql: ISql,
   eventId: string,
   userId: string,
+  options: { checkedGithubUrl?: string | null } = {},
 ): Promise<Submission> {
   const event = await lockEventForDeadline(sql, eventId);
   const team = await lockMyTeam(sql, eventId, userId);
@@ -284,6 +285,14 @@ export async function submitSubmission(
   const [{ members }] = await sql<[{ members: number }]>`
     select count(*)::int as members from team_members where team_id = ${team.id}
   `;
+  // The route checked this GitHub link was public before the transaction (R37). If a teammate
+  // changed it in between, that check no longer applies.
+  if (
+    options.checkedGithubUrl !== undefined &&
+    (submission.github_url ?? null) !== (options.checkedGithubUrl ?? null)
+  ) {
+    throw new ApiError('CONFLICT', 'The GitHub link changed while you submitted. Submit again.');
+  }
   const problems = submitProblems(submission, members, event.team_size_min);
   if (!row || Object.keys(problems.fields).length > 0) {
     throw ApiError.validation('Your project needs a title and a write-up.', problems.fields);

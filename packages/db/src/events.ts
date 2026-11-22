@@ -7,6 +7,8 @@ import {
   type Event,
   type EventStatus,
   type EventSummary,
+  type StaffInvite,
+  type StaffList,
   type StaffMember,
   type StaffRole,
   type UpdateEventBody,
@@ -378,9 +380,30 @@ export async function listStaff(sql: ISql, eventId: string): Promise<StaffMember
   `;
 }
 
+/** Invitations still waiting for their person to sign in, oldest first. */
+export async function listStaffInvites(sql: ISql, eventId: string): Promise<StaffInvite[]> {
+  const rows = await sql<(Omit<StaffInvite, 'created_at'> & { created_at: Date })[]>`
+    select id, email, role::text as role, created_at from staff_invites
+    where event_id = ${eventId}
+    order by created_at, email
+  `;
+  return rows.map((r) => ({ ...r, created_at: r.created_at.toISOString() }));
+}
+
+/** Staff and pending invitations together, as the staff endpoints return them. */
+export async function listStaffAndInvites(sql: ISql, eventId: string): Promise<StaffList> {
+  const [items, invites] = await Promise.all([
+    listStaff(sql, eventId),
+    listStaffInvites(sql, eventId),
+  ]);
+  return { items, invites };
+}
+
 /**
- * Adds a staff role by email. The person must have signed in once (v1 rule: no pending
- * invites); otherwise USER_NOT_FOUND. Adding a role someone already has changes nothing.
+ * Adds a staff role by email (R39). Someone with an account gets the role now and a "you've been
+ * added" email. Someone without one gets an invitation: the role waits in staff_invites, an email
+ * asks them to sign in with that address, and their first sign-in claims it (database trigger).
+ * Adding a role someone already has, or inviting twice, changes nothing. Run inside tx().
  */
 export async function addStaff(
   sql: ISql,
@@ -388,15 +411,35 @@ export async function addStaff(
   actorId: string,
   email: string,
   role: StaffRole,
-): Promise<StaffMember[]> {
+): Promise<StaffList> {
   const [user] = await sql<
     [{ id: string }?]
   >`select id from users where email = ${email.toLowerCase()}`;
   if (!user) {
-    throw new ApiError(
-      'USER_NOT_FOUND',
-      'Nobody with that email has signed in to HackXperience yet. Ask them to sign in once, then add them.',
-    );
+    const [invite] = await sql<[{ id: string }?]>`
+      insert into staff_invites (event_id, email, role, invited_by)
+      values (${eventId}, ${email.toLowerCase()}, ${role}, ${actorId})
+      on conflict (event_id, email, role) do nothing
+      returning id
+    `;
+    if (invite) {
+      await audit(sql, {
+        eventId,
+        actorId,
+        action: 'staff.invited',
+        entityType: 'staff_invite',
+        entityId: invite.id,
+        after: { role },
+      });
+      // Agent rule 16: queued in this transaction. No user yet, so the address comes from the invite.
+      await sql`
+        insert into notification_outbox (user_id, channel, template, payload, dedupe_key)
+        values (null, 'email', 'staff_invite',
+                ${sql.json({ invite_id: invite.id, event_id: eventId })},
+                ${`staff_invite:${invite.id}`})
+      `;
+    }
+    return listStaffAndInvites(sql, eventId);
   }
   const inserted = await sql`
     insert into event_staff (event_id, user_id, role) values (${eventId}, ${user.id}, ${role})
@@ -412,8 +455,36 @@ export async function addStaff(
       entityId: user.id,
       after: { role },
     });
+    await sql`
+      insert into notification_outbox (user_id, channel, template, payload, dedupe_key)
+      values (${user.id}, 'email', 'staff_added', ${sql.json({ event_id: eventId, role })},
+              ${`staff_added:${eventId}:${user.id}:${role}:${Date.now()}`})
+    `;
   }
-  return listStaff(sql, eventId);
+  return listStaffAndInvites(sql, eventId);
+}
+
+/** DELETE /events/{id}/staff/invites/{inviteId}: withdraws an invitation. Audited. Run inside tx(). */
+export async function cancelStaffInvite(
+  sql: ISql,
+  eventId: string,
+  actorId: string,
+  inviteId: string,
+): Promise<StaffList> {
+  const [removed] = await sql<[{ role: string }?]>`
+    delete from staff_invites where id = ${inviteId} and event_id = ${eventId}
+    returning role::text as role
+  `;
+  if (!removed) throw new ApiError('NOT_FOUND', 'That invitation was already used or withdrawn.');
+  await audit(sql, {
+    eventId,
+    actorId,
+    action: 'staff.invite_cancelled',
+    entityType: 'staff_invite',
+    entityId: inviteId,
+    before: { role: removed.role },
+  });
+  return listStaffAndInvites(sql, eventId);
 }
 
 /** Removes one staff role. The last owner can't be removed. Run inside tx(). */

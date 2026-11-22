@@ -161,6 +161,16 @@ a {
 }
 
 .mono {
+  /* Numbers (times, counts, scores): the body font with equal-width digits, so columns
+     and counters line up. The class name is kept from the old design. */
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Codes people type or compare (invite and ticket codes, commit hashes): monospace, so
+   0 and O, 1 and l stay apart. */
+.code {
   font-family: var(--font-mono);
   font-weight: 500;
 }
@@ -1057,7 +1067,8 @@ a {
 }
 
 .stat-value {
-  font: 500 32px/1.1 var(--font-mono);
+  font: 600 32px/1.1 var(--font-body);
+  font-variant-numeric: tabular-nums;
   color: var(--forest);
 }
 
@@ -1226,7 +1237,8 @@ a {
 
 .nav-item .count {
   margin-left: auto;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-size: 13px;
   font-weight: 500;
   color: var(--mint);
@@ -1350,7 +1362,8 @@ a {
 }
 
 .tab .count {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
@@ -1409,7 +1422,8 @@ a {
 
 .table .num {
   text-align: right;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
@@ -1452,7 +1466,8 @@ a {
 
 .bulk-bar .count b {
   color: var(--bright);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
@@ -1600,7 +1615,7 @@ a {
 }
 
 .loading-time {
-  font: 500 12px/1 var(--font-mono);
+  font: 500 12px/1 var(--font-body);
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
@@ -1710,7 +1725,8 @@ a.row-between > .pixel-grid:first-child {
   justify-content: center;
   min-width: 44px;
   padding: 0 12px;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
 }
 
 .rating-chip:has(input:checked) {
@@ -1722,7 +1738,8 @@ a.row-between > .pixel-grid:first-child {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
-  font: 500 13px/1 var(--font-mono);
+  font: 500 13px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
 }
 
 .ratings > span {

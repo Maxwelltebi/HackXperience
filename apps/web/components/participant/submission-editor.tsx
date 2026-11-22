@@ -17,6 +17,7 @@ import { chipClass, SHA_STATUS, SUBMISSION_STATUS } from '@/lib/ui/status';
 import { Countdown } from '../countdown';
 import { AlertIcon, CheckIcon } from '../icons';
 import { Field } from '../organize/event-form';
+import { GithubField } from './github-field';
 import styles from './submission-editor.module.css';
 import { Busy } from '@/components/loading-state';
 import { LoadingState } from '@/components/loading-state';
@@ -271,7 +272,7 @@ export function SubmissionEditor(props: Props) {
               {SHA_STATUS[saved.sha_status].label}
             </span>
             {saved.locked_commit_sha ? (
-              <span className="mono">{saved.locked_commit_sha.slice(0, 12)}</span>
+              <span className="code">{saved.locked_commit_sha.slice(0, 12)}</span>
             ) : null}
           </p>
         ) : null}
@@ -315,22 +316,11 @@ export function SubmissionEditor(props: Props) {
               <legend className="label">
                 Links <span className="muted">· each one optional</span>
               </legend>
-              <Field
-                label="GitHub repository"
+              <GithubField
+                value={draft.github_url}
                 error={fields.github_url}
-                hint="The repository must be public. Its last commit is recorded at the deadline."
-              >
-                {(p) => (
-                  <input
-                    {...p}
-                    className="input"
-                    inputMode="url"
-                    placeholder="https://github.com/owner/repo"
-                    value={draft.github_url}
-                    onChange={(e) => set('github_url', e.target.value)}
-                  />
-                )}
-              </Field>
+                onChange={(value) => set('github_url', value)}
+              />
               <Field label="YouTube video" error={fields.youtube_url}>
                 {(p) => (
                   <input

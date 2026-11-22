@@ -185,6 +185,24 @@ export const removeStaffBodySchema = z
   .object({ user_id: uuidSchema, role: staffRoleSchema })
   .strict();
 
+/** A role waiting for someone who hasn't signed in yet (R39). Claimed at their first sign-in. */
+export const staffInviteSchema = z.object({
+  id: uuidSchema,
+  email: z.string(),
+  role: staffRoleSchema,
+  created_at: isoDateTimeSchema,
+});
+export type StaffInvite = z.infer<typeof staffInviteSchema>;
+
+/** GET, POST and DELETE /events/{id}/staff: the staff and the pending invitations. */
+export const staffListSchema = z.object({
+  items: z.array(staffMemberSchema),
+  invites: z.array(staffInviteSchema),
+});
+export type StaffList = z.infer<typeof staffListSchema>;
+
+export const staffInviteParamsSchema = z.object({ id: uuidSchema, inviteId: uuidSchema });
+
 // ---------- Tracks, schedule, rubric, awards ----------
 
 export const trackSchema = z.object({ id: uuidSchema, name: z.string(), description: z.string() });

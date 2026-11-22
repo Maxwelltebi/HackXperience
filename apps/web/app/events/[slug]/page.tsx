@@ -342,7 +342,7 @@ export default async function EventPage({ params }: Props) {
                       </div>
                       <p className={`well ${styles.code}`}>
                         <span className="muted small">Invite code</span>
-                        <span className="mono">{formatInviteCode(team.invite_code)}</span>
+                        <span className="code">{formatInviteCode(team.invite_code)}</span>
                       </p>
                     </>
                   ) : (

@@ -82,7 +82,7 @@ export default async function ProjectPage({
                     {item.github_url.replace('https://', '')}
                   </a>
                   {item.locked_commit_sha ? (
-                    <span className="mono muted"> at {item.locked_commit_sha.slice(0, 12)}</span>
+                    <span className="code muted"> at {item.locked_commit_sha.slice(0, 12)}</span>
                   ) : null}
                 </dd>
               </>

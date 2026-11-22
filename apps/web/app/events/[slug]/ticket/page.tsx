@@ -39,7 +39,7 @@ export default async function TicketPage({ params }: { params: Promise<{ slug: s
           </span>
         ) : null}
         <div className={styles.qr} dangerouslySetInnerHTML={{ __html: qr }} />
-        <p className="mono small muted" style={{ margin: 0, overflowWrap: 'anywhere' }}>
+        <p className="code small muted" style={{ margin: 0, overflowWrap: 'anywhere' }}>
           {ticket.ticket_code}
         </p>
         <p className="muted small" style={{ margin: 0 }}>

@@ -3,6 +3,8 @@ import {
   escapeHtml,
   renderApplicationDecision,
   renderSubmissionReminder,
+  renderStaffAdded,
+  renderStaffInvite,
   renderTeamAssigned,
 } from './index';
 
@@ -99,5 +101,33 @@ describe('renderTeamAssigned', () => {
     });
     expect(email.html).not.toContain('<b>Ama</b>');
     expect(email.html).not.toContain('Team <1>');
+  });
+});
+
+describe('staff role emails (R39)', () => {
+  it('tells someone with an account their role, with a link to their tools', () => {
+    const email = renderStaffAdded({
+      name: 'Kofi',
+      eventName: 'The CIReN Experience 5.0',
+      role: 'judge',
+      toolsUrl: 'https://hack.ciren.network/organize/e1',
+    });
+    expect(email.subject).toBe("You're a judge at The CIReN Experience 5.0");
+    expect(email.text).toContain('score the projects assigned to you');
+    expect(email.html).toContain('https://hack.ciren.network/organize/e1');
+  });
+
+  it('invites someone with no account to sign in with the invited address', () => {
+    const email = renderStaffInvite({
+      email: 'mentor@example.com',
+      eventName: 'The CIReN Experience 5.0',
+      role: 'mentor',
+      inviterName: 'Maxwell Tebi',
+      signInUrl: 'https://hack.ciren.network/sign-in?next=%2Forganize%2Fe1',
+    });
+    expect(email.subject).toBe("You're invited to be a mentor at The CIReN Experience 5.0");
+    expect(email.text).toContain('mentor@example.com');
+    expect(email.text).toContain('Maxwell Tebi invited you');
+    expect(email.html).toContain('sign-in?next=%2Forganize%2Fe1');
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createCommitFetcher } from '@/lib/server/github';
+import { createCommitFetcher, createVisibilityChecker } from '@/lib/server/github';
 
 const SHA = '0123456789abcdef0123456789abcdef01234567';
 
@@ -46,5 +46,36 @@ describe('createCommitFetcher', () => {
     await expect(createCommitFetcher('t', fake.impl)({ owner: 'a', repo: 'b' })).rejects.toThrow(
       String(status),
     );
+  });
+});
+
+describe('createVisibilityChecker (R37)', () => {
+  const repo = { owner: 'ciren', repo: 'clinicq' };
+
+  it('asks for the repository and reads whether it is private', async () => {
+    const open = fakeFetch(200, { private: false, visibility: 'public' });
+    expect(await createVisibilityChecker('ghp_test', open.impl)(repo)).toBe('public');
+    expect(open.calls[0]?.url).toBe('https://api.github.com/repos/ciren/clinicq');
+    expect(open.calls[0]?.headers.authorization).toBe('Bearer ghp_test');
+    const hidden = fakeFetch(200, { private: true, visibility: 'private' });
+    expect(await createVisibilityChecker('t', hidden.impl)(repo)).toBe('private');
+  });
+
+  it.each([404, 451])('treats %i as private: judges could not open it', async (status) => {
+    const fake = fakeFetch(status, { message: 'Not Found' });
+    expect(await createVisibilityChecker(undefined, fake.impl)(repo)).toBe('private');
+  });
+
+  it.each([401, 403, 429, 500])(
+    'answers unknown on %i, so an outage blocks nobody',
+    async (status) => {
+      const fake = fakeFetch(status, { message: 'nope' });
+      expect(await createVisibilityChecker(undefined, fake.impl)(repo)).toBe('unknown');
+    },
+  );
+
+  it('answers unknown when GitHub cannot be reached', async () => {
+    const broken = (() => Promise.reject(new Error('offline'))) as unknown as typeof fetch;
+    expect(await createVisibilityChecker(undefined, broken)(repo)).toBe('unknown');
   });
 });

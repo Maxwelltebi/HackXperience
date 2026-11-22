@@ -106,3 +106,21 @@ export function AwardIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function CameraIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 8h4l2-3h6l2 3h4v11H3z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </Icon>
+  );
+}
+
+export function CameraOffIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M3 8h4l2-3h6l2 3h4v11H3z" />
+      <path d="m3 3 18 18" />
+    </Icon>
+  );
+}

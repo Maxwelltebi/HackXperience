@@ -2,6 +2,9 @@ import {
   renderApplicationDecision,
   renderSubmissionReminder,
   renderTeamAssigned,
+  renderStaffAdded,
+  renderStaffInvite,
+  type StaffRoleName,
   type RenderedEmail,
 } from '@hx/emails';
 import { formatDateTime } from '@hx/shared';
@@ -30,7 +33,8 @@ export interface OutboxDeps {
 
 export interface OutboxRow {
   id: string;
-  user_id: string;
+  /** Null only for staff invitations, which go to an email address with no account yet (R39). */
+  user_id: string | null;
   template: string;
   payload: Record<string, unknown>;
   attempts: number;
@@ -150,6 +154,8 @@ type Prepared =
 async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
   if (row.template === 'submission_reminder') return prepareReminder(sql, row, deps);
   if (row.template === 'team_assigned') return prepareTeamAssigned(sql, row, deps);
+  if (row.template === 'staff_added') return prepareStaffAdded(sql, row, deps);
+  if (row.template === 'staff_invite') return prepareStaffInvite(sql, row, deps);
   if (row.template === 'application_decision') {
     const applicationId = String(row.payload.application_id);
     const status = String(row.payload.status);
@@ -179,6 +185,57 @@ async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prep
     };
   }
   return { kind: 'failed', reason: `unknown template ${row.template}` };
+}
+
+/** "You're a judge at …" (R39). Superseded if the role was removed before it was sent. */
+async function prepareStaffAdded(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
+  const eventId = String(row.payload.event_id);
+  const role = String(row.payload.role) as StaffRoleName;
+  const [current] = await sql<[{ email: string; name: string; event_name: string }?]>`
+    select u.email, u.name, e.name as event_name
+    from event_staff s
+    join users u on u.id = s.user_id
+    join events e on e.id = s.event_id and e.deleted_at is null
+    where s.event_id = ${eventId} and s.user_id = ${row.user_id} and s.role = ${role}
+  `;
+  if (!current) return { kind: 'superseded' };
+  return {
+    kind: 'send',
+    to: current.email,
+    email: renderStaffAdded({
+      name: current.name,
+      eventName: current.event_name,
+      role,
+      toolsUrl: `${deps.appUrl}/organize/${eventId}`,
+    }),
+  };
+}
+
+/** "You're invited to be a judge" (R39). Superseded once the invite is used or withdrawn. */
+async function prepareStaffInvite(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prepared> {
+  const inviteId = String(row.payload.invite_id);
+  const [invite] = await sql<
+    [{ email: string; role: StaffRoleName; event_id: string; event_name: string; inviter: string }?]
+  >`
+    select i.email, i.role::text as role, i.event_id, e.name as event_name, u.name as inviter
+    from staff_invites i
+    join events e on e.id = i.event_id and e.deleted_at is null
+    join users u on u.id = i.invited_by
+    where i.id = ${inviteId}
+  `;
+  if (!invite) return { kind: 'superseded' };
+  const next = encodeURIComponent(`/organize/${invite.event_id}`);
+  return {
+    kind: 'send',
+    to: invite.email,
+    email: renderStaffInvite({
+      email: invite.email,
+      eventName: invite.event_name,
+      role: invite.role,
+      inviterName: invite.inviter,
+      signInUrl: `${deps.appUrl}/sign-in?next=${next}`,
+    }),
+  };
 }
 
 /** "You're on a team" (R36), re-checked at send time: superseded once they left or it was deleted. */

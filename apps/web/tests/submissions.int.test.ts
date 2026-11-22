@@ -1,9 +1,10 @@
 // Phase 4: submissions through the API (status codes, If-Match, roles that must be refused).
 import { createTeam, getSql, tx } from '@hx/db';
 import { confirmApplicant } from '@hx/db/testing';
-import { submissionSchema } from '@hx/shared';
+import { repoCheckSchema, submissionSchema } from '@hx/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { POST as reopen } from '@/app/api/v1/events/[id]/submissions/reopen/route';
+import { GET as repoCheck } from '@/app/api/v1/github/repo/route';
 import {
   GET as getSubmission,
   PUT as putSubmission,
@@ -168,5 +169,79 @@ describe('deadline and reopen', () => {
       '2',
     );
     expect(saved.status).toBe(200);
+  });
+});
+
+describe('public GitHub repositories (R37)', () => {
+  // The test setup fakes GitHub: names starting with "private" are private, "unknown" can't be
+  // checked, anything else is public.
+  let id: string;
+  let member: string;
+
+  beforeAll(async () => {
+    const result = await fx.eventWithRoles();
+    id = result.event.id;
+    member = result.people.participant.id;
+    await confirmApplicant(sql, id, member);
+    await tx((t) => createTeam(t, id, member, crypto.randomUUID(), 'Repo team'));
+  });
+
+  const save = (body: unknown, version: string) =>
+    call(putSubmission, {
+      method: 'PUT',
+      as: member,
+      params: { id },
+      body,
+      headers: { 'if-match': version },
+    });
+  const submitNow = () => call(submit, { method: 'POST', as: member, params: { id } });
+
+  it('saves a draft with a private repository, but refuses to submit it', async () => {
+    const draft = {
+      title: 'Hidden',
+      write_up: 'A project.',
+      github_url: 'https://github.com/ciren/private-app',
+    };
+    expect((await save(draft, '0')).status).toBe(200);
+    const body = await expectError(await submitNow(), 400, 'VALIDATION_FAILED');
+    expect(body.error.details?.fields).toHaveProperty('github_url');
+  });
+
+  it('submits once the repository is public', async () => {
+    await save({ github_url: 'https://github.com/ciren/open-app' }, '1');
+    const response = await submitNow();
+    expect(submissionSchema.parse(await response.json()).status).toBe('submitted');
+  });
+
+  it('after submitting, refuses switching to a private repository', async () => {
+    const body = await expectError(
+      await save({ github_url: 'https://github.com/ciren/private-other' }, '2'),
+      400,
+      'VALIDATION_FAILED',
+    );
+    expect(body.error.details?.fields).toHaveProperty('github_url');
+  });
+
+  it('lets a save through when GitHub cannot be asked', async () => {
+    expect((await save({ github_url: 'https://github.com/ciren/unknown-app' }, '2')).status).toBe(
+      200,
+    );
+  });
+
+  it('answers the editor live check, and refuses someone signed out', async () => {
+    const ask = (url: string) =>
+      call(repoCheck, { as: member, path: `/api/v1/github/repo?url=${encodeURIComponent(url)}` });
+    for (const [url, visibility] of [
+      ['https://github.com/ciren/open-app', 'public'],
+      ['https://github.com/ciren/private-app', 'private'],
+      ['https://gitlab.com/a/b', 'invalid'],
+    ] as const) {
+      expect(repoCheckSchema.parse(await (await ask(url)).json()).visibility).toBe(visibility);
+    }
+    await expectError(
+      await call(repoCheck, { path: '/api/v1/github/repo?url=https://github.com/a/b' }),
+      401,
+      'UNAUTHENTICATED',
+    );
   });
 });
