@@ -115,6 +115,15 @@ Known gaps: the time zone field is free text (validated by the API), not a picke
 
 ---
 
+## Domain, sign-in and launch state (22 Nov 2026)
+
+- **Domain.** `hack.ciren.network` is a CNAME at Namecheap to Vercel and serves the app over HTTPS. Still to do: Supabase **URL Configuration** (Site URL `https://hack.ciren.network`, Redirect URL `https://hack.ciren.network/**`) and `APP_URL` in Vercel, then a redeploy.
+- **Google sign-in.** Not yet switched on in the dev Supabase project (only GitHub is). Needs an OAuth client in Google Cloud with the redirect URI `https://nyhxahjhuxveydkxxulo.supabase.co/auth/v1/callback`, and its ID and secret in Supabase → Authentication → Providers → Google.
+- **Test event removed.** The Flagship Hackathon test event and everything attached to it (1 application, 1 team, 4 tracks, 3 staff roles, 20 audit rows, 5 outbox rows) were deleted from the dev project at the product owner's request. The dev project has no events.
+- **Coming soon.** With no upcoming event, the homepage's dark band reads "Next event: Coming soon" and the Events page's empty state reads "Coming soon".
+
+---
+
 ## Team forming by organizers (web; 21 Nov 2026, R36)
 
 At past events the strongest people grouped together. Organizers can now form balanced teams from skill ratings.
@@ -539,7 +548,7 @@ The screens PDF was redrawn in CIReN's own style, replacing the soft neumorphic 
 ### Human tasks for the Phase 4 gate
 
 - [ ] Run `pnpm exec supabase db push --remote` to add the submissions tables to the dev project.
-- [ ] GitHub token from a CIReN account (read access to public repositories) into Vercel as `GITHUB_TOKEN`. Without it GitHub allows 60 requests an hour, which is enough to try locally.
+- [ ] GitHub token from a CIReN account (read access to public repositories) into Vercel as `GITHUB_TOKEN`. Without it GitHub allows 60 requests an hour, which is enough to try locally. **Status 22 Nov 2026: not set yet; to be set before the production launch** (it also lifts the same limit on the public-repository check at submit, R37).
 - [ ] Gate: a test event with the deadline 5 minutes ahead, edited through the deadline. The save after the deadline is refused, the draft is auto-submitted, the hash appears within 2 minutes, and reopen works and shows in `audit_log`.
 
 ### Left out, and why

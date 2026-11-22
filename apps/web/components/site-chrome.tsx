@@ -1,4 +1,5 @@
 import Link from '@/components/link';
+import { MobileMenu, type NavItem } from './mobile-menu';
 
 export function BrandMark() {
   return (
@@ -35,30 +36,30 @@ export function SiteHeader({
   /** The homepage makes Sign in its one solid button; elsewhere the page's own action is. */
   signInPrimary?: boolean;
 }) {
+  const items: NavItem[] = [
+    { href: '/events', label: 'Events', current: current === 'events' },
+    { href: '/#how-to-participate', label: 'How to Participate' },
+    canOrganize
+      ? { href: '/organize', label: 'Organize' }
+      : { href: '/#for-organizers', label: 'For organizers' },
+  ];
   return (
     <div className="site-header-bar">
       <header className="container site-header">
         <Brand />
-        <nav className="nav" aria-label="Main">
-          <Link
-            className="nav-link"
-            href="/events"
-            aria-current={current === 'events' ? 'page' : undefined}
-          >
-            Events
-          </Link>
-          <Link className="nav-link" href="/#how-to-participate">
-            How to Participate
-          </Link>
-          {canOrganize ? (
-            <Link className="nav-link" href="/organize">
-              Organize
-            </Link>
-          ) : (
-            <Link className="nav-link" href="/#for-organizers">
-              For organizers
-            </Link>
-          )}
+        <div className="nav">
+          <nav className="nav-links" aria-label="Main">
+            {items.map((item) => (
+              <Link
+                key={item.href}
+                className="nav-link"
+                href={item.href}
+                aria-current={item.current ? 'page' : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
           {signedIn ? (
             <Link className="btn btn-sm" href="/profile">
               Profile
@@ -68,7 +69,8 @@ export function SiteHeader({
               Sign in
             </Link>
           )}
-        </nav>
+          <MobileMenu items={items} />
+        </div>
       </header>
     </div>
   );

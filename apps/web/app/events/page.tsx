@@ -32,7 +32,7 @@ export default async function EventsPage() {
           </h2>
           {upcoming.length === 0 ? (
             <div className="panel empty">
-              <strong>No upcoming events yet</strong>
+              <strong>Coming soon</strong>
               <span>The next CIReN hackathon appears here as soon as organizers publish it.</span>
             </div>
           ) : (

@@ -102,7 +102,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {next ? <NextEventBand event={next} zone={zone(next)} now={now} /> : null}
+        {next ? <NextEventBand event={next} zone={zone(next)} now={now} /> : <ComingSoonBand />}
 
         {past.length > 0 ? (
           <section className="band band-white" aria-labelledby="past-title">
@@ -258,6 +258,26 @@ function NextEventBand({ event, zone, now }: { event: EventSummary; zone: string
             </li>
           ))}
         </ol>
+      </div>
+    </section>
+  );
+}
+
+/** The dark band when no event is published yet. */
+function ComingSoonBand() {
+  return (
+    <section className="band band-dark" aria-labelledby="next-title">
+      <div className="container stack">
+        <p className="eyebrow" style={{ margin: 0 }}>
+          Next event
+        </p>
+        <h2 id="next-title" className="h1">
+          Coming soon
+        </h2>
+        <p className="muted" style={{ margin: 0 }}>
+          The next <span className="brand-case">CIReN</span> hackathon appears here as soon as
+          organizers publish it.
+        </p>
       </div>
     </section>
   );
