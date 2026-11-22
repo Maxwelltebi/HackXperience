@@ -28,7 +28,17 @@ alter table project_images enable row level security;
 
 -- The bucket: public to read (galleries are public), written only through signed upload URLs
 -- that the API creates for team members. 5 MB, PNG, JPEG or WebP.
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('project-images', 'project-images', true, 5242880,
-        array['image/png', 'image/jpeg', 'image/webp'])
-on conflict (id) do nothing;
+-- Only where Supabase Storage is running: the local stack and CI have storage turned off
+-- (supabase/config.toml), so `storage.buckets` doesn't exist there and the tests fake storage.
+-- (Edited 22 Nov 2026, with the product owner's approval, after it ran on the dev project, so
+-- it applies cleanly to an empty database. Where storage exists the result is the same.)
+do $$
+begin
+  if to_regclass('storage.buckets') is not null then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('project-images', 'project-images', true, 5242880,
+            array['image/png', 'image/jpeg', 'image/webp'])
+    on conflict (id) do nothing;
+  end if;
+end;
+$$;
