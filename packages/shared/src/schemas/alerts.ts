@@ -7,11 +7,13 @@ import { uuidSchema } from './base';
  */
 export const alertSignupBodySchema = z
   .object({
+    // Trimmed before the format check: a stray space from a phone keyboard isn't an error.
     email: z
-      .email('Enter an email address.')
+      .string()
       .trim()
       .toLowerCase()
-      .max(254, 'That email is too long.'),
+      .max(254, 'That email is too long.')
+      .pipe(z.email('Enter an email address.')),
     website: z.string().max(200).optional(),
   })
   .strict();

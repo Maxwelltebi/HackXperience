@@ -192,7 +192,10 @@ export const staffMemberSchema = z.object({
 export type StaffMember = z.infer<typeof staffMemberSchema>;
 
 export const addStaffBodySchema = z
-  .object({ email: z.email('Enter an email address.').trim().toLowerCase(), role: staffRoleSchema })
+  .object({
+    email: z.string().trim().toLowerCase().pipe(z.email('Enter an email address.')),
+    role: staffRoleSchema,
+  })
   .strict();
 export const removeStaffBodySchema = z
   .object({ user_id: uuidSchema, role: staffRoleSchema })
