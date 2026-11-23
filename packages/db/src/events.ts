@@ -13,6 +13,7 @@ import {
   type StaffRole,
   type UpdateEventBody,
 } from '@hx/shared';
+import { queuePublishedAlerts } from './alerts';
 import { audit } from './audit';
 import type { ISql } from './client';
 import { buildResultsSnapshot } from './judging';
@@ -332,6 +333,11 @@ export async function changeEventStatus(
       to,
       reasons: result.reasons,
     });
+  }
+
+  // Event alerts (R42): the first time an event is published, in this same transaction.
+  if (to === 'published' && current.status === 'draft') {
+    await queuePublishedAlerts(sql, current, counts.now);
   }
 
   // Judging starts from locked submissions, even if the tick hasn't run the lock step yet.

@@ -8,6 +8,7 @@ import {
   type RenderedEmail,
 } from '@hx/emails';
 import { formatDateTime } from '@hx/shared';
+import { EVENT_ALERT_TEMPLATE, prepareEventAlert } from './alerts';
 import type { ISql, Sql } from './client';
 
 /** Retries wait 1, 5, 30, then 120 minutes; the 5th failed attempt marks the row failed. */
@@ -33,7 +34,10 @@ export interface OutboxDeps {
 
 export interface OutboxRow {
   id: string;
-  /** Null only for staff invitations, which go to an email address with no account yet (R39). */
+  /**
+   * Null only for staff invitations (R39) and event alerts (R42), which go to email addresses
+   * that may have no account.
+   */
   user_id: string | null;
   template: string;
   payload: Record<string, unknown>;
@@ -73,6 +77,7 @@ export async function claimOutbox(
   limit = CLAIM_LIMIT,
   userIds?: string[],
   channel: 'email' | 'push' = 'email',
+  eventIds?: string[],
 ): Promise<OutboxRow[]> {
   return sql<OutboxRow[]>`
     update notification_outbox o
@@ -83,6 +88,7 @@ export async function claimOutbox(
       select id from notification_outbox
       where status = 'pending' and channel = ${channel} and send_after <= now()
         ${userIds ? sql`and user_id = any(${userIds}::uuid[])` : sql``}
+        ${eventIds ? sql`and payload->>'event_id' = any(${eventIds}::text[])` : sql``}
       order by send_after
       limit ${limit}
       for update skip locked
@@ -98,9 +104,15 @@ export async function claimOutbox(
 export async function processOutbox(
   sql: Sql,
   deps: OutboxDeps,
-  options: { limit?: number; userIds?: string[] } = {},
+  options: { limit?: number; userIds?: string[]; eventIds?: string[] } = {},
 ): Promise<OutboxResult> {
-  const rows = await claimOutbox(sql, options.limit ?? CLAIM_LIMIT, options.userIds);
+  const rows = await claimOutbox(
+    sql,
+    options.limit ?? CLAIM_LIMIT,
+    options.userIds,
+    'email',
+    options.eventIds,
+  );
   const result: OutboxResult = {
     claimed: rows.length,
     sent: 0,
@@ -156,6 +168,8 @@ async function prepare(sql: Sql, row: OutboxRow, deps: OutboxDeps): Promise<Prep
   if (row.template === 'team_assigned') return prepareTeamAssigned(sql, row, deps);
   if (row.template === 'staff_added') return prepareStaffAdded(sql, row, deps);
   if (row.template === 'staff_invite') return prepareStaffInvite(sql, row, deps);
+  if (row.template === EVENT_ALERT_TEMPLATE)
+    return prepareEventAlert(sql, row.payload, deps.appUrl);
   if (row.template === 'application_decision') {
     const applicationId = String(row.payload.application_id);
     const status = String(row.payload.status);

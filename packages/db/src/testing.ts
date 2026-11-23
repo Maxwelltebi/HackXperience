@@ -129,7 +129,18 @@ export async function confirmApplicant(
 export function testData(sql: ISql) {
   const users: string[] = [];
   const events: string[] = [];
+  const subscribers: string[] = [];
   return {
+    /** An event alert subscriber (R42), with a unique address unless one is given. */
+    async alertSubscriber(email = `alert-${randomUUID()}@example.test`) {
+      const [row] = await sql<[{ id: string; email: string; unsubscribe_token: string }]>`
+        insert into alert_subscribers (email) values (${email})
+        on conflict (email) do update set unsubscribed_at = null
+        returning id, email, unsubscribe_token
+      `;
+      subscribers.push(row.id);
+      return row;
+    },
     async user(name = 'Test User', options: TestUserOptions = {}) {
       const user = await createTestUser(sql, { name, ...options });
       users.push(user.id);
@@ -152,6 +163,10 @@ export function testData(sql: ISql) {
       await sql`insert into event_staff (event_id, user_id, role) values (${eventId}, ${userId}, ${role})`;
     },
     async cleanup() {
+      for (const id of subscribers.splice(0)) {
+        await sql`delete from notification_outbox where payload->>'subscriber_id' = ${id}`;
+        await sql`delete from alert_subscribers where id = ${id}`;
+      }
       for (const id of events.splice(0)) await deleteTestEvent(sql, id);
       for (const id of users.splice(0)) await deleteTestUser(sql, id);
     },

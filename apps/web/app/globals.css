@@ -21,6 +21,8 @@
   --line-strong: #aebdaf; /* inputs, outline buttons */
   --on-dark-muted: rgba(255, 255, 255, 0.72);
   --on-dark-line: rgba(255, 255, 255, 0.28);
+  --pixel-off: rgba(184, 227, 176, 0.1); /* mint, faint: an unlit cell on dark */
+  --pixel-dim: rgba(184, 227, 176, 0.55); /* mint, half: a flickering cell */
 
   /* Status badges (06): a word in a bordered box, tinted. */
   --info: #1c46b8;
@@ -2039,4 +2041,212 @@ a.row-between > .pixel-grid:first-child {
   min-height: 38px;
   padding: 6px 10px;
   font-size: 14px;
+}
+
+/* ---------- Event alerts pop-up (R42) ---------- */
+
+/* A frame in the bottom corner; a bottom sheet on phones. Not modal: the page stays usable. */
+.alerts-pop {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  border-width: 2px 0 0;
+  box-shadow: none;
+  animation: alerts-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (min-width: 640px) {
+  .alerts-pop {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 400px;
+    border-width: 2px;
+    box-shadow: var(--frame-shadow);
+  }
+}
+
+@keyframes alerts-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.alerts-pop[data-shake='a'] {
+  animation: alerts-shake-a 320ms;
+}
+
+.alerts-pop[data-shake='b'] {
+  animation: alerts-shake-b 320ms;
+}
+
+@keyframes alerts-shake-a {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes alerts-shake-b {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.alerts-pop-top {
+  display: grid;
+  gap: 16px;
+  padding: 16px 20px 20px;
+}
+
+.alerts-pop-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px -6px 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--white);
+  cursor: pointer;
+}
+
+.alerts-pop-close:hover,
+.alerts-pop-close:focus-visible {
+  border-color: var(--on-dark-line);
+}
+
+.alerts-pop-event {
+  margin: 0;
+  font: 600 20px/1.2 var(--font-display);
+  color: var(--white);
+}
+
+.alerts-pop-count b {
+  font-size: 28px;
+}
+
+.alerts-pop-body {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  background: var(--white);
+}
+
+.alerts-pop-field {
+  display: flex;
+  gap: 8px;
+}
+
+.alerts-pop-field .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.alerts-pop-field .btn {
+  flex: none;
+}
+
+.alerts-pop-email {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+
+/* The pixel display: 21 × 7 square cells. */
+.pixel-board {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 3px;
+  max-width: 300px;
+}
+
+.px {
+  aspect-ratio: 1;
+  background: var(--pixel-off);
+  transition: background-color 160ms;
+}
+
+.px-on {
+  background: var(--bright);
+}
+
+.px-meter {
+  background: var(--mint);
+}
+
+.px-flicker {
+  animation: px-flicker 3.2s steps(1) infinite;
+  animation-delay: calc(var(--n) * -32s);
+}
+
+@keyframes px-flicker {
+  0%,
+  88% {
+    background: var(--pixel-off);
+  }
+  90%,
+  96% {
+    background: var(--pixel-dim);
+  }
+}
+
+/* The HX mark and the check draw in column by column. */
+.pixel-board-idle .px-on,
+.pixel-board-done .px-on {
+  animation: px-draw 220ms backwards;
+  animation-delay: calc(var(--c) * 35ms);
+}
+
+@keyframes px-draw {
+  from {
+    background: var(--pixel-off);
+    transform: scale(0.4);
+  }
+}
+
+.pixel-board-ready .px-on {
+  animation: px-nudge 900ms ease-in-out infinite alternate;
+}
+
+@keyframes px-nudge {
+  to {
+    transform: translateX(40%);
+  }
+}
+
+.pixel-board-sending .px {
+  animation: px-wave 900ms ease-in-out infinite;
+  animation-delay: calc(var(--c) * 40ms);
+}
+
+@keyframes px-wave {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Opens the pop-up from the footer: looks like the footer's links. */
+.site-footer .link-button {
+  color: var(--white);
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.site-footer .link-button:hover {
+  text-decoration: underline;
 }

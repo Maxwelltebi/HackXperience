@@ -4,3 +4,4 @@ export * from './application-decision';
 export * from './submission-reminder';
 export * from './team-assigned';
 export * from './staff-role';
+export * from './event-alert';

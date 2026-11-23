@@ -8,6 +8,7 @@ import { headerProps, getViewer } from '@/lib/server/viewer';
 import { eventPhase } from '@/lib/ui/event-phase';
 import { chipClass } from '@/lib/ui/status';
 import styles from './page.module.css';
+import { OpenAlertsButton } from '@/components/alerts/open-alerts-button';
 
 const STEPS = [
   {
@@ -278,6 +279,9 @@ function ComingSoonBand() {
           The next <span className="brand-case">CIReN</span> hackathon appears here as soon as
           organizers publish it.
         </p>
+        <div>
+          <OpenAlertsButton className="btn btn-primary">Get event alerts</OpenAlertsButton>
+        </div>
       </div>
     </section>
   );

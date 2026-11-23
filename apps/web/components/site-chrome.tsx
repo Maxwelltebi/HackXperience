@@ -1,4 +1,6 @@
 import Link from '@/components/link';
+import { AlertsPopup } from './alerts/alerts-popup';
+import { OpenAlertsButton } from './alerts/open-alerts-button';
 import { MobileMenu, type NavItem } from './mobile-menu';
 
 export function BrandMark() {
@@ -44,35 +46,38 @@ export function SiteHeader({
       : { href: '/#for-organizers', label: 'For organizers' },
   ];
   return (
-    <div className="site-header-bar">
-      <header className="container site-header">
-        <Brand />
-        <div className="nav">
-          <nav className="nav-links" aria-label="Main">
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                className="nav-link"
-                href={item.href}
-                aria-current={item.current ? 'page' : undefined}
-              >
-                {item.label}
+    <>
+      <div className="site-header-bar">
+        <header className="container site-header">
+          <Brand />
+          <div className="nav">
+            <nav className="nav-links" aria-label="Main">
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  className="nav-link"
+                  href={item.href}
+                  aria-current={item.current ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            {signedIn ? (
+              <Link className="btn btn-sm" href="/profile">
+                Profile
               </Link>
-            ))}
-          </nav>
-          {signedIn ? (
-            <Link className="btn btn-sm" href="/profile">
-              Profile
-            </Link>
-          ) : (
-            <Link className={signInPrimary ? 'btn btn-primary' : 'btn'} href="/sign-in">
-              Sign in
-            </Link>
-          )}
-          <MobileMenu items={items} />
-        </div>
-      </header>
-    </div>
+            ) : (
+              <Link className={signInPrimary ? 'btn btn-primary' : 'btn'} href="/sign-in">
+                Sign in
+              </Link>
+            )}
+            <MobileMenu items={items} />
+          </div>
+        </header>
+      </div>
+      <AlertsPopup />
+    </>
   );
 }
 
@@ -104,6 +109,9 @@ export function SiteFooter() {
                 </li>
                 <li>
                   <Link href="/#for-organizers">For organizers</Link>
+                </li>
+                <li>
+                  <OpenAlertsButton className="link-button">Event alerts</OpenAlertsButton>
                 </li>
               </ul>
             </nav>

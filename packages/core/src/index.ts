@@ -10,3 +10,4 @@ export * from './submission';
 export * from './judging';
 export * from './csv';
 export * from './team-formation';
+export * from './event-alerts';

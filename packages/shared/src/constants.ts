@@ -63,6 +63,23 @@ export const RATE_LIMITS_PER_MINUTE = {
   inviteRotate: 5,
   mentorRequest: 5,
   repoCheck: 20,
+  /** Event alert sign-ups, per IP address: the pop-up needs no account (R42). */
+  alertSignup: 5,
+} as const;
+
+/**
+ * Event alert emails (R42): when an event is published, when its applications open, and
+ * before they close. Subscribers need no account.
+ */
+export const EVENT_ALERT_KINDS = ['published', 'applications_open', 'closing_soon'] as const;
+export type EventAlertKind = (typeof EVENT_ALERT_KINDS)[number];
+export const EVENT_ALERTS = {
+  /** "Closing soon" goes out this long before applications close… */
+  closingSoonHours: 48,
+  /** …but never within this long of another alert for the same event. */
+  quietHours: 24,
+  /** No "applications open" or "closing soon" alert with less than this left to apply. */
+  minimumLeftHours: 1,
 } as const;
 
 /** The built-in skills every applicant rates, 1 to 5, for organizer team forming (R36). */

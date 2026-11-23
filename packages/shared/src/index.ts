@@ -14,3 +14,4 @@ export * from './schemas/judging';
 export * from './schemas/live';
 export * from './live';
 export * from './schemas/reports';
+export * from './schemas/alerts';

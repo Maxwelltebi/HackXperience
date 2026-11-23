@@ -6,6 +6,7 @@ export * from './events';
 export * from './setup';
 export * from './applications';
 export * from './outbox';
+export * from './alerts';
 export * from './tick';
 export * from './suppressions';
 export type * from './database.types';

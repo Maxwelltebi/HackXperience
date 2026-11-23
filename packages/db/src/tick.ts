@@ -1,3 +1,4 @@
+import { enqueueEventAlerts } from './alerts';
 import type { Sql } from './client';
 import { processOutbox, recoverStuckOutbox, type OutboxDeps, type OutboxResult } from './outbox';
 import { checkPushReceipts, processPushOutbox, type PushDeps, type PushResult } from './push';
@@ -29,6 +30,7 @@ export type TickResult =
       recovered: number;
       locked: DeadlineLockResult[];
       reminders: number;
+      alerts: number;
       hashes: HashResult;
       outbox: OutboxResult | 'not_configured';
       push: (PushResult & { receipts_checked: number; tokens_removed: number }) | 'not_configured';
@@ -37,7 +39,8 @@ export type TickResult =
 /**
  * One run of POST /api/internal/tick (every minute from pg_cron).
  *
- * The database-only steps (recover stuck emails, lock deadlines, queue reminders) run in one
+ * The database-only steps (recover stuck emails, lock deadlines, queue reminders and event
+ * alerts) run in one
  * transaction holding pg_try_advisory_xact_lock, so two ticks never run them at once; a tick
  * that can't get the lock does nothing. The lock is the transaction-scoped kind because the
  * production pooler runs in transaction mode, where a session lock could stay stuck on a
@@ -58,7 +61,8 @@ export async function runTick(sql: Sql, deps: TickDeps): Promise<TickResult> {
     const recovered = await recoverStuckOutbox(tx);
     const locked = await lockDueDeadlines(tx);
     const reminders = await enqueueDeadlineReminders(tx);
-    return { recovered, locked, reminders };
+    const alerts = await enqueueEventAlerts(tx);
+    return { recovered, locked, reminders, alerts };
   });
   if (steps === null) return { skipped: true };
 

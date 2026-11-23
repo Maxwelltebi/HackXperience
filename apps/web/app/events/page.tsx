@@ -1,6 +1,7 @@
 import { getSql, listPublicEvents, toEventSummary } from '@hx/db';
 import { formatDateTime } from '@hx/shared';
 import type { Metadata } from 'next';
+import { OpenAlertsButton } from '@/components/alerts/open-alerts-button';
 import Link from '@/components/link';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { getViewer, headerProps } from '@/lib/server/viewer';
@@ -34,6 +35,7 @@ export default async function EventsPage() {
             <div className="panel empty">
               <strong>Coming soon</strong>
               <span>The next CIReN hackathon appears here as soon as organizers publish it.</span>
+              <OpenAlertsButton className="btn btn-primary">Get event alerts</OpenAlertsButton>
             </div>
           ) : (
             upcoming.map((event) => {
