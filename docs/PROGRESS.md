@@ -4,6 +4,47 @@ Handoff log between phases. Each phase adds a section: what was built, how to ru
 
 ---
 
+## Paused: wrap-up list (23 Nov 2026)
+
+**Status.** Work is paused until CIReN confirms its next event (Q1). The web app is built (Phases 1 to 7, plus R33 to R42) and deployed at https://hack.ciren.network against the dev Supabase project, which has migrations 0001 to 0013 and no events. The site shows "Coming soon" and the event alerts pop-up. When work resumes, start here, then the open questions register below.
+
+### 1. Broken now (fix first)
+
+- [ ] **The tick isn't running on the dev project.** pg_cron fires every minute, but the Vault has no `hx_tick_url` or `hx_tick_secret` (checked 23 Nov 2026), so nothing is called. Until it runs: deadlines don't lock or auto-submit, reminder and event alert emails aren't queued, commit hashes aren't captured, and the outbox isn't sent. Fix: a random string as `TICK_SECRET` in Vercel, then in the Supabase SQL editor `select vault.create_secret('https://hack.ciren.network/api/internal/tick', 'hx_tick_url');` and `select vault.create_secret('<same TICK_SECRET>', 'hx_tick_secret');`.
+- [ ] **The nightly backup has failed every night since 19 Nov 2026.** GitHub Actions secrets `BACKUP_DATABASE_URL` and `BACKUP_ENCRYPTION_KEY` are missing. The keep-alive job in the same workflow failed only because `hack.ciren.network` didn't resolve yet; it should pass now.
+- [ ] **Domain settings, if not done:** Supabase URL Configuration (Site URL `https://hack.ciren.network`, Redirect URL `https://hack.ciren.network/**`) and `APP_URL=https://hack.ciren.network` in Vercel, then redeploy.
+
+### 2. Before launch
+
+- [ ] **AWS SES** (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SES_FROM`, `SES_REPLY_TO`, `SNS_TOPIC_ARN` in Vercel; SNS subscription to `/api/internal/ses-events`). Until then every email waits in the outbox.
+- [ ] **Production Supabase project**: create it, `db push`, switch the Email provider off, add its `<ref>.supabase.co` callback and authorized domain to the Google OAuth client, add its own Vault tick secrets, and point Vercel's Production environment at it.
+- [ ] **`GITHUB_TOKEN`** in Vercel (Phase 4 human tasks).
+- [ ] **Google branding verification**: verify `ciren.network` in Google Search Console (TXT record at Namecheap), add a privacy policy page (wording from CIReN; the app has none yet), submit the branding for review.
+- [ ] **Code of conduct link** on the sign-in page (Q6).
+
+### 3. Testing: phase gates (none run yet)
+
+- [ ] Deadline gate: a test event with the deadline 5 minutes ahead; the save after it is refused, the draft is auto-submitted, the hash appears, and reopen works and is in `audit_log` (Phase 4). Needs the tick.
+- [ ] Live features in two browsers: a mentor request appears without a refresh, the claim updates the team's page, the dashboard count rises on a check-in (Phase 6).
+- [ ] End-to-end suite: create the four test accounts, run `pnpm e2e` (Phase 7).
+- [ ] Load test on a preview deployment; restore drill with `scripts/restore.sh`; impact CSV against a hand count; delete and restore a team; read `docs/RUNBOOK.md` with the Ghana-based operator (Phase 7).
+- [ ] Phase 8: a full dry-run event before the real one.
+
+### 4. Decisions for the product owner
+
+The open questions register below has 25 questions; each has a default that is built. The ones that most change what people see: **Q1** (next event date), **Q30** (people who lose their place stay on their team), **Q4** (account deletion), **Q3** (GitHub accounts with no public email can't sign in), **Q21** and **Q22** (full ranking in public; publishing with scores missing).
+
+### 5. Deferred
+
+- [ ] **Android app** (the mobile side of every phase). Google Play's 14-day closed test hasn't started (Q16). Needs an Expo access token and FCM credentials.
+- [ ] Restyle all emails to the CIReN look (they still have rounded corners).
+- [ ] "Projects ready" email to judges when judging starts.
+- [ ] "Your role" box on the event page for staff.
+- [ ] One-click unsubscribe headers (`List-Unsubscribe`) on alert emails, before the list passes 5,000 sends a day.
+- [ ] Add the tables and columns from migrations 0010 to 0013 to the Canonical schema in `docs/BUILD_PLAN.md`; run `pnpm db:types` once a local database is running.
+
+---
+
 ## Open questions register
 
 One list for every open question. Agents add rows; a person answers in the **Answer** column (or in a commit message that names the ID), and the next agent applies the answer and moves the row to Resolved. **Default if unanswered** is what the code does today, so nothing blocks unless the Blocks column says so.
