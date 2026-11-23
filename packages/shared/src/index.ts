@@ -15,3 +15,4 @@ export * from './schemas/live';
 export * from './live';
 export * from './schemas/reports';
 export * from './schemas/alerts';
+export * from './schemas/admin';

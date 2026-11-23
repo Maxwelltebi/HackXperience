@@ -53,7 +53,8 @@ export default async function OrganizeEventLayout({
   if (can(roles, 'staff.manage')) items.push({ href: `${base}/staff`, label: 'Staff' });
 
   const name = viewer.me.user.name || 'Signed in';
-  const role = roles[0] ? ROLE_LABEL[roles[0]] : null;
+  // R43: a platform admin has owner rights here, staff role or not; say which applies.
+  const role = access.platformAdmin ? 'Platform admin' : roles[0] ? ROLE_LABEL[roles[0]] : null;
 
   return (
     <div className="app-shell">
@@ -66,6 +67,7 @@ export default async function OrganizeEventLayout({
         <SidebarNav items={items} />
         <div className="sidebar-foot">
           <Link href="/organize">All your events</Link>
+          {access.platformAdmin ? <Link href="/admin/events">Every event (admin)</Link> : null}
           <Link href="/profile" className="sidebar-user" style={{ textDecoration: 'none' }}>
             <span className="avatar" aria-hidden="true">
               {initials(name)}

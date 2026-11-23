@@ -2250,3 +2250,25 @@ a.row-between > .pixel-grid:first-child {
 .site-footer .link-button:hover {
   text-decoration: underline;
 }
+
+/* ---------- Platform admin (R43) ---------- */
+
+.people-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.people-list li {
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.people-list .sub {
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}

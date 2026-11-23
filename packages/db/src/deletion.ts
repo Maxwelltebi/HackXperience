@@ -6,10 +6,15 @@ import type { ISql } from './client';
 // audited. Every list and lookup already filters deleted_at, so a deleted row disappears
 // everywhere at once and restore brings it back exactly as it was.
 
-/** The owner check for a deleted event, which the normal event loader can't see. */
+/**
+ * The owner check for a deleted event, which the normal event loader can't see. Platform admins
+ * pass too (R43).
+ */
 async function assertOwner(sql: ISql, eventId: string, userId: string): Promise<void> {
   const rows = await sql`
     select 1 from event_staff where event_id = ${eventId} and user_id = ${userId} and role = 'owner'
+    union all
+    select 1 from users where id = ${userId} and is_platform_admin
   `;
   if (rows.length === 0) throw new ApiError('NOT_FOUND', 'No such event.');
 }
@@ -46,15 +51,19 @@ export async function restoreEvent(sql: ISql, eventId: string, actorId: string):
   });
 }
 
-/** Deleted events the user owns, for the restore list. */
+/** Deleted events the user owns (every deleted event, for a platform admin), for the restore list. */
 export async function listDeletedEvents(
   sql: ISql,
   userId: string,
 ): Promise<{ id: string; name: string; deleted_at: string }[]> {
   const rows = await sql<{ id: string; name: string; deleted_at: Date }[]>`
     select e.id, e.name, e.deleted_at from events e
-    join event_staff s on s.event_id = e.id and s.user_id = ${userId} and s.role = 'owner'
     where e.deleted_at is not null
+      and (
+        exists (select 1 from event_staff s
+                where s.event_id = e.id and s.user_id = ${userId} and s.role = 'owner')
+        or exists (select 1 from users u where u.id = ${userId} and u.is_platform_admin)
+      )
     order by e.deleted_at desc
   `;
   return rows.map((r) => ({ ...r, deleted_at: r.deleted_at.toISOString() }));

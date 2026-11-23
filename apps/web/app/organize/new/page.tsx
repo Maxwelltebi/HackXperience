@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function NewEventPage() {
   const viewer = await getViewer();
   if (!viewer) redirect('/sign-in?next=/organize/new');
-  const orgId = viewer.me.org_ids[0];
+  const orgId = viewer.orgId;
 
   return (
     <>

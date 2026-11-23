@@ -148,8 +148,13 @@ export function toEventSummary(row: EventRow): EventSummary {
 
 export interface EventAccess {
   event: EventRow;
-  /** The caller's staff roles at this event; empty for participants and visitors. */
+  /**
+   * The caller's staff roles at this event; empty for participants and visitors. Platform admins
+   * always have owner here, whether or not they are on the event's staff (R43).
+   */
   roles: StaffRole[];
+  /** The caller is a platform admin (R43). */
+  platformAdmin: boolean;
 }
 
 /**
@@ -161,19 +166,24 @@ export async function loadEventRoles(
   eventId: string,
   userId: string | null,
 ): Promise<EventAccess | null> {
-  const [row] = await sql<[(EventRow & { roles: StaffRole[] })?]>`
+  const [row] = await sql<[(EventRow & { roles: StaffRole[]; platform_admin: boolean })?]>`
     select ${sql(EVENT_COLUMNS.map((c) => `e.${c}`))},
            array(
              select s.role::text from event_staff s
              where s.event_id = e.id and s.user_id = ${userId}
              order by s.role
-           ) as roles
+           ) as roles,
+           coalesce((select u.is_platform_admin from users u where u.id = ${userId}), false)
+             as platform_admin
     from events e
     where e.id = ${eventId} and e.deleted_at is null
   `;
   if (!row) return null;
-  const { roles, ...event } = row;
-  return { event, roles };
+  const { roles, platform_admin: platformAdmin, ...event } = row;
+  // R43: platform admins have owner rights at every event. Not a staff row: they aren't listed.
+  const withOwner: StaffRole[] =
+    platformAdmin && !roles.includes('owner') ? ['owner', ...roles] : roles;
+  return { event, roles: withOwner, platformAdmin };
 }
 
 /** Drafts are visible only to staff who can edit them; everything else is public. */
@@ -216,8 +226,13 @@ export async function listStaffEvents(sql: ISql, userId: string): Promise<StaffE
   `;
 }
 
+/** A member of the organization, or a platform admin, who can act for any organization (R43). */
 export async function isOrgMember(sql: ISql, orgId: string, userId: string): Promise<boolean> {
-  const rows = await sql`select 1 from org_members where org_id = ${orgId} and user_id = ${userId}`;
+  const rows = await sql`
+    select 1 from org_members where org_id = ${orgId} and user_id = ${userId}
+    union all
+    select 1 from users where id = ${userId} and is_platform_admin
+  `;
   return rows.length > 0;
 }
 

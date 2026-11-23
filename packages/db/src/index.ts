@@ -22,3 +22,4 @@ export * from './live';
 export * from './push';
 export * from './reports';
 export * from './deletion';
+export * from './admin';

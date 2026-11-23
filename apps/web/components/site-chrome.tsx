@@ -28,11 +28,14 @@ export function Brand() {
 export function SiteHeader({
   signedIn,
   canOrganize = false,
+  isAdmin = false,
   current,
   signInPrimary = false,
 }: {
   signedIn: boolean;
   canOrganize?: boolean;
+  /** Platform admin (R43): adds the Admin link. */
+  isAdmin?: boolean;
   /** Marks the matching nav link as the current page. */
   current?: 'events';
   /** The homepage makes Sign in its one solid button; elsewhere the page's own action is. */
@@ -44,6 +47,7 @@ export function SiteHeader({
     canOrganize
       ? { href: '/organize', label: 'Organize' }
       : { href: '/#for-organizers', label: 'For organizers' },
+    ...(isAdmin ? [{ href: '/admin', label: 'Admin' }] : []),
   ];
   return (
     <>

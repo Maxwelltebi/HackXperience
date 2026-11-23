@@ -10,8 +10,8 @@ export interface TestUserOptions {
 }
 
 /**
- * Insert an auth user the way Supabase Auth does after an OAuth sign-in, so the
- * on_auth_user_created trigger runs. Returns the new user's id and email.
+ * Insert an auth user the way Supabase Auth does after an OAuth sign-in (email confirmed by the
+ * provider), so the on_auth_user_created trigger runs. Returns the new user's id and email.
  */
 export async function createTestUser(
   sql: ISql,
@@ -23,10 +23,11 @@ export async function createTestUser(
   if (options.userName) meta.user_name = options.userName;
 
   await sql`
-    insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
+    insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data, raw_app_meta_data)
     values (
       ${id},
       ${email},
+      now(),
       ${sql.json(meta)},
       ${sql.json({ provider: options.provider ?? 'google' })}
     )

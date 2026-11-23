@@ -26,7 +26,7 @@ export default async function OrganizePage() {
     listStaffEvents(getSql(), viewer.userId),
     listDeletedEvents(getSql(), viewer.userId),
   ]);
-  const canCreate = viewer.me.org_ids.length > 0;
+  const canCreate = viewer.orgId !== null;
 
   return (
     <>
